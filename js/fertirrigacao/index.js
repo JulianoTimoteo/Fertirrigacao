@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { setupConfigTanquesTab }                                              from './input.js';
-import { initFertiFirebase, subscribeLagoa, unsubscribeAllLagoas, LAGOA_CONFIG } from './firebase.js';
+import { initFertiFirebase, subscribeLagoa, unsubscribeAllLagoas, LAGOA_CONFIG, forcarPollLeituras } from './firebase.js';
 import { getLagoasCardsHTML, initLagoasOffline, onLeituraESP32, getEstadoLagoas, clearOfflineTimers } from './lagoas.js';
 import { renderLagoasChart, destroyLagoasChart, getGraficoHTML }              from './chart.js';
 import { getVazaoHTML, getSummaryCardHTML, atualizarAcumulados, setupMetaInput, resetAcumulados, recalcularVolumeFromEstado } from './vazao.js';
@@ -206,5 +206,6 @@ export default {
   stop:    stopFertirrigacaoSimulation,
   destroy: destroyFertirrigacaoChart,
   control: controlFertirrigacaoSimulation,
+  refresh: forcarPollLeituras,
   getHTML: getFertirrigacaoTabHTML
 };

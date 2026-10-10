@@ -7,5 +7,6 @@ export {
   initFertiFirebase,
   subscribeLagoa,
   unsubscribeAllLagoas,
-  getESP32Health
+  getESP32Health,
+  forcarPollLeituras
 } from './fertirrigacaomonit.js';

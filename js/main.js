@@ -15,7 +15,8 @@ import {
     setupImplementosSelector,
     unsubscribeAll,
     destroyCharts,
-    setRefreshTime
+    setRefreshTime,
+    forcarAtualizacaoImplementos
 } from './dashboard/tratos.js';
 
 import { 
@@ -255,7 +256,17 @@ function setupTabNavigation() {
         if (!btn) return;
 
         const tabId = btn.dataset.tab;
+        _activeAppTab = tabId;
         
+        // Ajusta o ciclo do timer para o ESP32 da aba correspondente
+        if (tabId === 'implementos') {
+            _currentCycleSeconds = 10;
+            _remainingSeconds = 10;
+        } else if (tabId === 'fertirrigacao') {
+            _currentCycleSeconds = 30;
+            _remainingSeconds = 30;
+        }
+
         fertirrigacao.stop();
         
         if (tabId === 'fertirrigacao') {
@@ -601,56 +612,102 @@ function _applyTheme(theme, icon, label) {
 }
 
 // ============================================================================
-// CRONÔMETRO DE ATUALIZAÇÃO AUTOMÁTICA
-// Sem F5 — força re-fetch dos dados do Firebase sem recarregar a página
+// CRONÔMETRO DE ATUALIZAÇÃO AUTOMÁTICA SINCRONIZADO COM ESP32
+// Sem F5 — sincroniza com a transmissão do ESP32 em tempo real
 // ============================================================================
 
 let _autoRefreshTimer = null;
-const AUTO_REFRESH_SECONDS = 300; // 5 minutos
+let _currentCycleSeconds = 30; // 30s para fertirrigação por padrão (ciclo do ESP32)
+let _remainingSeconds = 30;
+let _activeAppTab = 'fertirrigacao';
 
 function setupAutoRefresh() {
-    let remaining = AUTO_REFRESH_SECONDS;
     const widget    = document.getElementById('auto-refresh-widget');
     const countEl   = document.getElementById('auto-refresh-countdown');
     if (!countEl) return;
 
-    const _fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    _remainingSeconds = _currentCycleSeconds;
 
-    const _refresh = () => {
-        // Dispara re-init do módulo de fertirrigação (re-subscribe Firebase)
-        // sem recarregar a página
-        try {
-            fertirrigacao.stop();
-            setTimeout(() => fertirrigacao.init(), 200);
-            console.log('[AutoRefresh] Re-fetch Firebase disparado');
-        } catch(e) { console.warn('[AutoRefresh] Erro:', e); }
-
-        remaining = AUTO_REFRESH_SECONDS;
-        if (widget) { widget.classList.remove('refreshing'); void widget.offsetWidth; widget.classList.add('refreshing'); }
-        setTimeout(() => widget?.classList.remove('refreshing'), 1000);
+    const _fmt = s => {
+        const m = Math.floor(Math.max(0, s) / 60);
+        const sec = Math.max(0, s) % 60;
+        return `${m}:${String(sec).padStart(2, '0')}`;
     };
 
-    const _tick = () => {
-        remaining--;
-        if (countEl) {
-            countEl.textContent = _fmt(remaining);
-            // Fica vermelho nos últimos 30s
-            countEl.style.color = remaining <= 30 ? 'var(--c-red)' : '';
+    const _executarAtualizacao = async () => {
+        if (widget) {
+            widget.classList.remove('refreshing');
+            void widget.offsetWidth;
+            widget.classList.add('refreshing');
         }
-        if (remaining <= 0) { _refresh(); }
+
+        try {
+            if (_activeAppTab === 'fertirrigacao') {
+                if (typeof fertirrigacao.refresh === 'function') {
+                    await fertirrigacao.refresh();
+                } else {
+                    fertirrigacao.stop();
+                    setTimeout(() => fertirrigacao.init(), 100);
+                }
+            } else if (_activeAppTab === 'implementos') {
+                forcarAtualizacaoImplementos();
+            }
+        } catch(e) {
+            console.warn('[AutoRefresh] Erro na sincronização:', e);
+        } finally {
+            setTimeout(() => widget?.classList.remove('refreshing'), 800);
+        }
+    };
+
+    // 📡 ESCUTA SINCRONIZAÇÃO EMITIDA PELO ESP32 EM TEMPO REAL
+    window.addEventListener('esp32:syncCycle', (e) => {
+        const interval = e.detail?.intervalSeconds || _currentCycleSeconds;
+        _currentCycleSeconds = interval;
+        _remainingSeconds = interval;
+        if (countEl) {
+            countEl.textContent = _fmt(_remainingSeconds);
+            countEl.style.color = '#10b981'; // flash verde de sincronia com ESP32
+            countEl.classList.remove('animate-pulse');
+            setTimeout(() => {
+                if (countEl) countEl.style.color = '';
+            }, 600);
+        }
+    });
+
+    const _tick = () => {
+        _remainingSeconds--;
+        if (countEl) {
+            countEl.textContent = _fmt(_remainingSeconds);
+            // Destaca em vermelho nos últimos 5 segundos antes do envio do ESP32
+            if (_remainingSeconds <= 5) {
+                countEl.style.color = 'var(--c-red, #ef4444)';
+                countEl.classList.add('animate-pulse');
+            } else {
+                countEl.style.color = '';
+                countEl.classList.remove('animate-pulse');
+            }
+        }
+
+        if (_remainingSeconds <= 0) {
+            _executarAtualizacao();
+            _remainingSeconds = _currentCycleSeconds;
+        }
     };
 
     if (_autoRefreshTimer) clearInterval(_autoRefreshTimer);
     _autoRefreshTimer = setInterval(_tick, 1000);
 
-    // Clique no widget força refresh imediato
+    // Clique manual no widget força refresh imediato e reseta o ciclo
     if (widget) {
         widget.style.cursor = 'pointer';
-        widget.title = 'Clique para atualizar agora';
-        widget.addEventListener('click', () => { _refresh(); });
+        widget.title = 'Sincronizado com o ESP32 — Clique para atualizar agora';
+        widget.addEventListener('click', () => {
+            _remainingSeconds = _currentCycleSeconds;
+            _executarAtualizacao();
+        });
     }
 
-    console.log('[AutoRefresh] Ativo — intervalo:', AUTO_REFRESH_SECONDS, 's');
+    console.log('[AutoRefresh] Sincronizado com ciclo do ESP32:', _currentCycleSeconds, 's');
 }
 
 // ============================================================================

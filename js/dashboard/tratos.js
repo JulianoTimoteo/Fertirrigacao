@@ -278,10 +278,25 @@ async function loadDataFromAPI() {
         console.log(`📊 Cache: ${readingsCache.length} | Recente: ${readingsCache[0]?.leitura}cm | ${readingsCache[0]?.statusBase} | ${readingsCache[0]?.timestamp?.toLocaleString()}`);
         updateDashboard(readingsCache);
 
+        // 📡 Sincroniza o cronômetro do cabeçalho com o envio do ESP32 de implementos
+        window.dispatchEvent(new CustomEvent('esp32:syncCycle', {
+            detail: {
+                modulo: 'implementos',
+                intervalSeconds: refreshTime || 10,
+                timestamp: Date.now()
+            }
+        }));
+
     } catch (e) { 
         console.error("❌ Erro no carregamento:", e);
     } finally {
         _loadingData = false;
+    }
+}
+
+export function forcarAtualizacaoImplementos() {
+    if (!_loadingData && currentMacAddress) {
+        loadDataFromAPI();
     }
 }
 
