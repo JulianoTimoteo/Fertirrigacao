@@ -1,0 +1,28 @@
+.status-produtivo { 
+    border-color: #40800c !important; 
+    color: #40800c !important; 
+}
+.status-parado { 
+    border-color: #ef4444 !important; 
+    color: #dc2626 !important; 
+}
+.status-deslocando { 
+    border-color: #f59e0b !important; 
+    color: #d97706 !important; 
+}
+.status-manutencao { 
+    border-color: #6366f1 !important; 
+    color: #4f46e5 !important; 
+}
+.status-erro { 
+    border-color: #6b7280 !important; 
+    color: #4b5563 !important; 
+}
+
+/* moved to style_global.css */
+/* moved to style_global.css */
+/* moved to style_global.css */
+/* moved to style_global.css */
+
+/* moved to style_global.css */
+/* moved to style_global.css */

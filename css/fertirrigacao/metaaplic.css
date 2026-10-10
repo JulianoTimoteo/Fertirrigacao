@@ -1,0 +1,8 @@
+/* ============================================================
+   fertirrigacao/metaaplic.css
+   Barra de progresso e card de Meta de Aplicação na Safra
+   ============================================================ */
+
+#meta-progress-bar {
+    transition: width 0.7s ease, background-color 0.5s ease;
+}

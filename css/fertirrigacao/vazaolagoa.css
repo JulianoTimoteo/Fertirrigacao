@@ -1,0 +1,20 @@
+/* #vazao-table → definido em style_global.css */
+
+/* ── Painéis da aba Vazão (tema claro/escuro) ──────────────────── */
+.vazao-panel {
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
+}
+.vazao-panel h3      { color: var(--text-1); }
+.vazao-panel p       { color: var(--text-2); }
+.vazao-panel th      { color: var(--text-3) !important; background: var(--bg-3) !important; }
+.vazao-panel td      { color: var(--text-1); }
+.vazao-panel .divide-y > * + * { border-color: var(--border-1) !important; }
+
+/* Insights container */
+#insights-container {
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
+}
+#insights-container h3        { color: var(--text-1); }
+#insights-container .border-b { border-color: var(--border-1) !important; }

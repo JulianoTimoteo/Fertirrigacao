@@ -1,0 +1,25 @@
+/* fert-sub-tab e fert-sub-content → definidos em style_global.css */
+
+/* Painel de análise em tempo real */
+
+/* ── Painéis de insight (tema claro/escuro) ────────────────────── */
+.insight-panel-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
+}
+.insight-inner-card {
+  background: var(--bg-3);
+}
+#ins-alertas-lista .text-center { color: var(--text-3); }
+
+/* Config tanques */
+.config-tanque-card {
+  background: var(--bg-3);
+  border: 1px solid var(--border-1);
+}
+
+/* Helpers temáticos */
+.ferti-text-muted         { color: var(--text-3); }
+.ferti-swatch-offline     { background: var(--bg-4); }
+
+[data-theme="light"] .ferti-text-muted { color: #374151; }

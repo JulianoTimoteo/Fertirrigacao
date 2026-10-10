@@ -1,0 +1,24 @@
+/* ============================================================
+   dashboard/dashboard-Status.css
+   Cards de métricas + barra de status + gráfico de profundidade
+   ============================================================ */
+
+.metric-card {
+    background: var(--bg-2);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+}
+.metric-card:hover { transform: translateY(-5px); }
+
+.data-label {
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    color: #4b5563;
+}
+.data-value {
+    font-size: 2.25rem;
+    font-weight: 800;
+}

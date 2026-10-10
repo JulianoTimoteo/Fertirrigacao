@@ -1,0 +1,21 @@
+# Dependências e arquivos de ambiente
+node_modules/
+.env
+.env.local
+*.env
+
+# Chaves de serviço Firebase e credenciais privadas
+*-adminsdk-*.json
+*.pem
+*.key
+
+# Logs
+*.log
+firebase-debug.log
+npm-debug.log*
+
+# IDEs e Sistema Operacional
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

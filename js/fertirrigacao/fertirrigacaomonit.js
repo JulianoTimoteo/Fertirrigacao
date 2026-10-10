@@ -1,0 +1,128 @@
+﻿// ============================================================================
+// fertirrigacaomonit.js — Conexão Firestore "fertirrigacaomonit"
+// Lê da coleção "medidas" — documentos com chave {TANQUE}_{DD-MM-YYYY}
+// Polling a cada 30s.
+// ============================================================================
+
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, getDocs, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyA6ZPZiDP-f3QeUzchkItKMgn3Xf9-NJTQ",
+  authDomain: "fertirrigacaomonit.firebaseapp.com",
+  projectId: "fertirrigacaomonit",
+  storageBucket: "fertirrigacaomonit.firebasestorage.app",
+  appId: "1:707534137465:web:839d7e27bc538de7308ca8"
+};
+
+const POLL_INTERVAL_MS     = 30 * 1000;
+const ONLINE_THRESHOLD_MS  = 15 * 60 * 1000;
+
+export const LAGOA_CONFIG = {
+  1: { name: 'Carregamento Usina A', firebaseId: 'T1', tanqueId: 'T1' },
+  2: { name: 'Carregamento Usina B', firebaseId: 'T2', tanqueId: 'T2' },
+  3: { name: 'EUCALIPTO CHEIRO',      firebaseId: 'T3', tanqueId: 'T3' },
+  4: { name: 'CASTANHA',              firebaseId: 'T4', tanqueId: 'T4' },
+  5: { name: 'SANTA THERESINHA',      firebaseId: 'T5', tanqueId: 'T5' }
+};
+
+let _db        = null;
+let _pollTimer = null;
+let _callbacks = {};
+const _healthData = {};
+
+export function initFertiFirebase() {
+  try {
+    const app = getApps().length > 0 ? getApp() : initializeApp(FIREBASE_CONFIG);
+    _db = getFirestore(app);
+    console.log('[Fertirrigacaomonit] Firestore SDK inicializado');
+    return true;
+  } catch (e) {
+    console.error('[Fertirrigacaomonit] init:', e);
+    return false;
+  }
+}
+
+async function _fetchLatestReadings() {
+  const medidasRef = collection(_db, 'medidas');
+  const snap = await getDocs(medidasRef);
+
+  const porTanque = {};
+
+  snap.forEach(doc => {
+    const key = doc.id;
+    const m = key.match(/^(T[1-5])_(\d{2})-(\d{2})-(\d{4})$/);
+    if (!m) return;
+
+    const tanque = m[1];
+    const ts = new Date(+m[4], +m[3] - 1, +m[2]).getTime();
+    if (!porTanque[tanque] || ts > porTanque[tanque].ts) {
+      porTanque[tanque] = { ts, data: doc.data() };
+    }
+  });
+
+  const results = {};
+  for (const [tanque, entry] of Object.entries(porTanque)) {
+    results[tanque] = entry.data;
+  }
+  return results;
+}
+
+export function getESP32Health() { return JSON.parse(JSON.stringify(_healthData)); }
+
+export function subscribeLagoa(lagoaId, onUpdate) {
+  _callbacks[lagoaId] = onUpdate;
+  if (Object.keys(_callbacks).length === 1) _iniciarPolling();
+}
+
+function _iniciarPolling() {
+  if (_pollTimer) clearInterval(_pollTimer);
+
+  const poll = async () => {
+    try {
+      const readings = await _fetchLatestReadings();
+      for (const [id, cfg] of Object.entries(LAGOA_CONFIG)) {
+        const cb = _callbacks[id];
+        if (!cb) continue;
+
+        const raw = readings[cfg.firebaseId];
+        if (!raw || raw.ultima_medicao == null) continue;
+
+        const tsFirestore = raw.timestamp?.toDate?.() || raw.timestamp;
+        const tsLeitura   = tsFirestore instanceof Date ? tsFirestore.getTime() : Date.now();
+        const idadeMs     = Math.max(0, Date.now() - tsLeitura);
+        const isRecent    = idadeMs < ONLINE_THRESHOLD_MS;
+
+        const nivel = parseFloat(raw.ultima_medicao) || 0;
+
+        _healthData[cfg.firebaseId] = {
+          lagoaId: +id, nome: cfg.name, mac: 'Firestore',
+          ultimaVezVisto: tsLeitura > 0 ? new Date(tsLeitura) : null,
+          ultimaDataHora: (raw.data || '-') + ' ' + (raw.hora_ultima || '-'),
+          statusSensor: 'OK', nivel, online: isRecent,
+          idadeMinutos: Math.round(idadeMs / 60000),
+          totalLeituras: 1, erros: 0, sistemaAtivo: true
+        };
+
+        cb({
+          nivel, hora: raw.hora_ultima, data: raw.data,
+          mac: 'Firestore', status: 'OK',
+          isStale: !isRecent,
+          idadeMin: Math.round(idadeMs / 60000)
+        });
+
+        window.dispatchEvent(new CustomEvent('esp32:healthUpdate', { detail: getESP32Health() }));
+      }
+    } catch (e) {
+      console.warn('[Fertirrigacaomonit] Polling:', e.message);
+    }
+  };
+
+  poll();
+  _pollTimer = setInterval(poll, POLL_INTERVAL_MS);
+}
+
+export function unsubscribeAllLagoas() {
+  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+  _callbacks = {};
+}
