@@ -20,11 +20,13 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 export const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyA6ZPZiDP-f3QeUzchkItKMgn3Xf9-NJTQ",
-    authDomain: "fertirrigacaomonit.firebaseapp.com",
-    projectId: "fertirrigacaomonit",
-    storageBucket: "fertirrigacaomonit.firebasestorage.app",
-    appId: "1:707534137465:web:839d7e27bc538de7308ca8"
+    apiKey: "AIzaSyBN-jcSaOxiIg9H8Zc2MxdPoBe36g3qnV4",
+    authDomain: "monitoramento-esp32-2551e.firebaseapp.com",
+    databaseURL: "https://monitoramento-esp32-2551e-default-rtdb.firebaseio.com",
+    projectId: "monitoramento-esp32-2551e",
+    storageBucket: "monitoramento-esp32-2551e.firebasestorage.app",
+    messagingSenderId: "1026903641131",
+    appId: "1:1026903641131:web:86e847b5e600914b26ae6e"
 };
 
 // Inicialização segura (singleton)
