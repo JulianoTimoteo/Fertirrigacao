@@ -243,3 +243,81 @@
     background: rgba(11, 15, 25, 0.96) !important;
     border: 1.5px solid rgba(56, 189, 248, 0.4);
 }
+
+/* ============================================================================
+   IMUNIDADE DE TEMA: O MAPA GIS É UM AMBIENTE ESCURO INDEPENDENTE DO TEMA DO APP
+   Garante 100% de contraste tanto com o Sistema em Tema Claro quanto em Escuro
+   ============================================================================ */
+
+[data-theme="light"] .lagoa-marker-label,
+[data-theme="light"] .lagoa-marker-label span,
+[data-theme="light"] .lagoa-marker-label * {
+    color: #ffffff !important;
+    background: #020617 !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+[data-theme="light"] .lagoa-marker-icon,
+[data-theme="light"] .lagoa-marker-icon span,
+[data-theme="light"] .lagoa-marker-icon * {
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+}
+
+[data-theme="light"] .map-distance-chip,
+[data-theme="light"] .map-distance-chip * {
+    color: #ffffff !important;
+    background: #020617 !important;
+    border-color: #38bdf8 !important;
+}
+
+[data-theme="light"] .map-floating-overlay {
+    background: rgba(11, 15, 25, 0.95) !important;
+    border: 1.5px solid rgba(56, 189, 248, 0.35) !important;
+    color: #ffffff !important;
+}
+
+[data-theme="light"] .map-floating-overlay .map-overlay-title {
+    color: #ffffff !important;
+}
+
+[data-theme="light"] .map-floating-overlay .map-overlay-badge {
+    color: #38bdf8 !important;
+    background: rgba(56, 189, 248, 0.15) !important;
+    border-color: rgba(56, 189, 248, 0.4) !important;
+}
+
+[data-theme="light"] .map-floating-overlay .map-overlay-label {
+    color: #cbd5e1 !important;
+}
+
+[data-theme="light"] .map-floating-overlay .map-overlay-value {
+    color: #ffffff !important;
+}
+
+[data-theme="light"] .map-floating-overlay #map-total-stored {
+    color: #22d3ee !important;
+}
+
+[data-theme="light"] .map-floating-overlay #map-flow-status {
+    color: #34d399 !important;
+}
+
+/* No cabeçalho do mapa no Modo Claro: botões refinados com alto contraste */
+[data-theme="light"] #btn-map-focus-usina {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+[data-theme="light"] #btn-map-toggle-layer {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+[data-theme="light"] #btn-map-focus-castanha {
+    background: rgba(139, 92, 246, 0.12) !important;
+    color: #6d28d9 !important;
+    border: 1px solid rgba(139, 92, 246, 0.35) !important;
+}

@@ -172,23 +172,22 @@ body {
   color: var(--text-1);
 }
 
-/* MODO CLARO: conteúdo principal texto preto */
-[data-theme="light"] .main-content,
-[data-theme="light"] .main-content * {
+/* MODO CLARO: conteúdo principal texto preto (exceto o mapa GIS e seus marcadores) */
+[data-theme="light"] .main-content *:not(.adutoras-map-container *):not(.lagoa-map-marker *):not(.map-floating-overlay *):not(.custom-distance-marker *) {
   color: var(--text-1);
 }
-[data-theme="light"] .main-content .text-white,
-[data-theme="light"] .main-content [class*="text-white"] {
+[data-theme="light"] .main-content .text-white:not(.adutoras-map-container *):not(.lagoa-map-marker *):not(.map-floating-overlay *),
+[data-theme="light"] .main-content [class*="text-white"]:not(.adutoras-map-container *):not(.lagoa-map-marker *):not(.map-floating-overlay *) {
   color: #0a0a0a !important;
 }
-[data-theme="light"] .main-content .text-slate-400,
-[data-theme="light"] .main-content .text-slate-500,
-[data-theme="light"] .main-content [class*="text-slate-"] {
+[data-theme="light"] .main-content .text-slate-400:not(.adutoras-map-container *):not(.lagoa-map-marker *):not(.map-floating-overlay *),
+[data-theme="light"] .main-content .text-slate-500:not(.adutoras-map-container *):not(.lagoa-map-marker *):not(.map-floating-overlay *),
+[data-theme="light"] .main-content [class*="text-slate-"]:not(.adutoras-map-container *):not(.lagoa-map-marker *):not(.map-floating-overlay *) {
   color: #1f2937 !important;
 }
-[data-theme="light"] .main-content .text-gray-400,
-[data-theme="light"] .main-content .text-gray-500,
-[data-theme="light"] .main-content [class*="text-gray-"] {
+[data-theme="light"] .main-content .text-gray-400:not(.adutoras-map-container *):not(.lagoa-map-marker *):not(.map-floating-overlay *),
+[data-theme="light"] .main-content .text-gray-500:not(.adutoras-map-container *):not(.lagoa-map-marker *):not(.map-floating-overlay *),
+[data-theme="light"] .main-content [class*="text-gray-"]:not(.adutoras-map-container *):not(.lagoa-map-marker *):not(.map-floating-overlay *) {
   color: #1f2937 !important;
 }
 
