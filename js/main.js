@@ -1,4 +1,4 @@
-﻿import { 
+�import { 
     apiGet,
     apiPost
 } from './api.js?v=8.4.1';
@@ -36,17 +36,17 @@ import {
 
 import { formatarTimestampFixo } from './dashboard/regras.js?v=8.4.1';
 
-// ðŸ”¥ IMPORTAÃ‡ÃƒO DO MÃ“DULO DE FERTIRRIGAÃ‡ÃƒO
+// �x� IMPORTA�!ÒO DO M�DULO DE FERTIRRIGA�!ÒO
 import fertirrigacao from './fertirrigacao/index.js?v=8.4.1';
 
-// ðŸŒŸ IMPORTAÃ‡ÃƒO DO SUBMENU DE PERFIL / AVATAR
+// �xRx IMPORTA�!ÒO DO SUBMENU DE PERFIL / AVATAR
 import { setupProfileMenu } from './dashboard/perfil.js?v=8.4.1';
 
-// VariÃ¡vel global do perfil do usuÃ¡rio
+// Variável global do perfil do usuário
 let currentUserProfile = null;
 
 // ============================================================================
-// FUNÃ‡Ã•ES UTILITÃRIAS
+// FUN�!�"ES UTILITÁRIAS
 // ============================================================================
 
 export function formatTimestamp(timestamp) {
@@ -62,7 +62,7 @@ export function formatTimestamp(timestamp) {
         const date = formatarTimestampFixo(timestamp);
         
         if (isNaN(date.getTime()) || date.getFullYear() < 2000) {
-            return 'Data nÃ£o disponÃ­vel';
+            return 'Data não disponível';
         }
         
         const dia = String(date.getDate()).padStart(2, '0');
@@ -114,7 +114,7 @@ export function showConfirmationModal(message, onConfirm) {
     const modalPlaceholder = document.getElementById('modal-placeholder');
     modalPlaceholder.innerHTML = `<div id="confirmation-modal" class="modal-container fixed inset-0 flex items-center justify-center z-50 p-4" style="background:var(--overlay)">
         <div class="modal-content rounded-xl shadow-2xl p-7 max-w-sm w-full" style="background:var(--bg-2);border:1px solid var(--border-1)">
-            <h3 class="text-lg font-bold mb-3" style="color:var(--text-1)">ConfirmaÃ§Ã£o</h3>
+            <h3 class="text-lg font-bold mb-3" style="color:var(--text-1)">Confirmação</h3>
             <p class="mb-6" style="color:var(--text-2)">${message}</p>
             <div class="flex justify-end gap-3">
                 <button id="cancel-confirmation" class="px-4 py-2 rounded-lg text-sm font-semibold" style="background:var(--bg-4);color:var(--text-1)">Cancelar</button>
@@ -137,7 +137,7 @@ export function showConfirmationModal(message, onConfirm) {
 }
 
 // ============================================================================
-// INICIALIZAÃ‡ÃƒO
+// INICIALIZA�!ÒO
 // ============================================================================
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -150,8 +150,8 @@ function initializeApp() {
     try {
         setupAuthListeners();
     } catch (error) { 
-        console.error("Erro fatal na inicializaÃ§Ã£o:", error); 
-        showMessage('Erro Fatal', 'NÃ£o foi possÃ­vel inicializar o sistema.', 'error');
+        console.error("Erro fatal na inicialização:", error); 
+        showMessage('Erro Fatal', 'Não foi possível inicializar o sistema.', 'error');
     }
 }
 
@@ -176,7 +176,7 @@ export function startApplication(user) {
     
     currentUserProfile = getCurrentUserProfile();
     if (!currentUserProfile) {
-        console.error("Perfil de usuÃ¡rio nÃ£o encontrado!");
+        console.error("Perfil de usuário não encontrado!");
         showLoginScreen();
         return;
     }
@@ -200,7 +200,7 @@ function initializeDashboard() {
         logoutButton.addEventListener('click', doLogout);
     }
     
-    // Configura o Submenu dinÃ¢mico e animado do Avatar (JT)
+    // Configura o Submenu dinâmico e animado do Avatar (JT)
     setupProfileMenu(
         { email: currentUserProfile?.email || currentUserProfile?.username },
         currentUserProfile,
@@ -242,7 +242,7 @@ function initializeDashboard() {
         });
     }
 
-    console.log("ðŸ”§ Inicializando painel de administraÃ§Ã£o");
+    console.log("�x� Inicializando painel de administração");
     
     const addUserForm = document.getElementById('add-user-form');
     if (addUserForm) {
@@ -282,7 +282,7 @@ function setupTabNavigation() {
             setTimeout(() => fertirrigacao.init(), 100);
         }
 
-        // âœ… FIX: SÃ³ troca a classe de cor da aba ativa â€” NÃƒO substitui className inteiro
+        // �S& FIX: Só troca a classe de cor da aba ativa � NÒO substitui className inteiro
         // Remove somente as classes de cor de aba anteriores, preservando "sidebar"
         sidebar.classList.remove('fertirrigacao', 'implementos', 'historico', 'limites', 'cadastro');
         sidebar.classList.add(tabId);
@@ -349,7 +349,7 @@ function getLoginHTML() {
                 <div>
                     <input id="email" type="text" autocomplete="username" required 
                             class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#40800c] focus:border-[#40800c]" 
-                           placeholder="UsuÃ¡rio ou e-mail">
+                           placeholder="Usuário ou e-mail">
                 </div>
                 <div>
                     <input id="password" type="password" autocomplete="current-password" required 
@@ -358,7 +358,7 @@ function getLoginHTML() {
                 </div>
                 <div class="flex items-center">
                     <input id="remember-me" type="checkbox" class="h-4 w-4 text-[#40800c] rounded">
-                    <label for="remember-me" class="ml-2 block text-sm" style="color:var(--text-1)">Lembrar usuÃ¡rio</label>
+                    <label for="remember-me" class="ml-2 block text-sm" style="color:var(--text-1)">Lembrar usuário</label>
                 </div>
                 <div id="login-error" class="text-red-600 text-sm text-center hidden"></div>
                 <div class="flex items-center gap-2 pt-2">
@@ -397,7 +397,7 @@ function getLoginHTML() {
                 </div>
                 <button type="submit" id="send-request-button" 
                         class="w-full py-2 px-4 bg-[#40800c] hover:bg-[#306009] text-white font-medium rounded-md transition-colors">
-                    Enviar SolicitaÃ§Ã£o
+                    Enviar Solicitação
                 </button>
             </form>
         </div>
@@ -411,7 +411,7 @@ function getLoginHTML() {
 function getSplashHTML() { 
     return `<img id="splash-logo" src="https://usinapitangueiras.com.br/wp-content/uploads/2020/04/usina-pitangueiras-logo.png" 
                 alt="Logo Usina Pitangueiras" class="opacity-0 scale-125 h-36">
-            <p id="splash-slogan" style="color:var(--text-2)" class="text-xl font-semibold opacity-0 mt-4">A energia que move a regiÃ£o</p>`; 
+            <p id="splash-slogan" style="color:var(--text-2)" class="text-xl font-semibold opacity-0 mt-4">A energia que move a região</p>`; 
 }
 
 // ============================================================================
@@ -420,11 +420,11 @@ function getSplashHTML() {
 
 function getAppHTML(user, profile) {
     if (!profile) {
-        console.error("Profile nÃ£o definido em getAppHTML");
-        return '<div class="p-8 text-red-500">Erro ao carregar perfil do usuÃ¡rio</div>';
+        console.error("Profile não definido em getAppHTML");
+        return '<div class="p-8 text-red-500">Erro ao carregar perfil do usuário</div>';
     }
     
-    const username = profile.displayName || (user?.email ? user.email.split('@')[0] : 'UsuÃ¡rio');
+    const username = profile.displayName || (user?.email ? user.email.split('@')[0] : 'Usuário');
     
     const allTabs = ['fertirrigacao', 'implementos', 'historico', 'limites', 'cadastro'];
     const firstVisibleTab = allTabs[0];
@@ -442,8 +442,8 @@ function getAppHTML(user, profile) {
                 <h1 class="text-xl md:text-2xl font-extrabold tracking-tight hidden sm:block" style="color:var(--text-1)">Monitoramento Operacional</h1>
                 <div class="flex items-center space-x-3">
                     
-                    <!-- â± CronÃ´metro de atualizaÃ§Ã£o automÃ¡tica -->
-                    <div id="auto-refresh-widget" title="AtualizaÃ§Ã£o automÃ¡tica dos dados">
+                    <!-- ⏱ Cronômetro de atualização automática -->
+                    <div id="auto-refresh-widget" title="Atualização automática dos dados">
                         <span class="material-symbols-outlined" style="font-size:1rem;">autorenew</span>
                         <span id="auto-refresh-countdown">5:00</span>
                     </div>
@@ -453,13 +453,13 @@ function getAppHTML(user, profile) {
                         <span id="theme-label">Claro</span>
                     </button>
 
-                    <!-- ðŸŒŸ AVATAR JT INTERATIVO COM SUBMENU DROPDOWN ANIMADO -->
+                    <!-- �xRx AVATAR JT INTERATIVO COM SUBMENU DROPDOWN ANIMADO -->
                     <div class="relative" id="profile-container">
                         <button id="avatar-btn" type="button" class="avatar-button flex items-center gap-2 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer" title="Clique para gerenciar perfil">
                             ${avatarImg}
                             <div class="hidden md:flex flex-col text-left">
                                 <span id="header-user-name" class="font-bold text-sm leading-tight" style="color:var(--text-1)">${username}</span>
-                                <span class="text-[11px] text-gray-400 capitalize leading-tight">${profile.role || 'UsuÃ¡rio'}</span>
+                                <span class="text-[11px] text-gray-400 capitalize leading-tight">${profile.role || 'Usuário'}</span>
                             </div>
                             <span id="avatar-caret" class="material-symbols-outlined text-xs text-gray-400 transition-transform duration-200">expand_more</span>
                         </button>
@@ -480,7 +480,7 @@ function getAppHTML(user, profile) {
                             <button id="btn-edit-displayname" class="profile-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[var(--text-1)] text-left cursor-pointer">
                                 <span class="material-symbols-outlined text-emerald-600 text-lg">badge</span>
                                 <div>
-                                    <div class="font-bold">Mudar Nome de ExibiÃ§Ã£o</div>
+                                    <div class="font-bold">Mudar Nome de Exibição</div>
                                     <div class="text-[10px] text-gray-400 font-normal">Alterar seu nome exibido na tela</div>
                                 </div>
                             </button>
@@ -488,7 +488,7 @@ function getAppHTML(user, profile) {
                             <button id="btn-edit-credentials" class="profile-menu-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[var(--text-1)] text-left cursor-pointer">
                                 <span class="material-symbols-outlined text-blue-500 text-lg">key</span>
                                 <div>
-                                    <div class="font-bold">Mudar UsuÃ¡rio e Senha</div>
+                                    <div class="font-bold">Mudar Usuário e Senha</div>
                                     <div class="text-[10px] text-gray-400 font-normal">Atualizar credenciais no Firebase</div>
                                 </div>
                             </button>
@@ -514,12 +514,12 @@ function getAppHTML(user, profile) {
         </header>
 
         <div class="app-layout">
-          <!-- Sidebar de navegaÃ§Ã£o lateral -->
+          <!-- Sidebar de navegação lateral -->
           <div id="sidebar-overlay"></div>
           <nav id="tabs-container" class="sidebar ${firstVisibleTab}">
             <button class="tab-button active" data-tab="fertirrigacao">
               <span class="material-symbols-outlined">water_drop</span>
-              <span class="tab-label">FertirrigaÃ§Ã£o</span>
+              <span class="tab-label">Fertirrigação</span>
             </button>
             <button class="tab-button" data-tab="implementos">
               <span class="material-symbols-outlined">dashboard</span>
@@ -527,7 +527,7 @@ function getAppHTML(user, profile) {
             </button>
             <button class="tab-button" data-tab="historico">
               <span class="material-symbols-outlined">history</span>
-              <span class="tab-label">HistÃ³rico</span>
+              <span class="tab-label">Histórico</span>
             </button>
             <button class="tab-button" data-tab="limites">
               <span class="material-symbols-outlined">agriculture</span>
@@ -539,7 +539,7 @@ function getAppHTML(user, profile) {
             </button>
           </nav>
 
-          <!-- ConteÃºdo principal -->
+          <!-- Conteúdo principal -->
           <main class="main-content">
             <div id="fertirrigacao-tab" class="tab-content active">${fertirrigacao.getHTML()}</div>
             <div id="implementos-tab"   class="tab-content">${getImplementosTabHTML()}</div>
@@ -597,7 +597,7 @@ function setupThemeToggle() {
     const label  = document.getElementById('theme-label');
     if (!btn) return;
 
-    // Carrega preferÃªncia salva ou usa escuro como padrÃ£o
+    // Carrega preferência salva ou usa escuro como padrão
     const saved = localStorage.getItem('agro_theme') || 'dark';
     _applyTheme(saved, icon, label);
 
@@ -621,12 +621,12 @@ function _applyTheme(theme, icon, label) {
 }
 
 // ============================================================================
-// CRONÃ”METRO DE ATUALIZAÃ‡ÃƒO AUTOMÃTICA SINCRONIZADO COM ESP32
-// Sem F5 â€” sincroniza com a transmissÃ£o do ESP32 em tempo real
+// CRON�METRO DE ATUALIZA�!ÒO AUTOMÁTICA SINCRONIZADO COM ESP32
+// Sem F5 � sincroniza com a transmissão do ESP32 em tempo real
 // ============================================================================
 
 let _autoRefreshTimer = null;
-let _currentCycleSeconds = 30; // 30s para fertirrigaÃ§Ã£o por padrÃ£o (ciclo do ESP32)
+let _currentCycleSeconds = 30; // 30s para fertirrigação por padrão (ciclo do ESP32)
 let _remainingSeconds = 30;
 let _activeAppTab = 'fertirrigacao';
 
@@ -662,13 +662,13 @@ function setupAutoRefresh() {
                 forcarAtualizacaoImplementos();
             }
         } catch(e) {
-            console.warn('[AutoRefresh] Erro na sincronizaÃ§Ã£o:', e);
+            console.warn('[AutoRefresh] Erro na sincronização:', e);
         } finally {
             setTimeout(() => widget?.classList.remove('refreshing'), 800);
         }
     };
 
-    // ðŸ“¡ ESCUTA SINCRONIZAÃ‡ÃƒO EMITIDA PELO ESP32 EM TEMPO REAL
+    // �x� ESCUTA SINCRONIZA�!ÒO EMITIDA PELO ESP32 EM TEMPO REAL
     window.addEventListener('esp32:syncCycle', (e) => {
         const interval = e.detail?.intervalSeconds || _currentCycleSeconds;
         _currentCycleSeconds = interval;
@@ -687,7 +687,7 @@ function setupAutoRefresh() {
         _remainingSeconds--;
         if (countEl) {
             countEl.textContent = _fmt(_remainingSeconds);
-            // Destaca em vermelho nos Ãºltimos 5 segundos antes do envio do ESP32
+            // Destaca em vermelho nos últimos 5 segundos antes do envio do ESP32
             if (_remainingSeconds <= 5) {
                 countEl.style.color = 'var(--c-red, #ef4444)';
                 countEl.classList.add('animate-pulse');
@@ -706,10 +706,10 @@ function setupAutoRefresh() {
     if (_autoRefreshTimer) clearInterval(_autoRefreshTimer);
     _autoRefreshTimer = setInterval(_tick, 1000);
 
-    // Clique manual no widget forÃ§a refresh imediato e reseta o ciclo
+    // Clique manual no widget força refresh imediato e reseta o ciclo
     if (widget) {
         widget.style.cursor = 'pointer';
-        widget.title = 'Sincronizado com o ESP32 â€” Clique para atualizar agora';
+        widget.title = 'Sincronizado com o ESP32 � Clique para atualizar agora';
         widget.addEventListener('click', () => {
             _remainingSeconds = _currentCycleSeconds;
             _executarAtualizacao();
@@ -764,7 +764,7 @@ function getImplementosTabHTML() {
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         <div id="last-depth-card" class="metric-card animated-border h-52">
             <div class="card-content-wrapper h-full flex flex-col justify-center">
-                <p class="data-label">DistÃ¢ncia Sensor-Solo</p>
+                <p class="data-label">Distância Sensor-Solo</p>
                 <div id="last-depth-skeleton" class="mt-1 h-9 w-3/4 rounded-md bg-gray-200 animate-pulse"></div>
                 <p class="data-value text-indigo-700 hidden" id="last-depth">0.00 cm</p>
             </div>
@@ -772,7 +772,7 @@ function getImplementosTabHTML() {
         
         <div id="avg-depth-card" class="metric-card animated-border h-52">
             <div class="card-content-wrapper h-full flex flex-col justify-center">
-                <p class="data-label">Profundidade de InserÃ§Ã£o</p>
+                <p class="data-label">Profundidade de Inserção</p>
                 <div id="avg-depth-skeleton" class="mt-1 h-9 w-3/4 rounded-md bg-gray-200 animate-pulse"></div>
                 <p class="data-value text-purple-700 hidden" id="avg-depth">0.0 cm</p>
             </div>
@@ -780,7 +780,7 @@ function getImplementosTabHTML() {
 
         <div id="productive-percent-card" class="metric-card animated-border h-52">
             <div class="card-content-wrapper h-full flex flex-col p-2">
-                <p class="data-label text-center text-xs font-medium mb-1">DistribuiÃ§Ã£o (50 leituras)</p>
+                <p class="data-label text-center text-xs font-medium mb-1">Distribuição (50 leituras)</p>
                 <div class="flex items-center justify-center gap-2 flex-1">
                     <div class="relative flex-shrink-0" style="width: 85px; height: 85px;">
                         <div id="productive-percent-skeleton" class="h-full w-full rounded-full animate-pulse" style="background:var(--bg-4)"></div>
@@ -801,7 +801,7 @@ function getImplementosTabHTML() {
 
     <div class="mb-10">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-2xl font-bold" style="color:var(--text-1)">ðŸ“Š Perfil de InserÃ§Ã£o no Solo</h2>
+            <h2 class="text-2xl font-bold" style="color:var(--text-1)">�x` Perfil de Inserção no Solo</h2>
         </div>
         <div class="grid grid-cols-4 gap-3 mb-4">
             <div class="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
@@ -829,13 +829,13 @@ function getImplementosTabHTML() {
         <div class="text-center text-xs mt-3" style="color:var(--text-3)">
             <span class="font-semibold">Limites Atuais:</span>
             <span class="text-emerald-600 mx-2">Produtivo: <strong id="limit-produtivo">-- / -- cm</strong></span> | 
-            <span class="text-indigo-600 ml-2">Sem OperaÃ§Ã£o: <strong id="limit-parado">-- Â± -- cm</strong></span>
+            <span class="text-indigo-600 ml-2">Sem Operação: <strong id="limit-parado">-- ± -- cm</strong></span>
         </div>
     </div>
     
     <div>
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold" style="color:var(--text-1)">Ãšltimas Leituras</h2>
+            <h2 class="text-2xl font-bold" style="color:var(--text-1)">�altimas Leituras</h2>
             <button id="refresh-now-btn" class="flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors">
                 <span class="material-symbols-outlined text-sm">refresh</span>
                 Atualizar Agora
@@ -847,8 +847,8 @@ function getImplementosTabHTML() {
                     <tr class="table-header">
                         <th scope="col" class="px-6 py-3 text-left">Timestamp</th>
                         <th scope="col" class="px-6 py-3 text-left">Dist. Sensor-Solo (cm)</th>
-                        <th scope="col" class="px-6 py-3 text-left">Status ServiÃ§o</th>
-                        <th scope="col" class="px-6 py-3 text-left">ConexÃ£o</th>
+                        <th scope="col" class="px-6 py-3 text-left">Status Serviço</th>
+                        <th scope="col" class="px-6 py-3 text-left">Conexão</th>
                     </tr>
                 </thead>
                 <tbody id="readings-history" style="background:var(--bg-2)">
@@ -886,7 +886,7 @@ function getLimitesTabHTML() {
                 <div class="p-4 border-b flex flex-wrap gap-4" style="background:var(--bg-3);border-color:var(--border-1)">
                     <div class="flex-1 min-w-[200px] relative">
                         <span class="material-symbols-outlined absolute left-3 top-2.5 text-gray-400">search</span>
-                        <input type="text" id="equipment-search-input" placeholder="Pesquisar frota ou cÃ³digo..." class="w-full pl-10 pr-4 py-2 border rounded-lg">
+                        <input type="text" id="equipment-search-input" placeholder="Pesquisar frota ou código..." class="w-full pl-10 pr-4 py-2 border rounded-lg">
                     </div>
                     <select id="grupo-filter" class="border rounded-lg px-4 py-2" style="background:var(--bg-input);color:var(--text-1);border-color:var(--border-1)"></select>
                     <select id="status-filter" class="border rounded-lg px-4 py-2" style="background:var(--bg-input);color:var(--text-1);border-color:var(--border-1)">
@@ -899,12 +899,12 @@ function getLimitesTabHTML() {
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead style="background:var(--bg-3)">
                             <tr class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                <th class="px-6 py-4 text-left" style="color:var(--text-2);background:var(--bg-3)">CÃ³digo</th>
-                                <th class="px-6 py-4 text-left" style="color:var(--text-2);background:var(--bg-3)">Frota/DescriÃ§Ã£o</th>
+                                <th class="px-6 py-4 text-left" style="color:var(--text-2);background:var(--bg-3)">Código</th>
+                                <th class="px-6 py-4 text-left" style="color:var(--text-2);background:var(--bg-3)">Frota/Descrição</th>
                                 <th class="px-6 py-4 text-left" style="color:var(--text-2);background:var(--bg-3)">Grupo</th>
                                 <th class="px-6 py-4 text-left" style="color:var(--text-2);background:var(--bg-3)">Equipe</th>
                                 <th class="px-6 py-4 text-center" style="color:var(--text-2);background:var(--bg-3)">Status Dash</th>
-                                <th class="px-6 py-4 text-center" style="color:var(--text-2);background:var(--bg-3)">AÃ§Ãµes</th>
+                                <th class="px-6 py-4 text-center" style="color:var(--text-2);background:var(--bg-3)">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="equipment-list-body" style="background:var(--bg-2)"></tbody>
@@ -917,14 +917,14 @@ function getLimitesTabHTML() {
             <div class="rounded-xl p-8" style="background:var(--bg-2);border:1px solid var(--border-1)">
                 <form id="cadastro-equip-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="md:col-span-2 border-b pb-2 mb-2">
-                        <h3 class="text-lg font-bold" style="color:var(--text-1)">InformaÃ§Ãµes BÃ¡sicas</h3>
+                        <h3 class="text-lg font-bold" style="color:var(--text-1)">Informações Básicas</h3>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium" style="color:var(--text-1)">CÃ³digo da Frota *</label>
+                        <label class="block text-sm font-medium" style="color:var(--text-1)">Código da Frota *</label>
                         <input type="text" name="codigo" required class="w-full mt-1 p-2 border rounded-lg" style="background:var(--bg-input);color:var(--text-1);border-color:var(--border-1)">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium" style="color:var(--text-1)">DescriÃ§Ã£o/Nome *</label>
+                        <label class="block text-sm font-medium" style="color:var(--text-1)">Descrição/Nome *</label>
                         <input type="text" name="descricao" required class="w-full mt-1 p-2 border rounded-lg" style="background:var(--bg-input);color:var(--text-1);border-color:var(--border-1)">
                     </div>
                     <div>
@@ -937,7 +937,7 @@ function getLimitesTabHTML() {
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium" style="color:var(--text-1)">Equipe ResponsÃ¡vel *</label>
+                        <label class="block text-sm font-medium" style="color:var(--text-1)">Equipe Responsável *</label>
                         <div class="flex gap-2">
                             <select name="equipe" required class="w-full mt-1 p-2 border rounded-lg" style="background:var(--bg-input);color:var(--text-1);border-color:var(--border-1)"></select>
                             <button type="button" id="edit-teams-shortcut" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-600" title="Gerenciar Equipes">
@@ -946,19 +946,19 @@ function getLimitesTabHTML() {
                         </div>
                     </div>
                     <div class="md:col-span-2 border-b pb-2 mt-4 mb-2">
-                        <h3 class="text-lg font-bold" style="color:var(--text-1)">ParÃ¢metros Operacionais (cm)</h3>
+                        <h3 class="text-lg font-bold" style="color:var(--text-1)">Parâmetros Operacionais (cm)</h3>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium" style="color:var(--text-1)">h_Mesa (Altura Sensor atÃ© Solo) *</label>
+                        <label class="block text-sm font-medium" style="color:var(--text-1)">h_Mesa (Altura Sensor até Solo) *</label>
                         <input type="number" name="hmesa" step="0.1" value="100.0" class="w-full mt-1 p-2 border rounded-lg" style="background:var(--bg-input);color:var(--text-1);border-color:var(--border-1)">
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium" style="color:var(--text-1)">Prof. MÃ­nima</label>
+                            <label class="block text-sm font-medium" style="color:var(--text-1)">Prof. Mínima</label>
                             <input type="number" name="min" step="0.1" value="10.0" class="w-full mt-1 p-2 border rounded-lg" style="background:var(--bg-input);color:var(--text-1);border-color:var(--border-1)">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium" style="color:var(--text-1)">Prof. MÃ¡xima</label>
+                            <label class="block text-sm font-medium" style="color:var(--text-1)">Prof. Máxima</label>
                             <input type="number" name="max" step="0.1" value="45.0" class="w-full mt-1 p-2 border rounded-lg" style="background:var(--bg-input);color:var(--text-1);border-color:var(--border-1)">
                         </div>
                     </div>
@@ -978,7 +978,7 @@ function getLimitesTabHTML() {
 
         <div id="vincular-equip-content" class="equip-sub-content hidden">
             <div class="rounded-xl p-8" style="background:var(--bg-2);border:1px solid var(--border-1);border-top:8px solid #10b981">
-                <h2 class="text-3xl font-bold mb-2">Gerenciar VÃ­nculos MAC</h2>
+                <h2 class="text-3xl font-bold mb-2">Gerenciar Vínculos MAC</h2>
                 <p class="text-sm mb-6" style="color:var(--text-2)">Vincule ou desvincule MAC addresses aos equipamentos cadastrados.</p>
                 <div class="overflow-x-auto rounded-lg" style="border:1px solid var(--border-1)">
                     <table class="min-w-full text-sm" style="background:var(--bg-2)">
@@ -986,7 +986,7 @@ function getLimitesTabHTML() {
                             <tr>
                                 <th class="p-3 text-left font-semibold" style="color:var(--text-2)">MAC Address</th>
                                 <th class="p-3 text-left font-semibold" style="color:var(--text-2)">Equipamento Vinculado</th>
-                                <th class="p-3 text-center font-semibold" style="color:var(--text-2)">AÃ§Ã£o</th>
+                                <th class="p-3 text-center font-semibold" style="color:var(--text-2)">Ação</th>
                             </tr>
                         </thead>
                         <tbody id="mac-list-body" class="divide-y">
@@ -1007,15 +1007,15 @@ function getLimitesTabHTML() {
 }
 
 // ============================================================================
-// HISTÃ“RICO TAB HTML
+// HIST�RICO TAB HTML
 // ============================================================================
 
 function getHistoricoTabHTML() {
     return `
     <div class="space-y-8">
         <div class="rounded-xl p-6" style="background:var(--bg-2);border:1px solid var(--border-1);box-shadow:var(--shadow-sm)">
-            <h2 class="text-2xl font-bold mb-1">Consulta de HistÃ³rico</h2>
-            <p class="text-sm mb-6" style="color:var(--text-2)">Selecione um equipamento e o perÃ­odo desejado para visualizar os dados de operaÃ§Ã£o.</p>
+            <h2 class="text-2xl font-bold mb-1">Consulta de Histórico</h2>
+            <p class="text-sm mb-6" style="color:var(--text-2)">Selecione um equipamento e o período desejado para visualizar os dados de operação.</p>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <div class="md:col-span-2">
                     <label for="equipment-select-historico" class="block text-sm font-medium" style="color:var(--text-1)">Equipamento</label>
@@ -1023,7 +1023,7 @@ function getHistoricoTabHTML() {
                             class="mt-1 block w-full rounded-md focus:ring-2 focus:ring-blue-500" style="background:var(--bg-input);color:var(--text-1);border:1px solid var(--border-1)"></select>
                 </div>
                 <div>
-                    <label for="date-start-historico" class="block text-sm font-medium" style="color:var(--text-1)">Data de InÃ­cio</label>
+                    <label for="date-start-historico" class="block text-sm font-medium" style="color:var(--text-1)">Data de Início</label>
                     <input type="date" id="date-start-historico" 
                            class="mt-1 block w-full rounded-md focus:ring-2 focus:ring-blue-500" style="background:var(--bg-input);color:var(--text-1);border:1px solid var(--border-1)">
                 </div>
@@ -1036,7 +1036,7 @@ function getHistoricoTabHTML() {
             <div class="mt-4 flex flex-wrap items-center gap-3">
                 <button id="search-historico-btn" 
                         class="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow">
-                    <span class="material-symbols-outlined text-sm">search</span> Buscar HistÃ³rico
+                    <span class="material-symbols-outlined text-sm">search</span> Buscar Histórico
                 </button>
                 <label class="cursor-pointer bg-slate-700 hover:bg-slate-800 text-white font-bold py-2.5 px-5 rounded-lg text-sm inline-flex items-center gap-2 transition-colors shadow">
                     <span class="material-symbols-outlined text-sm">upload_file</span> Importar Log do SD Card (.csv)
@@ -1055,8 +1055,8 @@ function getHistoricoTabHTML() {
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timestamp</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase" style="color:var(--text-3);background:var(--bg-3)">Dist. Sensor-Solo (cm)</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase" style="color:var(--text-3);background:var(--bg-3)">Status ServiÃ§o</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase" style="color:var(--text-3);background:var(--bg-3)">ConexÃ£o</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase" style="color:var(--text-3);background:var(--bg-3)">Status Serviço</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase" style="color:var(--text-3);background:var(--bg-3)">Conexão</th>
                         </tr>
                     </thead>
                     <tbody id="historico-readings-body" style="background:var(--bg-2)">
@@ -1076,39 +1076,39 @@ function getHistoricoTabHTML() {
 function getAdminHTML() {
     return `
         <div class="max-w-4xl mx-auto p-8 rounded-xl" style="background:var(--bg-2);border-top:8px solid #8b5cf6;border:1px solid var(--border-1)">
-            <h2 class="text-3xl font-bold mb-6">Painel de AdministraÃ§Ã£o</h2>
+            <h2 class="text-3xl font-bold mb-6">Painel de Administração</h2>
             <div id="admin-sub-tabs" class="flex gap-2 border-b mb-6">
-                <div class="admin-sub-tab active" data-tab="pendentes">AprovaÃ§Ãµes Pendentes</div>
-                <div class="admin-sub-tab" data-tab="gerenciar">Gerenciar UsuÃ¡rios</div>
+                <div class="admin-sub-tab active" data-tab="pendentes">Aprovações Pendentes</div>
+                <div class="admin-sub-tab" data-tab="gerenciar">Gerenciar Usuários</div>
                 <div class="admin-sub-tab" data-tab="adicionar">Adicionar Manualmente</div>
                 <div class="admin-sub-tab" data-tab="grupos">Grupos</div>
                 <div class="admin-sub-tab" data-tab="equipes">Equipes</div>
             </div>
             <div id="pendentes-content" class="admin-content space-y-4">
-                <h3 class="text-xl font-semibold" style="color:var(--text-1)">UsuÃ¡rios aguardando aprovaÃ§Ã£o</h3>
+                <h3 class="text-xl font-semibold" style="color:var(--text-1)">Usuários aguardando aprovação</h3>
                 <div id="pendentes-list" class="space-y-3"></div>
             </div>
             <div id="gerenciar-content" class="admin-content hidden space-y-4">
-                <h3 class="text-xl font-semibold" style="color:var(--text-1)">Gerenciar usuÃ¡rios existentes</h3>
+                <h3 class="text-xl font-semibold" style="color:var(--text-1)">Gerenciar usuários existentes</h3>
                 <div id="gerenciar-list" class="space-y-3"></div>
             </div>
             <div id="adicionar-content" class="admin-content hidden">
                 <form id="add-user-form" class="mb-10 p-6 rounded-xl" style="background:var(--bg-2);border:1px solid var(--border-1)">
-                    <h3 class="text-xl font-bold mb-6" style="color:var(--text-1)">Cadastrar Novo UsuÃ¡rio no Firebase</h3>
+                    <h3 class="text-xl font-bold mb-6" style="color:var(--text-1)">Cadastrar Novo Usuário no Firebase</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium mb-1" style="color:var(--text-1)">Nome Completo *</label>
-                            <input name="new-user-name" type="text" placeholder="Ex: JoÃ£o da Silva" required 
+                            <input name="new-user-name" type="text" placeholder="Ex: João da Silva" required 
                                    class="w-full p-2 border rounded-md" style="background:var(--bg-input);color:var(--text-1);border-color:var(--border-1)">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1" style="color:var(--text-1)">Nome de UsuÃ¡rio (Login) *</label>
+                            <label class="block text-sm font-medium mb-1" style="color:var(--text-1)">Nome de Usuário (Login) *</label>
                             <input name="new-user-username" type="text" placeholder="Ex: joaosilva" required 
                                    class="w-full p-2 border rounded-md" style="background:var(--bg-input);color:var(--text-1);border-color:var(--border-1)">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1" style="color:var(--text-1)">Senha de Acesso *</label>
-                            <input name="new-user-password" type="text" placeholder="Senha do usuÃ¡rio" required 
+                            <input name="new-user-password" type="text" placeholder="Senha do usuário" required 
                                    class="w-full p-2 border rounded-md" style="background:var(--bg-input);color:var(--text-1);border-color:var(--border-1)">
                         </div>
                         <div>
@@ -1117,26 +1117,26 @@ function getAdminHTML() {
                                    class="w-full p-2 border rounded-md" style="background:var(--bg-input);color:var(--text-1);border-color:var(--border-1)">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1" style="color:var(--text-1)">ID / MatrÃ­cula (Opcional)</label>
+                            <label class="block text-sm font-medium mb-1" style="color:var(--text-1)">ID / Matrícula (Opcional)</label>
                             <input name="new-user-id" type="text" placeholder="Ex: FUNC-105" 
                                    class="w-full p-2 border rounded-md" style="background:var(--bg-input);color:var(--text-1);border-color:var(--border-1)">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1" style="color:var(--text-1)">NÃ­vel de Acesso (Cargo)</label>
+                            <label class="block text-sm font-medium mb-1" style="color:var(--text-1)">Nível de Acesso (Cargo)</label>
                             <select name="new-user-role" class="w-full p-2 border rounded-md" style="background:var(--bg-input);color:var(--text-1);border-color:var(--border-1)">
-                                <option value="OperaÃ§Ã£o">OperaÃ§Ã£o</option>
-                                <option value="Lider">LÃ­der</option>
+                                <option value="Operação">Operação</option>
+                                <option value="Lider">Líder</option>
                                 <option value="Master">Master (Administrador Total)</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="mt-6 border-t pt-4" style="border-color:var(--border-1)">
-                        <label class="block text-sm font-medium mb-3" style="color:var(--text-1)">PermissÃµes de Abas:</label>
+                        <label class="block text-sm font-medium mb-3" style="color:var(--text-1)">Permissões de Abas:</label>
                         <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
                             <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer" style="border-color:var(--border-1)">
                                 <input type="checkbox" name="new-user-permissions" value="fertirrigacao" checked class="text-emerald-600 rounded">
-                                <span class="text-xs font-semibold" style="color:var(--text-1)">FertirrigaÃ§Ã£o</span>
+                                <span class="text-xs font-semibold" style="color:var(--text-1)">Fertirrigação</span>
                             </label>
                             <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer" style="border-color:var(--border-1)">
                                 <input type="checkbox" name="new-user-permissions" value="implementos" checked class="text-emerald-600 rounded">
@@ -1144,7 +1144,7 @@ function getAdminHTML() {
                             </label>
                             <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer" style="border-color:var(--border-1)">
                                 <input type="checkbox" name="new-user-permissions" value="historico" checked class="text-emerald-600 rounded">
-                                <span class="text-xs font-semibold" style="color:var(--text-1)">HistÃ³rico</span>
+                                <span class="text-xs font-semibold" style="color:var(--text-1)">Histórico</span>
                             </label>
                             <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer" style="border-color:var(--border-1)">
                                 <input type="checkbox" name="new-user-permissions" value="limites" class="text-emerald-600 rounded">
@@ -1160,19 +1160,19 @@ function getAdminHTML() {
                     <div class="mt-6 text-right">
                         <button type="submit" 
                                 class="py-2.5 px-6 rounded-lg shadow-lg text-white font-bold bg-[#40800c] hover:bg-[#306009] transition-all">
-                            Salvar UsuÃ¡rio no Firebase
+                            Salvar Usuário no Firebase
                         </button>
                     </div>
                 </form>
             </div>
             <div id="grupos-content" class="admin-content hidden">
                 <h3 class="text-xl font-semibold mb-4" style="color:#a78bfa">Gerenciar Grupos de Equipamentos</h3>
-                <p class="text-sm mb-4" style="color:var(--text-2)">Adicione ou remova grupos disponÃ­veis nos formulÃ¡rios de cadastro de equipamentos.</p>
+                <p class="text-sm mb-4" style="color:var(--text-2)">Adicione ou remova grupos disponíveis nos formulários de cadastro de equipamentos.</p>
                 <div id="grupos-admin-container"></div>
             </div>
             <div id="equipes-content" class="admin-content hidden">
                 <h3 class="text-xl font-semibold mb-4" style="color:#60a5fa">Gerenciar Equipes</h3>
-                <p class="text-sm mb-4" style="color:var(--text-2)">Adicione ou remova equipes disponÃ­veis nos formulÃ¡rios de cadastro de equipamentos.</p>
+                <p class="text-sm mb-4" style="color:var(--text-2)">Adicione ou remova equipes disponíveis nos formulários de cadastro de equipamentos.</p>
                 <div id="equipes-admin-container"></div>
             </div>
         </div>`;

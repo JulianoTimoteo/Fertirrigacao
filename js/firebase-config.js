@@ -1,6 +1,6 @@
-﻿// ============================================================================
-// firebase-config.js â€” ConexÃ£o Direta ao Firestore (fertirrigacaomonit)
-// Gerencia UsuÃ¡rios, Equipamentos, Grupos e Equipes diretamente no Firebase
+�// ============================================================================
+// firebase-config.js � Conexão Direta ao Firestore (fertirrigacaomonit)
+// Gerencia Usuários, Equipamentos, Grupos e Equipes diretamente no Firebase
 // ============================================================================
 
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -29,11 +29,11 @@ export const FIREBASE_CONFIG = {
     measurementId: "G-7MW20VV2W1"
 };
 
-// InicializaÃ§Ã£o segura (singleton)
+// Inicialização segura (singleton)
 export const app = getApps().length > 0 ? getApp() : initializeApp(FIREBASE_CONFIG);
 export const db = getFirestore(app);
 
-// Constantes de coleÃ§Ãµes no Firestore
+// Constantes de coleções no Firestore
 export const COLLECTIONS = {
     USERS: 'users',
     EQUIPAMENTOS: 'equipamentos',
@@ -42,7 +42,7 @@ export const COLLECTIONS = {
     MEDIDAS: 'medidas'
 };
 
-// Re-export das funÃ§Ãµes do Firestore para uso em outros mÃ³dulos
+// Re-export das funções do Firestore para uso em outros módulos
 export {
     collection,
     doc,
@@ -57,5 +57,5 @@ export {
     orderBy
 };
 
-console.log("ðŸ”¥ Firebase Firestore inicializado diretamente para UsuÃ¡rios e Equipamentos!");
+console.log("�x� Firebase Firestore inicializado diretamente para Usuários e Equipamentos!");
 

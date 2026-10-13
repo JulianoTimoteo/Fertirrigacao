@@ -1,6 +1,6 @@
-﻿// ============================================================================
-// api.js â€” Ponto de ConexÃ£o: Roteamento Direto para o Firebase Firestore
-// Substitui a API do Google Sheets por persistÃªncia direta no Firebase
+�// ============================================================================
+// api.js � Ponto de Conexão: Roteamento Direto para o Firebase Firestore
+// Substitui a API do Google Sheets por persistência direta no Firebase
 // ============================================================================
 
 import {
@@ -42,7 +42,7 @@ export async function apiGet(action, params = {}) {
         case 'getLeiturasESP':
             return getLeiturasESP(params.mac, params.desde, params.ate, params.limite);
         default:
-            console.log(`â„¹ï¸ [apiGet] AÃ§Ã£o local/mock: ${action}`);
+            console.log(`��️ [apiGet] Ação local/mock: ${action}`);
             return [];
     }
 }
@@ -94,13 +94,13 @@ export async function apiPost(action, data = {}) {
             return fbDeleteEquipe(data.id);
             
         default:
-            console.log(`â„¹ï¸ [apiPost] AÃ§Ã£o tratada no Firebase: ${action}`, data);
+            console.log(`��️ [apiPost] Ação tratada no Firebase: ${action}`, data);
             return { status: 'success', data };
     }
 }
 
 // ============================================================================
-// EXPORTS ESPECÃFICOS PARA COMPATIBILIDADE COM TODOS OS MÃ“DULOS
+// EXPORTS ESPECÍFICOS PARA COMPATIBILIDADE COM TODOS OS M�DULOS
 // ============================================================================
 
 export async function getEquipamentos({ forceRefresh = false } = {}) {
@@ -137,14 +137,14 @@ export async function getSensoresAtivos() {
     return fbGetSensoresAtivos();
 }
 
-// Leituras ESP32 para implementos, tanques e histÃ³rico direto do Firestore
+// Leituras ESP32 para implementos, tanques e histórico direto do Firestore
 export async function getLeiturasESP(identificador, desde = null, ate = null, limite = 500) {
     try {
         const snap = await getDocs(collection(db, 'medidas'));
         const leituras = [];
         let idFiltro = identificador ? String(identificador).toUpperCase().trim() : '';
 
-        // Mapeamento: MAC físico, nome da lagoa, ou código direto -> código do tanque
+        // Mapeamento: MAC f�sico, nome da lagoa, ou c�digo direto -> c�digo do tanque
         if (idFiltro.includes('84:1F:E8:38:F9:1C') || idFiltro.includes('CASTANHA') || idFiltro === 'ESP32_T4') idFiltro = 'T4';
         else if (idFiltro.includes('USINA A') || idFiltro === 'ESP32_T1') idFiltro = 'T1';
         else if (idFiltro.includes('USINA B') || idFiltro === 'ESP32_T2') idFiltro = 'T2';
@@ -159,7 +159,7 @@ export async function getLeiturasESP(identificador, desde = null, ate = null, li
             const data = docSnap.data();
             const tanque = (data.tanque || docId.split('_')[0] || '').toUpperCase();
 
-            // Filtra por código do equipamento (T1..T5, TR-01, TR-02, TR-03)
+            // Filtra por c�digo do equipamento (T1..T5, TR-01, TR-02, TR-03)
             if (idFiltro) {
                 const docTanque = docId.split('_')[0].toUpperCase();
                 const matchDoc   = docTanque === idFiltro;
@@ -169,7 +169,7 @@ export async function getLeiturasESP(identificador, desde = null, ate = null, li
                 if (!matchDoc && !matchCampo && !matchData && !matchCod) return;
             }
 
-            // Calcula timestamp em milissegundos — suporta todos os formatos do ESP32
+            // Calcula timestamp em milissegundos  suporta todos os formatos do ESP32
             let ts = 0;
             if (data.timestamp) {
                 if (typeof data.timestamp.toDate === 'function') {
@@ -200,7 +200,7 @@ export async function getLeiturasESP(identificador, desde = null, ate = null, li
             if (!ts) ts = Date.now();
             const tsSegundos = Math.floor(ts / 1000);
 
-            // Filtro por perÃ­odo de datas (desde / ate em segundos)
+            // Filtro por período de datas (desde / ate em segundos)
             if (desde && tsSegundos < desde) return;
             if (ate && tsSegundos > ate) return;
 
@@ -222,8 +222,8 @@ export async function getLeiturasESP(identificador, desde = null, ate = null, li
                 desvio_cm: Math.abs(nivel - media),
                 pacote_id: docId,
                 tanque: tanque || idFiltro || docId,
-                grupo: 'VinhaÃ§a',
-                equipe: 'FertirrigaÃ§Ã£o',
+                grupo: 'Vinhaça',
+                equipe: 'Fertirrigação',
                 mac: data.mac || 'ESP32 LoRa Mesh',
                 data: data.data || '',
                 hora: data.hora || data.hora_ultima || ''
@@ -239,7 +239,7 @@ export async function getLeiturasESP(identificador, desde = null, ate = null, li
         console.warn('Erro ao ler medidas reais do Firestore:', e);
     }
 
-    // Fallback: se o equipamento for TR-01/02/03 sem telemetria, gera simulaÃ§Ã£o suave
+    // Fallback: se o equipamento for TR-01/02/03 sem telemetria, gera simulação suave
     const leituras = [];
     const agora = Date.now();
     for (let i = 0; i < Math.min(limite, 50); i++) {
@@ -268,7 +268,7 @@ export async function testConnection() {
     return { status: 'success', message: 'Conectado diretamente ao Firebase Firestore' };
 }
 
-console.log("âœ… API reconfigurada: Equipamentos, UsuÃ¡rios, Grupos e Equipes agora 100% no Firebase!");
+console.log("�S& API reconfigurada: Equipamentos, Usuários, Grupos e Equipes agora 100% no Firebase!");
 
 
 
