@@ -1,4 +1,4 @@
-import { 
+﻿import { 
     getEquipamentos,
     getLeiturasESP 
 } from '../api.js';
@@ -17,7 +17,7 @@ let currentMacAddress = null;
 let currentLimits = { 
     produtivoMin: 10.0, 
     produtivoMax: 45.0, 
-    hMesa: 100.0,       // 🔥 PADRÃO 100.0 igual ao historico.js e equipamentos.js
+    hMesa: 100.0,       // ðŸ”¥ PADRÃƒO 100.0 igual ao historico.js e equipamentos.js
     paradoTolerancia: 5.0 
 };
 let readingsCache = [];
@@ -43,11 +43,11 @@ function calcularTempoSemLeitura() {
     }
     const agora = new Date();
     const diffMinutos = (agora.getTime() - ultimaLeituraTimestamp.getTime()) / (1000 * 60);
-    console.log(`⏱️ Última leitura: ${ultimaLeituraTimestamp.toLocaleString()}, Diferença: ${diffMinutos.toFixed(2)} min`);
+    console.log(`â±ï¸ Ãšltima leitura: ${ultimaLeituraTimestamp.toLocaleString()}, DiferenÃ§a: ${diffMinutos.toFixed(2)} min`);
     return diffMinutos;
 }
 
-// Guard: evita requisições simultâneas ao GAS
+// Guard: evita requisiÃ§Ãµes simultÃ¢neas ao GAS
 let _loadingData = false;
 
 function iniciarTimer(segundos = refreshTime) {
@@ -69,8 +69,8 @@ function iniciarTimer(segundos = refreshTime) {
         if (segundosRestantes <= 0) {
             segundosRestantes = refreshTime;
             if (timerEl) timerEl.textContent = segundosRestantes;
-            // Só dispara se não houver uma requisição já em andamento
-            if (currentMacAddress && !_loadingData) loadDataFromAPI();
+            // SÃ³ dispara se nÃ£o houver uma requisiÃ§Ã£o jÃ¡ em andamento
+            if (currentEquipmentId && !_loadingData) loadDataFromAPI();
         }
     }, 1000);
 }
@@ -89,11 +89,11 @@ export function setRefreshTime(segundos) {
 
 export async function setupImplementosSelector() {
     const select = document.getElementById('equipment-select-implementos');
-    if (!select) { console.error("❌ Select não encontrado!"); return; }
+    if (!select) { console.error("âŒ Select nÃ£o encontrado!"); return; }
 
     try {
         const equipamentos = await getEquipamentos();
-        console.log("✅ Equipamentos carregados:", equipamentos);
+        console.log("âœ… Equipamentos carregados:", equipamentos);
         
         select.innerHTML = '<option value="">-- Selecione o Equipamento Ativo --</option>';
         let temAtivos = false;
@@ -108,14 +108,14 @@ export async function setupImplementosSelector() {
                 option.value        = equip.codigo;
                 option.text         = `${equip.codigo} - ${equip.descricao} (${mac})`;
                 option.dataset.mac  = mac;
-                // 🔥 PADRÃO 100 igual ao historico.js e equipamentos.js
+                // ðŸ”¥ PADRÃƒO 100 igual ao historico.js e equipamentos.js
                 option.dataset.hmesa  = equip.hMesa  || equip.hmesa  || 100;
                 option.dataset.lmin   = equip.produtivoMin || equip.min || 10;
                 option.dataset.lmax   = equip.produtivoMax || equip.max || 45;
                 option.dataset.grupo  = equip.grupo  || "S/G";
                 option.dataset.equipe = equip.equipe || "S/E";
                 select.appendChild(option);
-                console.log(`➕ ${equip.codigo} | hMesa=${option.dataset.hmesa} min=${option.dataset.lmin} max=${option.dataset.lmax}`);
+                console.log(`âž• ${equip.codigo} | hMesa=${option.dataset.hmesa} min=${option.dataset.lmin} max=${option.dataset.lmax}`);
             }
         });
 
@@ -148,7 +148,7 @@ export async function setupImplementosSelector() {
                     isActive:     true
                 };
 
-                console.log("✅ Equipamento ativo:", equipamentoAtivo);
+                console.log("âœ… Equipamento ativo:", equipamentoAtivo);
                 updateConfigForm(currentLimits);
                 readingsCache = [];
                 ultimaLeituraTimestamp = null;
@@ -170,32 +170,32 @@ export async function setupImplementosSelector() {
         }
 
     } catch (e) { 
-        console.error("❌ Erro no Seletor:", e);
-        showMessage('Erro', 'Não foi possível carregar a lista de equipamentos.', 'error');
+        console.error("âŒ Erro no Seletor:", e);
+        showMessage('Erro', 'NÃ£o foi possÃ­vel carregar a lista de equipamentos.', 'error');
     }
 }
 
 // ============================================================================
 // CARREGAMENTO DE DADOS
-// 🔥 USA recalcularStatusHistorico DO regras.js — MESMO ENGINE DO historico.js
-// → Dashboard e Histórico mostram SEMPRE o mesmo status para a mesma leitura
+// ðŸ”¥ USA recalcularStatusHistorico DO regras.js â€” MESMO ENGINE DO historico.js
+// â†’ Dashboard e HistÃ³rico mostram SEMPRE o mesmo status para a mesma leitura
 // ============================================================================
 
 async function loadDataFromAPI() {
-    if (!currentMacAddress || !equipamentoAtivo) {
-        console.log("⚠️ Nenhum equipamento selecionado");
+    if (!currentEquipmentId || !equipamentoAtivo) {
+        console.log("âš ï¸ Nenhum equipamento selecionado");
         return;
     }
-    // Evita requisições simultâneas — GAS processa uma por vez
+    // Evita requisiÃ§Ãµes simultÃ¢neas â€” GAS processa uma por vez
     if (_loadingData) {
-        console.log("⏳ Requisição já em andamento, ignorando disparo duplicado");
+        console.log("â³ RequisiÃ§Ã£o jÃ¡ em andamento, ignorando disparo duplicado");
         return;
     }
     _loadingData = true;
 
     try {
-        console.log(`📡 Buscando leituras para MAC: ${currentMacAddress}`);
-        const leituras = await getLeiturasESP(currentMacAddress, null, null, 100);
+        console.log(`📡 Buscando leituras para código: ${currentEquipmentId}`);
+        const leituras = await getLeiturasESP(currentEquipmentId, null, null, 100);
         
         const historyBody = document.getElementById('readings-history');
         
@@ -209,9 +209,9 @@ async function loadDataFromAPI() {
             return;
         }
 
-        console.log(`✅ ${leituras.length} leituras brutas recebidas`);
+        console.log(`âœ… ${leituras.length} leituras brutas recebidas`);
 
-        // 🔥 DIAGNÓSTICO DE TIMESTAMP — mostra o valor bruto e convertido da API
+        // ðŸ”¥ DIAGNÃ“STICO DE TIMESTAMP â€” mostra o valor bruto e convertido da API
         if (leituras.length > 0) {
             const amostras = leituras.slice(0, 3);
             amostras.forEach((l, i) => {
@@ -220,15 +220,15 @@ async function loadDataFromAPI() {
                 const dateMs  = new Date(tsMs);
                 const dateSec = new Date(ts * 1000);
                 const dateRaw = new Date(ts);
-                console.log(`🕵️ Leitura[${i}] timestamp bruto=${ts} (tipo:${typeof ts})`);
-                console.log(`   → new Date(ts)       = ${dateRaw.toLocaleString('pt-BR')} (${ts < 1e10 ? 'segundos?' : 'ms?'})`);
-                console.log(`   → new Date(ts*1000)  = ${dateSec.toLocaleString('pt-BR')}`);
-                console.log(`   → formatarTimestamp  = ${formatarTimestampFixo(ts).toLocaleString('pt-BR')}`);
-                console.log(`   → data/hora API:     = ${l.data || '?'} ${l.hora || '?'}`);
+                console.log(`ðŸ•µï¸ Leitura[${i}] timestamp bruto=${ts} (tipo:${typeof ts})`);
+                console.log(`   â†’ new Date(ts)       = ${dateRaw.toLocaleString('pt-BR')} (${ts < 1e10 ? 'segundos?' : 'ms?'})`);
+                console.log(`   â†’ new Date(ts*1000)  = ${dateSec.toLocaleString('pt-BR')}`);
+                console.log(`   â†’ formatarTimestamp  = ${formatarTimestampFixo(ts).toLocaleString('pt-BR')}`);
+                console.log(`   â†’ data/hora API:     = ${l.data || '?'} ${l.hora || '?'}`);
             });
         }
 
-        // 🔥 MESMO ENGINE DO historico.js — garante consistência total
+        // ðŸ”¥ MESMO ENGINE DO historico.js â€” garante consistÃªncia total
         // recalcularStatusHistorico retorna em ordem DECRESCENTE (mais recente primeiro)
         const leiturasRecalculadas = recalcularStatusHistorico(leituras, equipamentoAtivo);
 
@@ -236,7 +236,7 @@ async function loadDataFromAPI() {
         if (leiturasRecalculadas.length > 0) {
             const ulr = leiturasRecalculadas[0];
             ultimaLeituraTimestamp = formatarTimestampFixo(ulr.timestamp);
-            console.log(`📅 Última: ${ultimaLeituraTimestamp.toLocaleString()} | ${ulr.media_cm || 0}cm | ${ulr.statusRecalculado}`);
+            console.log(`ðŸ“… Ãšltima: ${ultimaLeituraTimestamp.toLocaleString()} | ${ulr.media_cm || 0}cm | ${ulr.statusRecalculado}`);
         }
 
         const hMesaAtual  = equipamentoAtivo.hMesa;
@@ -246,7 +246,7 @@ async function loadDataFromAPI() {
         // Montar readingsCache com as 50 mais recentes
         readingsCache = leiturasRecalculadas.slice(0, 50).map((data, idx) => {
             const leituraVal = parseFloat(data.media_cm ?? data.leitura_sensor_cm ?? data.leitura ?? 0) || 0;
-            const ts         = formatarTimestampFixo(data.timestamp); // 🔥 mesmo que historico.js
+            const ts         = formatarTimestampFixo(data.timestamp); // ðŸ”¥ mesmo que historico.js
             const penetracao = hMesaAtual - leituraVal;
             const statusBase = data.statusRecalculado || STATUS.PARADO_MESA;
 
@@ -255,7 +255,7 @@ async function loadDataFromAPI() {
             let motivoTempoReal = data.motivo || '';
             if (idx === 0 && tempoSemLeitura > TEMPO_LIMITE) {
                 statusTempoReal = STATUS.DESLIGADO;
-                motivoTempoReal = `Sem pacotes há ${tempoSemLeitura.toFixed(1)}min`;
+                motivoTempoReal = `Sem pacotes hÃ¡ ${tempoSemLeitura.toFixed(1)}min`;
             }
 
             return {
@@ -275,10 +275,10 @@ async function loadDataFromAPI() {
             };
         });
 
-        console.log(`📊 Cache: ${readingsCache.length} | Recente: ${readingsCache[0]?.leitura}cm | ${readingsCache[0]?.statusBase} | ${readingsCache[0]?.timestamp?.toLocaleString()}`);
+        console.log(`ðŸ“Š Cache: ${readingsCache.length} | Recente: ${readingsCache[0]?.leitura}cm | ${readingsCache[0]?.statusBase} | ${readingsCache[0]?.timestamp?.toLocaleString()}`);
         updateDashboard(readingsCache);
 
-        // 📡 Sincroniza o cronômetro do cabeçalho com o envio do ESP32 de implementos
+        // ðŸ“¡ Sincroniza o cronÃ´metro do cabeÃ§alho com o envio do ESP32 de implementos
         window.dispatchEvent(new CustomEvent('esp32:syncCycle', {
             detail: {
                 modulo: 'implementos',
@@ -288,14 +288,14 @@ async function loadDataFromAPI() {
         }));
 
     } catch (e) { 
-        console.error("❌ Erro no carregamento:", e);
+        console.error("âŒ Erro no carregamento:", e);
     } finally {
         _loadingData = false;
     }
 }
 
 export function forcarAtualizacaoImplementos() {
-    if (!_loadingData && currentMacAddress) {
+    if (!_loadingData && currentEquipmentId) {
         loadDataFromAPI();
     }
 }
@@ -327,7 +327,7 @@ function updateDashboard(readings) {
     const tempoSemLeitura = calcularTempoSemLeitura();
     const TEMPO_LIMITE    = CONFIG_PADRAO.TEMPO_DESLIGADO_MINUTOS;
 
-    console.log(`📊 Dashboard | Sensor: ${latestDepth}cm | Prof: ${latestProfund}cm | Status: ${latestReading.statusBase} | ${tempoSemLeitura.toFixed(1)}min atrás`);
+    console.log(`ðŸ“Š Dashboard | Sensor: ${latestDepth}cm | Prof: ${latestProfund}cm | Status: ${latestReading.statusBase} | ${tempoSemLeitura.toFixed(1)}min atrÃ¡s`);
 
     // Badge Online/Offline
     if (badge) {
@@ -348,7 +348,7 @@ function updateDashboard(readings) {
     updateProductiveChart(readings);
     updateChart(readings);
 
-    // Percentuais de distribuição
+    // Percentuais de distribuiÃ§Ã£o
     const total  = readings.length;
     const ideal  = readings.filter(r => r.statusBase === STATUS.TRABALHANDO_IDEAL).length;
     const raso   = readings.filter(r => r.statusBase === STATUS.TRABALHANDO_RASO).length;
@@ -356,7 +356,7 @@ function updateDashboard(readings) {
     const desloc = readings.filter(r => r.statusBase === STATUS.DESLOCAMENTO).length;
     const parado = readings.filter(r => r.statusBase === STATUS.PARADO_MESA || r.statusBase === STATUS.PARADO_SUSPENSO).length;
 
-    console.log(`📊 Distrib (${total}): Ideal=${ideal} Raso=${raso} Fundo=${fundo} Desloc=${desloc} Parado=${parado}`);
+    console.log(`ðŸ“Š Distrib (${total}): Ideal=${ideal} Raso=${raso} Fundo=${fundo} Desloc=${desloc} Parado=${parado}`);
 
     document.getElementById('ideal-percent') ?.setAttribute('textContent', total ? ((ideal  / total) * 100).toFixed(1) + '%' : '0%');
     document.getElementById('raso-percent')  ?.setAttribute('textContent', total ? ((raso   / total) * 100).toFixed(1) + '%' : '0%');
@@ -463,17 +463,17 @@ function toggleSkeletons(showData = true) {
 }
 
 // ============================================================================
-// GRÁFICOS
+// GRÃFICOS
 // ============================================================================
 
-// Variável global para controlar o tema
+// VariÃ¡vel global para controlar o tema
 let chartTheme = 'dark'; // 'dark' ou 'light'
 
-// Função para alternar tema
+// FunÃ§Ã£o para alternar tema
 export function toggleChartTheme() {
     chartTheme = chartTheme === 'dark' ? 'light' : 'dark';
-    // Recarregar o gráfico com os dados atuais
-    if (currentMacAddress) {
+    // Recarregar o grÃ¡fico com os dados atuais
+    if (currentEquipmentId) {
         loadDataFromAPI();
     }
 }
@@ -482,7 +482,7 @@ function updateChart(readings) {
     const ctxEl = document.getElementById('depth-chart');
     if (!ctxEl) return;
 
-    // Destrói qualquer instância prévia no canvas antes de renderizar (evita "Canvas is already in use")
+    // DestrÃ³i qualquer instÃ¢ncia prÃ©via no canvas antes de renderizar (evita "Canvas is already in use")
     const existingChart = Chart.getChart(ctxEl);
     if (existingChart) {
         try { existingChart.destroy(); } catch (e) {}
@@ -499,7 +499,7 @@ function updateChart(readings) {
     const { hMesa, produtivoMin, produtivoMax } = currentLimits; 
 
     const timestamps = [];
-    const hMesaAtual = [];    // Linha 1: Onde o sensor está fisicamente
+    const hMesaAtual = [];    // Linha 1: Onde o sensor estÃ¡ fisicamente
     const insercaoReal = [];  // Linha 2: O quanto entrou na terra
 
     reversedReadings.forEach(r => {
@@ -510,10 +510,10 @@ function updateChart(readings) {
         const timestamp = formatarTimestampFixo(r.timestamp_formatado || r.data_hora || r.timestamp);
         timestamps.push(timestamp);
 
-        // 1. h_Mesa Atual (Posição no Ar)
+        // 1. h_Mesa Atual (PosiÃ§Ã£o no Ar)
         hMesaAtual.push(sensor);
 
-        // 2. Inserção Real (No Solo)
+        // 2. InserÃ§Ã£o Real (No Solo)
         const diferenca = sensor - hMesa;
         insercaoReal.push(sensor < hMesa ? diferenca : 0);
     });
@@ -538,7 +538,7 @@ function updateChart(readings) {
                         zIndex: 10
                     },
                     {
-                        label: 'Inserção no Solo',
+                        label: 'InserÃ§Ã£o no Solo',
                         data: insercaoReal,
                         borderColor: '#40800c',
                         backgroundColor: 'rgba(64, 128, 12, 0.2)',
@@ -651,8 +651,8 @@ function updateChart(readings) {
                             label: (ctx) => {
                                 const val = ctx.parsed.y;
                                 if (ctx.datasetIndex === 0) {
-                                    const status = val > hMesa ? '🚜 Deslocamento' : 
-                                                  val === hMesa ? '⚙️ Repouso' : '⛏️ Descendo';
+                                    const status = val > hMesa ? 'ðŸšœ Deslocamento' : 
+                                                  val === hMesa ? 'âš™ï¸ Repouso' : 'â›ï¸ Descendo';
                                     return `${status}: ${val.toFixed(1)}cm`;
                                 }
                                 if (ctx.datasetIndex === 1 && val < 0) {
@@ -661,7 +661,7 @@ function updateChart(readings) {
                                     if (prof >= produtivoMin && prof <= produtivoMax) zona = 'Ideal';
                                     else if (prof < produtivoMin) zona = 'Raso';
                                     else zona = 'Fundo';
-                                    return `⛏️ Inserção (${zona}): ${prof.toFixed(1)}cm no solo`;
+                                    return `â›ï¸ InserÃ§Ã£o (${zona}): ${prof.toFixed(1)}cm no solo`;
                                 }
                                 return null;
                             }
@@ -671,7 +671,7 @@ function updateChart(readings) {
             }
         });
     } catch (chartErr) {
-        console.warn('⚠️ Erro ao instanciar depthChart:', chartErr);
+        console.warn('âš ï¸ Erro ao instanciar depthChart:', chartErr);
         const chartCleanup = Chart.getChart(ctxEl);
         if (chartCleanup) {
             try { chartCleanup.destroy(); } catch (e) {}
@@ -680,7 +680,7 @@ function updateChart(readings) {
     }
 }
 
-// 🔥 ADICIONAR BOTÃO DE TEMA NO DASHBOARD
+// ðŸ”¥ ADICIONAR BOTÃƒO DE TEMA NO DASHBOARD
 export function addThemeToggle() {
     const chartContainer = document.querySelector('#depth-chart').parentElement;
     const toggleBtn = document.createElement('button');
@@ -759,10 +759,10 @@ function updateProductiveChart(readings) {
 // POLLING E EXPORTS
 // ============================================================================
 
-// startPolling removido — o timer único (iniciarTimer) controla o polling.
+// startPolling removido â€” o timer Ãºnico (iniciarTimer) controla o polling.
 // Mantido como stub para compatibilidade com unsubscribeAll.
 function startPolling() {
-    console.log("ℹ️ startPolling: usando iniciarTimer como único controlador de polling");
+    console.log("â„¹ï¸ startPolling: usando iniciarTimer como Ãºnico controlador de polling");
 }
 
 export function unsubscribeAll() { 
@@ -781,3 +781,4 @@ export function destroyCharts() {
     if (depthChart)      { try { depthChart.destroy(); } catch (e) {} depthChart = null; }
     if (productiveChart) { try { productiveChart.destroy(); } catch (e) {} productiveChart = null; }
 }
+

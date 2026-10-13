@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -8,7 +8,7 @@
     <!-- CSS Externos -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Fontes e Ícones -->
+    <!-- Fontes e Ãcones -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
 
@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="css/dashboard/perfil.css">
     <link rel="stylesheet" href="css/dashboard/ultimasleituras.css">
 
-    <!-- Fertirrigação -->
+    <!-- FertirrigaÃ§Ã£o -->
     <link rel="stylesheet" href="css/fertirrigacao/cards.css">
     <link rel="stylesheet" href="css/fertirrigacao/analisetemporeal.css">
     <link rel="stylesheet" href="css/fertirrigacao/vazaolagoa.css">
@@ -30,7 +30,7 @@
     <link rel="stylesheet" href="css/fertirrigacao/metaaplic.css">
 
     <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>ðŸŒ±</text></svg>">
 
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -48,49 +48,50 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
     <!--
-    ┌─────────────────────────────────────────────────────────────────────────┐
-    │  ESTRUTURA DE MÓDULOS v6                                                 │
-    │                                                                          │
-    │  js/main.js              ← Entry point único (carrega tudo via import)  │
-    │  js/api.js               ← Cliente HTTP da API                          │
-    │  js/auth.js              ← Autenticação Firebase                        │
-    │  js/firebase-config.js   ← Configuração Firebase principal              │
-    │                                                                          │
-    │  js/dashboard/           ← Módulos do Dashboard/Implementos             │
-    │    tratos.js             ← Gráfico de profundidade + polling             │
-    │    historico.js          ← Consulta histórica                           │
-    │    regras.js             ← Regras de status e cálculos                  │
-    │    Status.js             ← Cards de status                              │
-    │    perfil.js             ← Perfil do usuário                            │
-    │    ultimasleituras.js    ← Tabela de últimas leituras                   │
-    │                                                                          │
-    │  js/fertirrigacao/       ← Módulos de Fertirrigação                     │
-    │    index.js              ← Orquestrador (entry da aba)                  │
-    │    firebase.js           ← Firebase ESP32 (monitoramento-esp32-2551e)   │
-    │    lagoas.js             ← Cards das lagoas + lógica de atualização     │
-    │    chart.js              ← Gráfico de níveis (Chart.js)                 │
-    │    subtabs.js            ← Navegação das sub-abas + autoplay            │
-    │    vazao.js              ← Tabela de vazão + acumulados + meta          │
-    │    input.js              ← Configuração das dimensões dos tanques       │
-    │    regras.js             ← Cálculos: volume tronco de pirâmide         │
-    │    analisetemporeal.js   ← Análise em tempo real                       │
-    │    cards.js              ← Cards de resumo                             │
-    │    metaaplic.js          ← Meta de aplicação                           │
-    │    volume.js             ← Cálculo de volume                           │
-    │    vazaolagoa.js         ← Vazão por lagoa                             │
-    │                                                                          │
-    │  js/equipamentos/        ← Módulos de Equipamentos                      │
-    │    equipamentos.js       ← CRUD de equipamentos                        │
-    │    equipe.js             ← Gerenciamento de equipes                    │
-    │    grupo.js              ← Gerenciamento de grupos                     │
-    │                                                                          │
-    │  js/admin/               ← Módulos de Administração                     │
-    │    users.js              ← Gerenciamento de usuários                   │
-    └─────────────────────────────────────────────────────────────────────────┘
+    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+    â”‚  ESTRUTURA DE MÃ“DULOS v6                                                 â”‚
+    â”‚                                                                          â”‚
+    â”‚  js/main.js              â† Entry point Ãºnico (carrega tudo via import)  â”‚
+    â”‚  js/api.js               â† Cliente HTTP da API                          â”‚
+    â”‚  js/auth.js              â† AutenticaÃ§Ã£o Firebase                        â”‚
+    â”‚  js/firebase-config.js   â† ConfiguraÃ§Ã£o Firebase principal              â”‚
+    â”‚                                                                          â”‚
+    â”‚  js/dashboard/           â† MÃ³dulos do Dashboard/Implementos             â”‚
+    â”‚    tratos.js             â† GrÃ¡fico de profundidade + polling             â”‚
+    â”‚    historico.js          â† Consulta histÃ³rica                           â”‚
+    â”‚    regras.js             â† Regras de status e cÃ¡lculos                  â”‚
+    â”‚    Status.js             â† Cards de status                              â”‚
+    â”‚    perfil.js             â† Perfil do usuÃ¡rio                            â”‚
+    â”‚    ultimasleituras.js    â† Tabela de Ãºltimas leituras                   â”‚
+    â”‚                                                                          â”‚
+    â”‚  js/fertirrigacao/       â† MÃ³dulos de FertirrigaÃ§Ã£o                     â”‚
+    â”‚    index.js              â† Orquestrador (entry da aba)                  â”‚
+    â”‚    firebase.js           â† Firebase ESP32 (monitoramento-esp32-2551e)   â”‚
+    â”‚    lagoas.js             â† Cards das lagoas + lÃ³gica de atualizaÃ§Ã£o     â”‚
+    â”‚    chart.js              â† GrÃ¡fico de nÃ­veis (Chart.js)                 â”‚
+    â”‚    subtabs.js            â† NavegaÃ§Ã£o das sub-abas + autoplay            â”‚
+    â”‚    vazao.js              â† Tabela de vazÃ£o + acumulados + meta          â”‚
+    â”‚    input.js              â† ConfiguraÃ§Ã£o das dimensÃµes dos tanques       â”‚
+    â”‚    regras.js             â† CÃ¡lculos: volume tronco de pirÃ¢mide         â”‚
+    â”‚    analisetemporeal.js   â† AnÃ¡lise em tempo real                       â”‚
+    â”‚    cards.js              â† Cards de resumo                             â”‚
+    â”‚    metaaplic.js          â† Meta de aplicaÃ§Ã£o                           â”‚
+    â”‚    volume.js             â† CÃ¡lculo de volume                           â”‚
+    â”‚    vazaolagoa.js         â† VazÃ£o por lagoa                             â”‚
+    â”‚                                                                          â”‚
+    â”‚  js/equipamentos/        â† MÃ³dulos de Equipamentos                      â”‚
+    â”‚    equipamentos.js       â† CRUD de equipamentos                        â”‚
+    â”‚    equipe.js             â† Gerenciamento de equipes                    â”‚
+    â”‚    grupo.js              â† Gerenciamento de grupos                     â”‚
+    â”‚                                                                          â”‚
+    â”‚  js/admin/               â† MÃ³dulos de AdministraÃ§Ã£o                     â”‚
+    â”‚    users.js              â† Gerenciamento de usuÃ¡rios                   â”‚
+    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
     -->
 
-    <!-- Entry point único — todos os módulos carregados via ES import -->
-    <script type="module" src="js/main.js?v=8.3.6"></script>
+    <!-- Entry point Ãºnico â€” todos os mÃ³dulos carregados via ES import -->
+    <script type="module" src="js/main.js?v=8.4.0"></script>
 
 </body>
 </html>
+

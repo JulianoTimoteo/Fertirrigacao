@@ -1,24 +1,24 @@
-// ============================================================================
+﻿// ============================================================================
 // fertirrigacaomonit.js — Conexão Firestore "fertirrigacaomonit"
-// Lê da coleção "medidas" — documentos com chave {TANQUE}_{DD-MM-YYYY}
-// Polling a cada 30s sincronizado com ESP32.
+// Lê da coleção "medidas" — suporte flexível a documentos por código (T1..T5)
+// Polling a cada 10s sincronizado com ESP32.
 // ============================================================================
 
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBN-jcSaOxiIg9H8Zc2MxdPoBe36g3qnV4",
-  authDomain: "monitoramento-esp32-2551e.firebaseapp.com",
-  databaseURL: "https://monitoramento-esp32-2551e-default-rtdb.firebaseio.com",
-  projectId: "monitoramento-esp32-2551e",
-  storageBucket: "monitoramento-esp32-2551e.firebasestorage.app",
-  messagingSenderId: "1026903641131",
-  appId: "1:1026903641131:web:86e847b5e600914b26ae6e"
+  apiKey: "AIzaSyA6ZPZiDP-f3QeUzchkItKMgn3Xf9-NJTQ",
+  authDomain: "fertirrigacaomonit.firebaseapp.com",
+  projectId: "fertirrigacaomonit",
+  storageBucket: "fertirrigacaomonit.firebasestorage.app",
+  messagingSenderId: "707534137465",
+  appId: "1:707534137465:web:839d7e27bc538de7308ca8",
+  measurementId: "G-7MW20VV2W1"
 };
 
 export const POLL_INTERVAL_MS    = 10 * 1000;
-const ONLINE_THRESHOLD_MS = 15 * 60 * 1000;
+const ONLINE_THRESHOLD_MS = 35 * 60 * 1000; // 35 min: margem para reconexões de rede de campo
 
 export const LAGOA_CONFIG = {
   1: { name: 'Carregamento Usina A', firebaseId: 'T1', tanqueId: 'T1' },
@@ -37,7 +37,7 @@ export function initFertiFirebase() {
   try {
     const app = getApps().length > 0 ? getApp() : initializeApp(FIREBASE_CONFIG);
     _db = getFirestore(app);
-    console.log('[Fertirrigacaomonit] Firestore SDK inicializado');
+    console.log('[Fertirrigacaomonit] Firestore SDK inicializado com projeto:', FIREBASE_CONFIG.projectId);
     return true;
   } catch (e) {
     console.error('[Fertirrigacaomonit] init:', e);
@@ -82,46 +82,78 @@ export async function obterHistoricoMedidas() {
 }
 
 async function _fetchLatestReadings() {
+  if (!_db) return {};
   const medidasRef = collection(_db, 'medidas');
   const snap = await getDocs(medidasRef);
 
   const porTanque = {};
 
   snap.forEach(doc => {
-    const key = doc.id;
-    const m = key.match(/^(T[1-5])_(\d{2})-(\d{2})-(\d{4})$/);
-    if (!m) return;
+    const key = doc.id.trim();
+    const raw = doc.data();
 
-    const tanque  = m[1];
-    const dataDoc = `${m[2]}-${m[3]}-${m[4]}`;
-    const raw     = doc.data();
+    // 1. Identifica qual tanque (T1..T5) este documento representa
+    let tanque = null;
+    const mTanque = key.match(/^(T[1-5])\b/i);
+    if (mTanque) {
+      tanque = mTanque[1].toUpperCase();
+    } else if (raw.tanque) {
+      const mT = String(raw.tanque).trim().match(/^(T[1-5])/i);
+      if (mT) tanque = mT[1].toUpperCase();
+    } else if (raw.codigo) {
+      const mC = String(raw.codigo).trim().match(/^(T[1-5])/i);
+      if (mC) tanque = mC[1].toUpperCase();
+    } else if (raw.equipamento) {
+      const mE = String(raw.equipamento).trim().match(/^(T[1-5])/i);
+      if (mE) tanque = mE[1].toUpperCase();
+    } else if (raw.moduloId) {
+      const mM = String(raw.moduloId).trim().match(/^(T[1-5])/i);
+      if (mM) tanque = mM[1].toUpperCase();
+    }
 
-    // Usa o campo timestamp real do Firestore (mais preciso que a data do ID)
+    if (!tanque) return;
+
+    // 2. Extrai timestamp real com suporte a todos os formatos do Firestore
     let tsReal = 0;
     if (raw.timestamp) {
       if (typeof raw.timestamp.toDate === 'function') {
         tsReal = raw.timestamp.toDate().getTime();
-      } else if (typeof raw.timestamp === 'number') {
-        tsReal = raw.timestamp > 1e12 ? raw.timestamp : raw.timestamp * 1000;
+      } else if (typeof raw.timestamp === 'object' && raw.timestamp.timestampValue) {
+        tsReal = new Date(raw.timestamp.timestampValue).getTime();
       } else if (typeof raw.timestamp === 'string') {
         tsReal = new Date(raw.timestamp).getTime() || 0;
+      } else if (typeof raw.timestamp === 'number') {
+        tsReal = raw.timestamp > 1e12 ? raw.timestamp : raw.timestamp * 1000;
       }
-    }
-    // Fallback para a data do ID (hora do meio-dia para desambiguação)
-    if (!tsReal || tsReal < 1e12) {
-      tsReal = new Date(+m[4], +m[3] - 1, +m[2], 12, 0, 0).getTime();
     }
 
-    if (_dataFiltroAtiva) {
-      if (dataDoc === _dataFiltroAtiva) {
-        if (!porTanque[tanque] || tsReal > porTanque[tanque].ts) {
-          porTanque[tanque] = { ts: tsReal, data: raw };
-        }
+    if (!tsReal && raw.data) {
+      const partes = String(raw.data).split(/[-/]/);
+      if (partes.length === 3) {
+        const horaStr = raw.hora || raw.hora_ultima || '12:00:00';
+        const hp = horaStr.split(':');
+        tsReal = new Date(+partes[2], +partes[1] - 1, +partes[0], +hp[0] || 0, +hp[1] || 0, +hp[2] || 0).getTime();
       }
-    } else {
-      if (!porTanque[tanque] || tsReal > porTanque[tanque].ts) {
-        porTanque[tanque] = { ts: tsReal, data: raw };
-      }
+    }
+
+    if (!tsReal) tsReal = Date.now();
+
+    // 3. Filtro por data se estiver ativo
+    let dataDoc = '';
+    const mData = key.match(/(\d{2})[-/](\d{2})[-/](\d{4})/);
+    if (mData) {
+      dataDoc = `${mData[1]}-${mData[2]}-${mData[3]}`;
+    } else if (raw.data) {
+      dataDoc = String(raw.data).replace(/\//g, '-');
+    }
+
+    if (_dataFiltroAtiva && dataDoc && dataDoc !== _dataFiltroAtiva) {
+      return;
+    }
+
+    // 4. Guarda o registro mais recente para cada tanque
+    if (!porTanque[tanque] || tsReal > porTanque[tanque].ts) {
+      porTanque[tanque] = { ts: tsReal, data: raw };
     }
   });
 
@@ -142,33 +174,52 @@ export function subscribeLagoa(lagoaId, onUpdate) {
 export async function executarPollLeituras() {
   try {
     const readings = await _fetchLatestReadings();
+    console.log('[Fertirrigacaomonit] Lagoas encontradas no Firestore:', Object.keys(readings));
+
     for (const [id, cfg] of Object.entries(LAGOA_CONFIG)) {
       const cb = _callbacks[id];
       if (!cb) continue;
 
       const raw = readings[cfg.firebaseId];
-      if (!raw || raw.ultima_medicao == null) continue;
+      if (!raw) continue;
 
-      const tsFirestore = raw.timestamp?.toDate?.() || raw.timestamp;
-      const tsLeitura   = tsFirestore instanceof Date ? tsFirestore.getTime() : Date.now();
+      const nivel = parseFloat(
+        raw.ultima_medicao != null ? raw.ultima_medicao :
+        raw.nivel          != null ? raw.nivel :
+        raw.sensor         != null ? raw.sensor :
+        raw.distancia      != null ? raw.distancia :
+        raw.media_dia      != null ? raw.media_dia :
+        raw.media_cm) || 0;
+
+      const tsFirestore = raw.timestamp?.toDate?.() || 
+                          (raw.timestamp?.timestampValue ? new Date(raw.timestamp.timestampValue) : null) || 
+                          (typeof raw.timestamp === 'string' ? new Date(raw.timestamp) : null) ||
+                          (typeof raw.timestamp === 'number' ? (raw.timestamp > 1e12 ? new Date(raw.timestamp) : new Date(raw.timestamp * 1000)) : null);
+
+      const tsLeitura   = (tsFirestore instanceof Date && !isNaN(tsFirestore.getTime())) ? tsFirestore.getTime() : Date.now();
       const idadeMs     = Math.max(0, Date.now() - tsLeitura);
       const isRecent    = idadeMs < ONLINE_THRESHOLD_MS;
 
-      const nivel = parseFloat(raw.ultima_medicao) || 0;
+      const horaStr = raw.hora || raw.hora_ultima || (tsLeitura ? new Date(tsLeitura).toLocaleTimeString('pt-BR') : '-');
+      const dataStr = raw.data || (tsLeitura ? new Date(tsLeitura).toLocaleDateString('pt-BR') : '-');
+      const dataHoraStr = raw.data_hora || raw.dataHora || `${dataStr} - ${horaStr}`;
 
       _healthData[cfg.firebaseId] = {
-        lagoaId: +id, nome: cfg.name, mac: 'Firestore',
+        lagoaId: +id, nome: cfg.name, mac: raw.mac || 'Firestore',
         ultimaVezVisto: tsLeitura > 0 ? new Date(tsLeitura) : null,
-        ultimaDataHora: raw.data_hora || ((raw.data || '-') + ' - ' + (raw.hora_ultima || '-')),
+        ultimaDataHora: dataHoraStr,
         statusSensor: 'OK', nivel, online: isRecent,
         idadeMinutos: Math.round(idadeMs / 60000),
         totalLeituras: 1, erros: 0, sistemaAtivo: true
       };
 
       cb({
-        nivel, hora: raw.hora_ultima, data: raw.data,
-        data_hora: raw.data_hora || ((raw.data || '-') + ' - ' + (raw.hora_ultima || '-')),
-        mac: 'Firestore', status: 'OK',
+        nivel, 
+        hora: horaStr,
+        data: dataStr,
+        data_hora: dataHoraStr,
+        mac: raw.mac || 'Firestore', 
+        status: raw.status || 'OK',
         isStale: !isRecent,
         idadeMin: Math.round(idadeMs / 60000)
       });
@@ -176,7 +227,7 @@ export async function executarPollLeituras() {
       window.dispatchEvent(new CustomEvent('esp32:healthUpdate', { detail: getESP32Health() }));
     }
 
-    // 📡 Notifica sincronização do ciclo do ESP32 para o cronômetro do cabeçalho
+    // Notifica sincronização do ciclo do ESP32 para o cronômetro do cabeçalho
     window.dispatchEvent(new CustomEvent('esp32:syncCycle', {
       detail: {
         modulo: 'fertirrigacao',
