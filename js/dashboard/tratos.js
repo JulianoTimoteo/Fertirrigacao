@@ -69,8 +69,10 @@ function iniciarTimer(segundos = refreshTime) {
         if (segundosRestantes <= 0) {
             segundosRestantes = refreshTime;
             if (timerEl) timerEl.textContent = segundosRestantes;
-            // Só dispara se não houver uma requisição já em andamento
-            if (currentEquipmentId && !_loadingData) loadDataFromAPI();
+            // Só dispara se a aba de implementos estiver ativa e não houver requisição em andamento
+            const tabImpl = document.getElementById('implementos-tab');
+            const abaAtiva = tabImpl && tabImpl.classList.contains('active');
+            if (abaAtiva && currentEquipmentId && !_loadingData) loadDataFromAPI();
         }
     }, 1000);
 }
@@ -108,7 +110,7 @@ export async function setupImplementosSelector() {
                 option.value        = equip.codigo;
                 option.text         = `${equip.codigo} - ${equip.descricao} (${mac})`;
                 option.dataset.mac  = mac;
-                // x PADRÒO 100 igual ao historico.js e equipamentos.js
+                // x  PADRÒO 100 igual ao historico.js e equipamentos.js
                 option.dataset.hmesa  = equip.hMesa  || equip.hmesa  || 100;
                 option.dataset.lmin   = equip.produtivoMin || equip.min || 10;
                 option.dataset.lmax   = equip.produtivoMax || equip.max || 45;
@@ -153,13 +155,25 @@ export async function setupImplementosSelector() {
                 readingsCache = [];
                 ultimaLeituraTimestamp = null;
                 iniciarTimer(refreshTime);
-                // Carrega imediatamente ao selecionar equipamento
-                if (!_loadingData) loadDataFromAPI();
+                
+                // Carrega imediatamente ao selecionar equipamento SE a aba implementos estiver visível
+                const tabImpl = document.getElementById('implementos-tab');
+                const abaAtiva = tabImpl && tabImpl.classList.contains('active');
+                if (abaAtiva && !_loadingData) loadDataFromAPI();
             }
         });
 
         if (select.options.length > 1) {
-            select.selectedIndex = 1;
+            // Procura preferencialmente um implemento agrícola (TR-* ou que não seja T1..T5)
+            let chosenIdx = -1;
+            for (let i = 1; i < select.options.length; i++) {
+                const val = select.options[i].value;
+                if (!/^T[1-5]$/i.test(val)) {
+                    chosenIdx = i;
+                    break;
+                }
+            }
+            select.selectedIndex = chosenIdx !== -1 ? chosenIdx : 1;
             select.dispatchEvent(new Event('change'));
         }
 

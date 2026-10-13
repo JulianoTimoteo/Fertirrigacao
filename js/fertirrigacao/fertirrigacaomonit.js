@@ -17,8 +17,8 @@ const FIREBASE_CONFIG = {
   measurementId: "G-7MW20VV2W1"
 };
 
-export const POLL_INTERVAL_MS    = 10 * 1000;
-const ONLINE_THRESHOLD_MS = 35 * 60 * 1000; // 35 min: margem para reconexões de rede de campo
+export const POLL_INTERVAL_MS    = 30 * 1000; // 30s sincronizado com o cronômetro do dashboard
+const ONLINE_THRESHOLD_MS = 35 * 60 * 1000; // 35 min: margem para ciclo de 10 min do ESP32 mais tolerância
 
 export const LAGOA_CONFIG = {
   1: { name: 'Carregamento Usina A', firebaseId: 'T1', tanqueId: 'T1' },
@@ -128,6 +128,8 @@ async function _fetchLatestReadings() {
   const snap = await getDocs(medidasRef);
 
   const porTanque = {};
+  const hoje = new Date();
+  const hojeDoc = `${String(hoje.getDate()).padStart(2, '0')}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${hoje.getFullYear()}`;
 
   snap.forEach(doc => {
     const key = doc.id.trim();
@@ -168,6 +170,13 @@ async function _fetchLatestReadings() {
       }
     }
 
+    if (!tsReal && raw.data_hora) {
+      const m = String(raw.data_hora).match(/(\d{2})[-/](\d{2})[-/](\d{4})\s*[-_]?\s*(\d{2}):(\d{2})(?::(\d{2}))?/);
+      if (m) {
+        tsReal = new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5], +(m[6] || 0)).getTime();
+      }
+    }
+
     if (!tsReal && raw.data) {
       const partes = String(raw.data).split(/[-/]/);
       if (partes.length === 3) {
@@ -177,7 +186,7 @@ async function _fetchLatestReadings() {
       }
     }
 
-    if (!tsReal) tsReal = Date.now();
+    if (!tsReal) tsReal = 0;
 
     // 3. Filtro por data se estiver ativo
     let dataDoc = '';
@@ -200,8 +209,53 @@ async function _fetchLatestReadings() {
 
   const results = {};
   for (const [tanque, entry] of Object.entries(porTanque)) {
-    results[tanque] = entry.data;
+    results[tanque] = { ...entry.data };
   }
+
+  // 5. Para o modo Tempo Real (ou data selecionada), confere se a subcoleção "historico" tem ponto mais novo
+  const dataAlvo = _dataFiltroAtiva || hojeDoc;
+  for (const tanque of Object.keys(results)) {
+    try {
+      const docId = `${tanque}_${dataAlvo}`;
+      const histRef = collection(_db, 'medidas', docId, 'historico');
+      const snapHist = await getDocs(histRef);
+      if (!snapHist.empty) {
+        let maxTs = porTanque[tanque]?.ts || 0;
+        let ultimoPonto = null;
+
+        snapHist.forEach(d => {
+          const pt = d.data();
+          let tsPt = 0;
+          if (pt.timestamp) {
+            if (typeof pt.timestamp.toDate === 'function') tsPt = pt.timestamp.toDate().getTime();
+            else if (pt.timestamp.timestampValue) tsPt = new Date(pt.timestamp.timestampValue).getTime();
+            else if (typeof pt.timestamp === 'string') tsPt = new Date(pt.timestamp).getTime();
+          }
+          if (!tsPt && pt.hora) {
+            const hp = pt.hora.split(':');
+            const dp = dataAlvo.split('-');
+            tsPt = new Date(+dp[2], +dp[1] - 1, +dp[0], +hp[0] || 0, +hp[1] || 0, +hp[2] || 0).getTime();
+          }
+          if (tsPt > maxTs) {
+            maxTs = tsPt;
+            ultimoPonto = { ...pt, id: d.id, ts: tsPt };
+          }
+        });
+
+        if (ultimoPonto) {
+          results[tanque].ultima_medicao = ultimoPonto.nivel;
+          results[tanque].nivel          = ultimoPonto.nivel;
+          results[tanque].hora_ultima    = ultimoPonto.hora;
+          results[tanque].hora           = ultimoPonto.hora;
+          results[tanque].data_hora      = `${dataAlvo.replace(/-/g, '/')} - ${ultimoPonto.hora}`;
+          results[tanque].timestamp      = ultimoPonto.timestamp || new Date(maxTs);
+        }
+      }
+    } catch(err) {
+      // Ignora falhas pontuais de subcoleção
+    }
+  }
+
   return results;
 }
 
@@ -267,15 +321,6 @@ export async function executarPollLeituras() {
 
       window.dispatchEvent(new CustomEvent('esp32:healthUpdate', { detail: getESP32Health() }));
     }
-
-    // Notifica sincronização do ciclo do ESP32 para o cronômetro do cabeçalho
-    window.dispatchEvent(new CustomEvent('esp32:syncCycle', {
-      detail: {
-        modulo: 'fertirrigacao',
-        intervalSeconds: POLL_INTERVAL_MS / 1000,
-        timestamp: Date.now()
-      }
-    }));
   } catch (e) {
     console.warn('[Fertirrigacaomonit] Polling:', e.message);
   }

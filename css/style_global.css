@@ -552,8 +552,16 @@ input::placeholder { color: var(--text-3) !important; }
   font-size: 1rem; color: var(--c-primary);
   transition: transform 0.6s ease;
 }
+@keyframes spin-refresh {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 #auto-refresh-widget.refreshing .material-symbols-outlined {
-  transform: rotate(360deg);
+  animation: spin-refresh 0.8s linear infinite;
+  color: #10b981;
+}
+#auto-refresh-widget:active {
+  transform: scale(0.96);
 }
 #auto-refresh-countdown {
   font-variant-numeric: tabular-nums;
