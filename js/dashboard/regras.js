@@ -238,30 +238,34 @@ function calcularStatusPorLeitura({
     cfg,
     modoHistorico = false
 }) {
+    const leituraNum = parseFloat(leituraAtual) || 0;
+    const hMesaNum   = parseFloat(hMesa) || 100;
+    const profMinNum = parseFloat(profundidadeMin) || 10;
+    const profMaxNum = parseFloat(profundidadeMax) || 70;
     
     // Calcula a profundidade de inserção
-    const profundidade = hMesa - leituraAtual;
+    const profundidade = hMesaNum - leituraNum;
     
     // ===== 1. DESLOCAMENTO (acima da mesa) =====
-    if (leituraAtual > hMesa + cfg.TOLERANCIA_PARADO) {
+    if (leituraNum > hMesaNum + cfg.TOLERANCIA_PARADO) {
         return {
             status: STATUS.DESLOCAMENTO,
             profundidadeCalculada: profundidade,
-            motivo: `Equipamento acima da mesa (${leituraAtual.toFixed(2)}cm)`
+            motivo: `Equipamento acima da mesa (${leituraNum.toFixed(2)}cm)`
         };
     }
     
     // ===== 2. PARADO NA MESA (muito próximo de hMesa) =====
-    if (Math.abs(leituraAtual - hMesa) <= cfg.TOLERANCIA_PARADO * 2) {
+    if (Math.abs(leituraNum - hMesaNum) <= cfg.TOLERANCIA_PARADO * 2) {
         return {
             status: STATUS.PARADO_MESA,
             profundidadeCalculada: profundidade,
-            motivo: `Parado na mesa (${leituraAtual.toFixed(2)}cm)`
+            motivo: `Parado na mesa (${leituraNum.toFixed(2)}cm)`
         };
     }
     
     // ===== 3. TRABALHANDO (baseado na profundidade) =====
-    if (profundidade >= profundidadeMin && profundidade <= profundidadeMax) {
+    if (profundidade >= profMinNum && profundidade <= profMaxNum) {
         return {
             status: STATUS.TRABALHANDO_IDEAL,
             profundidadeCalculada: profundidade,
@@ -269,7 +273,7 @@ function calcularStatusPorLeitura({
         };
     }
     
-    if (profundidade < profundidadeMin && profundidade > 0) {
+    if (profundidade < profMinNum && profundidade > 0) {
         return {
             status: STATUS.TRABALHANDO_RASO,
             profundidadeCalculada: profundidade,
@@ -277,7 +281,7 @@ function calcularStatusPorLeitura({
         };
     }
     
-    if (profundidade > profundidadeMax) {
+    if (profundidade > profMaxNum) {
         return {
             status: STATUS.TRABALHANDO_FUNDO,
             profundidadeCalculada: profundidade,
@@ -331,12 +335,12 @@ export function recalcularStatusHistorico(leituras, equipamento) {
     for (const leitura of leiturasOrdenadas) {
         const timestamp = formatarTimestampFixo(leitura.timestamp);
         
-        // 🔥 PEGAR VALORES CORRETOS DO EQUIPAMENTO
-        const hMesaVal = equipamento.hMesa || equipamento.hmesa || 45; // Agora 45, não 100
-        const minVal = equipamento.produtivoMin || equipamento.min || 10;
-        const maxVal = equipamento.produtivoMax || equipamento.max || 30;
+        // PEGAR VALORES CORRETOS DO EQUIPAMENTO
+        const hMesaVal = parseFloat(equipamento.hMesa || equipamento.hmesa || 100);
+        const minVal = parseFloat(equipamento.produtivoMin || equipamento.min || 10);
+        const maxVal = parseFloat(equipamento.produtivoMax || equipamento.max || 70);
         
-        const leituraVal = leitura.media_cm || leitura.leitura_sensor_cm || leitura.leitura || 0;
+        const leituraVal = parseFloat(leitura.leitura ?? leitura.media_cm ?? leitura.leitura_sensor_cm ?? 0) || 0;
         
         const resultado = calcularStatusPorLeitura({
             mac: equipamento.mac,

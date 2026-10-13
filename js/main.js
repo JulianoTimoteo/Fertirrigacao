@@ -1,7 +1,7 @@
 import { 
     apiGet,
     apiPost
-} from './api.js';
+} from './api.js?v=8.3.4';
 
 import { 
     setupAuthListeners, 
@@ -9,7 +9,7 @@ import {
     setCurrentUserProfile,
     handlePasswordReset,
     handleLogout
-} from './auth.js';
+} from './auth.js?v=8.3.4';
 
 import { 
     setupImplementosSelector,
@@ -17,30 +17,30 @@ import {
     destroyCharts,
     setRefreshTime,
     forcarAtualizacaoImplementos
-} from './dashboard/tratos.js';
+} from './dashboard/tratos.js?v=8.3.4';
 
 import { 
     setupHistoricoTab,
     destroyHistoricoChart
-} from './dashboard/historico.js';
+} from './dashboard/historico.js?v=8.3.4';
 
 import { 
     setupEquipamentosTab
-} from './equipamentos/equipamentos.js';
+} from './equipamentos/equipamentos.js?v=8.3.4';
 
 import { 
     setupAdminTabs,
     loadAdminData,
     handleAddUser
-} from './admin/users.js';
+} from './admin/users.js?v=8.3.4';
 
-import { formatarTimestampFixo } from './dashboard/regras.js';
+import { formatarTimestampFixo } from './dashboard/regras.js?v=8.3.4';
 
 // 🔥 IMPORTAÇÃO DO MÓDULO DE FERTIRRIGAÇÃO
-import fertirrigacao from './fertirrigacao/index.js';
+import fertirrigacao from './fertirrigacao/index.js?v=8.3.4';
 
 // 🌟 IMPORTAÇÃO DO SUBMENU DE PERFIL / AVATAR
-import { setupProfileMenu } from './dashboard/perfil.js';
+import { setupProfileMenu } from './dashboard/perfil.js?v=8.3.4';
 
 // Variável global do perfil do usuário
 let currentUserProfile = null;
