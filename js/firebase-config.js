@@ -1,5 +1,5 @@
 // ============================================================================
-// firebase-config.js � Conexão Direta ao Firestore (fertirrigacaomonit)
+// firebase-config.js  Conexão Direta ao Firestore (fertirrigacaomonit)
 // Gerencia Usuários, Equipamentos, Grupos e Equipes diretamente no Firebase
 // ============================================================================
 
@@ -57,5 +57,5 @@ export {
     orderBy
 };
 
-console.log("�x� Firebase Firestore inicializado diretamente para Usuários e Equipamentos!");
+console.log("x Firebase Firestore inicializado diretamente para Usuários e Equipamentos!");
 

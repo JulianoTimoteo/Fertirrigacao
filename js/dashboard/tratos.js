@@ -17,7 +17,7 @@ let currentMacAddress = null;
 let currentLimits = { 
     produtivoMin: 10.0, 
     produtivoMax: 45.0, 
-    hMesa: 100.0,       // �x� PADRÒO 100.0 igual ao historico.js e equipamentos.js
+    hMesa: 100.0,       // x PADRÒO 100.0 igual ao historico.js e equipamentos.js
     paradoTolerancia: 5.0 
 };
 let readingsCache = [];
@@ -89,11 +89,11 @@ export function setRefreshTime(segundos) {
 
 export async function setupImplementosSelector() {
     const select = document.getElementById('equipment-select-implementos');
-    if (!select) { console.error("�R Select não encontrado!"); return; }
+    if (!select) { console.error("R Select não encontrado!"); return; }
 
     try {
         const equipamentos = await getEquipamentos();
-        console.log("�S& Equipamentos carregados:", equipamentos);
+        console.log("S& Equipamentos carregados:", equipamentos);
         
         select.innerHTML = '<option value="">-- Selecione o Equipamento Ativo --</option>';
         let temAtivos = false;
@@ -108,14 +108,14 @@ export async function setupImplementosSelector() {
                 option.value        = equip.codigo;
                 option.text         = `${equip.codigo} - ${equip.descricao} (${mac})`;
                 option.dataset.mac  = mac;
-                // �x� PADRÒO 100 igual ao historico.js e equipamentos.js
+                // x PADRÒO 100 igual ao historico.js e equipamentos.js
                 option.dataset.hmesa  = equip.hMesa  || equip.hmesa  || 100;
                 option.dataset.lmin   = equip.produtivoMin || equip.min || 10;
                 option.dataset.lmax   = equip.produtivoMax || equip.max || 45;
                 option.dataset.grupo  = equip.grupo  || "S/G";
                 option.dataset.equipe = equip.equipe || "S/E";
                 select.appendChild(option);
-                console.log(`�~" ${equip.codigo} | hMesa=${option.dataset.hmesa} min=${option.dataset.lmin} max=${option.dataset.lmax}`);
+                console.log(`~" ${equip.codigo} | hMesa=${option.dataset.hmesa} min=${option.dataset.lmin} max=${option.dataset.lmax}`);
             }
         });
 
@@ -148,7 +148,7 @@ export async function setupImplementosSelector() {
                     isActive:     true
                 };
 
-                console.log("�S& Equipamento ativo:", equipamentoAtivo);
+                console.log("S& Equipamento ativo:", equipamentoAtivo);
                 updateConfigForm(currentLimits);
                 readingsCache = [];
                 ultimaLeituraTimestamp = null;
@@ -170,23 +170,23 @@ export async function setupImplementosSelector() {
         }
 
     } catch (e) { 
-        console.error("�R Erro no Seletor:", e);
+        console.error("R Erro no Seletor:", e);
         showMessage('Erro', 'Não foi possível carregar a lista de equipamentos.', 'error');
     }
 }
 
 // ============================================================================
 // CARREGAMENTO DE DADOS
-// �x� USA recalcularStatusHistorico DO regras.js � MESMO ENGINE DO historico.js
-// �  Dashboard e Histórico mostram SEMPRE o mesmo status para a mesma leitura
+// x USA recalcularStatusHistorico DO regras.js  MESMO ENGINE DO historico.js
+//   Dashboard e Histórico mostram SEMPRE o mesmo status para a mesma leitura
 // ============================================================================
 
 async function loadDataFromAPI() {
     if (!currentEquipmentId || !equipamentoAtivo) {
-        console.log("�a�️ Nenhum equipamento selecionado");
+        console.log("a️ Nenhum equipamento selecionado");
         return;
     }
-    // Evita requisições simultâneas � GAS processa uma por vez
+    // Evita requisições simultâneas  GAS processa uma por vez
     if (_loadingData) {
         console.log("⏳ Requisição já em andamento, ignorando disparo duplicado");
         return;
@@ -194,7 +194,7 @@ async function loadDataFromAPI() {
     _loadingData = true;
 
     try {
-        console.log(`=� Buscando leituras para c�digo: ${currentEquipmentId}`);
+        console.log(`= Buscando leituras para cdigo: ${currentEquipmentId}`);
         const leituras = await getLeiturasESP(currentEquipmentId, null, null, 100);
         
         const historyBody = document.getElementById('readings-history');
@@ -209,9 +209,9 @@ async function loadDataFromAPI() {
             return;
         }
 
-        console.log(`�S& ${leituras.length} leituras brutas recebidas`);
+        console.log(`S& ${leituras.length} leituras brutas recebidas`);
 
-        // �x� DIAGN�STICO DE TIMESTAMP � mostra o valor bruto e convertido da API
+        // x DIAGNSTICO DE TIMESTAMP  mostra o valor bruto e convertido da API
         if (leituras.length > 0) {
             const amostras = leituras.slice(0, 3);
             amostras.forEach((l, i) => {
@@ -221,14 +221,14 @@ async function loadDataFromAPI() {
                 const dateSec = new Date(ts * 1000);
                 const dateRaw = new Date(ts);
                 console.log(`🕵️ Leitura[${i}] timestamp bruto=${ts} (tipo:${typeof ts})`);
-                console.log(`   �  new Date(ts)       = ${dateRaw.toLocaleString('pt-BR')} (${ts < 1e10 ? 'segundos?' : 'ms?'})`);
-                console.log(`   �  new Date(ts*1000)  = ${dateSec.toLocaleString('pt-BR')}`);
-                console.log(`   �  formatarTimestamp  = ${formatarTimestampFixo(ts).toLocaleString('pt-BR')}`);
-                console.log(`   �  data/hora API:     = ${l.data || '?'} ${l.hora || '?'}`);
+                console.log(`     new Date(ts)       = ${dateRaw.toLocaleString('pt-BR')} (${ts < 1e10 ? 'segundos?' : 'ms?'})`);
+                console.log(`     new Date(ts*1000)  = ${dateSec.toLocaleString('pt-BR')}`);
+                console.log(`     formatarTimestamp  = ${formatarTimestampFixo(ts).toLocaleString('pt-BR')}`);
+                console.log(`     data/hora API:     = ${l.data || '?'} ${l.hora || '?'}`);
             });
         }
 
-        // �x� MESMO ENGINE DO historico.js � garante consistência total
+        // x MESMO ENGINE DO historico.js  garante consistência total
         // recalcularStatusHistorico retorna em ordem DECRESCENTE (mais recente primeiro)
         const leiturasRecalculadas = recalcularStatusHistorico(leituras, equipamentoAtivo);
 
@@ -246,7 +246,7 @@ async function loadDataFromAPI() {
         // Montar readingsCache com as 50 mais recentes
         readingsCache = leiturasRecalculadas.slice(0, 50).map((data, idx) => {
             const leituraVal = parseFloat(data.media_cm ?? data.leitura_sensor_cm ?? data.leitura ?? 0) || 0;
-            const ts         = formatarTimestampFixo(data.timestamp); // �x� mesmo que historico.js
+            const ts         = formatarTimestampFixo(data.timestamp); // x mesmo que historico.js
             const penetracao = hMesaAtual - leituraVal;
             const statusBase = data.statusRecalculado || STATUS.PARADO_MESA;
 
@@ -278,7 +278,7 @@ async function loadDataFromAPI() {
         console.log(`📊 Cache: ${readingsCache.length} | Recente: ${readingsCache[0]?.leitura}cm | ${readingsCache[0]?.statusBase} | ${readingsCache[0]?.timestamp?.toLocaleString()}`);
         updateDashboard(readingsCache);
 
-        // �x� Sincroniza o cronômetro do cabeçalho com o envio do ESP32 de implementos
+        // x Sincroniza o cronômetro do cabeçalho com o envio do ESP32 de implementos
         window.dispatchEvent(new CustomEvent('esp32:syncCycle', {
             detail: {
                 modulo: 'implementos',
@@ -288,7 +288,7 @@ async function loadDataFromAPI() {
         }));
 
     } catch (e) { 
-        console.error("�R Erro no carregamento:", e);
+        console.error("R Erro no carregamento:", e);
     } finally {
         _loadingData = false;
     }
@@ -651,8 +651,8 @@ function updateChart(readings) {
                             label: (ctx) => {
                                 const val = ctx.parsed.y;
                                 if (ctx.datasetIndex === 0) {
-                                    const status = val > hMesa ? '�xaS Deslocamento' : 
-                                                  val === hMesa ? '�a"️ Repouso' : '�:�️ Descendo';
+                                    const status = val > hMesa ? 'xaS Deslocamento' : 
+                                                  val === hMesa ? 'a"️ Repouso' : ':️ Descendo';
                                     return `${status}: ${val.toFixed(1)}cm`;
                                 }
                                 if (ctx.datasetIndex === 1 && val < 0) {
@@ -661,7 +661,7 @@ function updateChart(readings) {
                                     if (prof >= produtivoMin && prof <= produtivoMax) zona = 'Ideal';
                                     else if (prof < produtivoMin) zona = 'Raso';
                                     else zona = 'Fundo';
-                                    return `�:�️ Inserção (${zona}): ${prof.toFixed(1)}cm no solo`;
+                                    return `:️ Inserção (${zona}): ${prof.toFixed(1)}cm no solo`;
                                 }
                                 return null;
                             }
@@ -671,7 +671,7 @@ function updateChart(readings) {
             }
         });
     } catch (chartErr) {
-        console.warn('�a�️ Erro ao instanciar depthChart:', chartErr);
+        console.warn('a️ Erro ao instanciar depthChart:', chartErr);
         const chartCleanup = Chart.getChart(ctxEl);
         if (chartCleanup) {
             try { chartCleanup.destroy(); } catch (e) {}
@@ -680,7 +680,7 @@ function updateChart(readings) {
     }
 }
 
-// �x� ADICIONAR BOTÒO DE TEMA NO DASHBOARD
+// x ADICIONAR BOTÒO DE TEMA NO DASHBOARD
 export function addThemeToggle() {
     const chartContainer = document.querySelector('#depth-chart').parentElement;
     const toggleBtn = document.createElement('button');
@@ -759,10 +759,10 @@ function updateProductiveChart(readings) {
 // POLLING E EXPORTS
 // ============================================================================
 
-// startPolling removido � o timer único (iniciarTimer) controla o polling.
+// startPolling removido  o timer único (iniciarTimer) controla o polling.
 // Mantido como stub para compatibilidade com unsubscribeAll.
 function startPolling() {
-    console.log("��️ startPolling: usando iniciarTimer como único controlador de polling");
+    console.log("️ startPolling: usando iniciarTimer como único controlador de polling");
 }
 
 export function unsubscribeAll() { 

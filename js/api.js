@@ -1,5 +1,5 @@
 // ============================================================================
-// api.js � Ponto de Conexão: Roteamento Direto para o Firebase Firestore
+// api.js  Ponto de Conexão: Roteamento Direto para o Firebase Firestore
 // Substitui a API do Google Sheets por persistência direta no Firebase
 // ============================================================================
 
@@ -42,7 +42,7 @@ export async function apiGet(action, params = {}) {
         case 'getLeiturasESP':
             return getLeiturasESP(params.mac, params.desde, params.ate, params.limite);
         default:
-            console.log(`��️ [apiGet] Ação local/mock: ${action}`);
+            console.log(`️ [apiGet] Ação local/mock: ${action}`);
             return [];
     }
 }
@@ -94,13 +94,13 @@ export async function apiPost(action, data = {}) {
             return fbDeleteEquipe(data.id);
             
         default:
-            console.log(`��️ [apiPost] Ação tratada no Firebase: ${action}`, data);
+            console.log(`️ [apiPost] Ação tratada no Firebase: ${action}`, data);
             return { status: 'success', data };
     }
 }
 
 // ============================================================================
-// EXPORTS ESPECÍFICOS PARA COMPATIBILIDADE COM TODOS OS M�DULOS
+// EXPORTS ESPECÍFICOS PARA COMPATIBILIDADE COM TODOS OS MDULOS
 // ============================================================================
 
 export async function getEquipamentos({ forceRefresh = false } = {}) {
@@ -144,7 +144,7 @@ export async function getLeiturasESP(identificador, desde = null, ate = null, li
         const leituras = [];
         let idFiltro = identificador ? String(identificador).toUpperCase().trim() : '';
 
-        // Mapeamento: MAC f�sico, nome da lagoa, ou c�digo direto -> c�digo do tanque
+        // Mapeamento: MAC fsico, nome da lagoa, ou cdigo direto -> cdigo do tanque
         if (idFiltro.includes('84:1F:E8:38:F9:1C') || idFiltro.includes('CASTANHA') || idFiltro === 'ESP32_T4') idFiltro = 'T4';
         else if (idFiltro.includes('USINA A') || idFiltro === 'ESP32_T1') idFiltro = 'T1';
         else if (idFiltro.includes('USINA B') || idFiltro === 'ESP32_T2') idFiltro = 'T2';
@@ -159,7 +159,7 @@ export async function getLeiturasESP(identificador, desde = null, ate = null, li
             const data = docSnap.data();
             const tanque = (data.tanque || docId.split('_')[0] || '').toUpperCase();
 
-            // Filtra por c�digo do equipamento (T1..T5, TR-01, TR-02, TR-03)
+            // Filtra por cdigo do equipamento (T1..T5, TR-01, TR-02, TR-03)
             if (idFiltro) {
                 const docTanque = docId.split('_')[0].toUpperCase();
                 const matchDoc   = docTanque === idFiltro;
@@ -268,7 +268,7 @@ export async function testConnection() {
     return { status: 'success', message: 'Conectado diretamente ao Firebase Firestore' };
 }
 
-console.log("�S& API reconfigurada: Equipamentos, Usuários, Grupos e Equipes agora 100% no Firebase!");
+console.log("S& API reconfigurada: Equipamentos, Usuários, Grupos e Equipes agora 100% no Firebase!");
 
 
 

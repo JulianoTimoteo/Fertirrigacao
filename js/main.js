@@ -1,7 +1,7 @@
 import { 
     apiGet,
     apiPost
-} from './api.js?v=8.4.2';
+} from './api.js?v=8.4.3';
 
 import { 
     setupAuthListeners, 
@@ -9,7 +9,7 @@ import {
     setCurrentUserProfile,
     handlePasswordReset,
     handleLogout
-} from './auth.js?v=8.4.2';
+} from './auth.js?v=8.4.3';
 
 import { 
     setupImplementosSelector,
@@ -17,36 +17,36 @@ import {
     destroyCharts,
     setRefreshTime,
     forcarAtualizacaoImplementos
-} from './dashboard/tratos.js?v=8.4.2';
+} from './dashboard/tratos.js?v=8.4.3';
 
 import { 
     setupHistoricoTab,
     destroyHistoricoChart
-} from './dashboard/historico.js?v=8.4.2';
+} from './dashboard/historico.js?v=8.4.3';
 
 import { 
     setupEquipamentosTab
-} from './equipamentos/equipamentos.js?v=8.4.2';
+} from './equipamentos/equipamentos.js?v=8.4.3';
 
 import { 
     setupAdminTabs,
     loadAdminData,
     handleAddUser
-} from './admin/users.js?v=8.4.2';
+} from './admin/users.js?v=8.4.3';
 
-import { formatarTimestampFixo } from './dashboard/regras.js?v=8.4.2';
+import { formatarTimestampFixo } from './dashboard/regras.js?v=8.4.3';
 
-// �x� IMPORTA�!ÒO DO M�DULO DE FERTIRRIGA�!ÒO
-import fertirrigacao from './fertirrigacao/index.js?v=8.4.2';
+// x IMPORTA!ÒO DO MDULO DE FERTIRRIGA!ÒO
+import fertirrigacao from './fertirrigacao/index.js?v=8.4.3';
 
-// �xRx IMPORTA�!ÒO DO SUBMENU DE PERFIL / AVATAR
-import { setupProfileMenu } from './dashboard/perfil.js?v=8.4.2';
+// xRx IMPORTA!ÒO DO SUBMENU DE PERFIL / AVATAR
+import { setupProfileMenu } from './dashboard/perfil.js?v=8.4.3';
 
 // Variável global do perfil do usuário
 let currentUserProfile = null;
 
 // ============================================================================
-// FUN�!�"ES UTILITÁRIAS
+// FUN!"ES UTILITÁRIAS
 // ============================================================================
 
 export function formatTimestamp(timestamp) {
@@ -137,7 +137,7 @@ export function showConfirmationModal(message, onConfirm) {
 }
 
 // ============================================================================
-// INICIALIZA�!ÒO
+// INICIALIZA!ÒO
 // ============================================================================
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -242,7 +242,7 @@ function initializeDashboard() {
         });
     }
 
-    console.log("�x� Inicializando painel de administração");
+    console.log("x Inicializando painel de administração");
     
     const addUserForm = document.getElementById('add-user-form');
     if (addUserForm) {
@@ -282,7 +282,7 @@ function setupTabNavigation() {
             setTimeout(() => fertirrigacao.init(), 100);
         }
 
-        // �S& FIX: Só troca a classe de cor da aba ativa � NÒO substitui className inteiro
+        // S& FIX: Só troca a classe de cor da aba ativa  NÒO substitui className inteiro
         // Remove somente as classes de cor de aba anteriores, preservando "sidebar"
         sidebar.classList.remove('fertirrigacao', 'implementos', 'historico', 'limites', 'cadastro');
         sidebar.classList.add(tabId);
@@ -453,7 +453,7 @@ function getAppHTML(user, profile) {
                         <span id="theme-label">Claro</span>
                     </button>
 
-                    <!-- �xRx AVATAR JT INTERATIVO COM SUBMENU DROPDOWN ANIMADO -->
+                    <!-- xRx AVATAR JT INTERATIVO COM SUBMENU DROPDOWN ANIMADO -->
                     <div class="relative" id="profile-container">
                         <button id="avatar-btn" type="button" class="avatar-button flex items-center gap-2 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer" title="Clique para gerenciar perfil">
                             ${avatarImg}
@@ -621,8 +621,8 @@ function _applyTheme(theme, icon, label) {
 }
 
 // ============================================================================
-// CRON�METRO DE ATUALIZA�!ÒO AUTOMÁTICA SINCRONIZADO COM ESP32
-// Sem F5 � sincroniza com a transmissão do ESP32 em tempo real
+// CRONMETRO DE ATUALIZA!ÒO AUTOMÁTICA SINCRONIZADO COM ESP32
+// Sem F5  sincroniza com a transmissão do ESP32 em tempo real
 // ============================================================================
 
 let _autoRefreshTimer = null;
@@ -668,7 +668,7 @@ function setupAutoRefresh() {
         }
     };
 
-    // �x� ESCUTA SINCRONIZA�!ÒO EMITIDA PELO ESP32 EM TEMPO REAL
+    // x ESCUTA SINCRONIZA!ÒO EMITIDA PELO ESP32 EM TEMPO REAL
     window.addEventListener('esp32:syncCycle', (e) => {
         const interval = e.detail?.intervalSeconds || _currentCycleSeconds;
         _currentCycleSeconds = interval;
@@ -709,7 +709,7 @@ function setupAutoRefresh() {
     // Clique manual no widget força refresh imediato e reseta o ciclo
     if (widget) {
         widget.style.cursor = 'pointer';
-        widget.title = 'Sincronizado com o ESP32 � Clique para atualizar agora';
+        widget.title = 'Sincronizado com o ESP32  Clique para atualizar agora';
         widget.addEventListener('click', () => {
             _remainingSeconds = _currentCycleSeconds;
             _executarAtualizacao();
@@ -1007,7 +1007,7 @@ function getLimitesTabHTML() {
 }
 
 // ============================================================================
-// HIST�RICO TAB HTML
+// HISTRICO TAB HTML
 // ============================================================================
 
 function getHistoricoTabHTML() {
