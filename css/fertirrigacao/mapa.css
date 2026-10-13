@@ -173,6 +173,27 @@
     border: 1px solid rgba(56, 189, 248, 0.4) !important;
 }
 
+/* ─── Tooltip Flutuante Instantâneo no Hover da Tubulação ─────────────────── */
+.adutora-leaflet-tooltip {
+    background: rgba(11, 15, 25, 0.96) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1.5px solid rgba(56, 189, 248, 0.6) !important;
+    border-radius: 0.85rem !important;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.85), 0 0 20px rgba(6, 182, 212, 0.35) !important;
+    color: #ffffff !important;
+    padding: 0 !important;
+    pointer-events: none !important;
+}
+
+.adutora-leaflet-tooltip::before {
+    border-top-color: rgba(11, 15, 25, 0.96) !important;
+}
+
+[data-theme="light"] .adutora-leaflet-tooltip,
+[data-theme="light"] .adutora-leaflet-tooltip * {
+    color: #ffffff !important;
+}
+
 /* ─── Painel de Telemetria Suspenso no Mapa (Glassmorphism Enterprise) ────── */
 .map-floating-overlay {
     position: absolute;

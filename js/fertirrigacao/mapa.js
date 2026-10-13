@@ -358,28 +358,75 @@ export function initMapaAdutoras() {
   atualizarDadosMapa();
 }
 
+function _gerarTooltipTrechoHTML(trecho) {
+  const diametroMm = trecho.diametroMm || 300;
+  const raioM = (diametroMm / 1000) / 2;
+  const volTubulacaoM3 = Math.round(Math.PI * Math.pow(raioM, 2) * (trecho.distanciaKm * 1000));
+  const tempoTransitoMin = Math.round((volTubulacaoM3 / 120) * 60);
+
+  return `
+    <div class="adutora-hover-card p-3" style="min-width: 260px;">
+      <div class="flex items-center justify-between pb-1.5 mb-2 border-b border-cyan-500/30">
+        <div class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-cyan-400 text-base">route</span>
+          <strong class="text-white text-xs font-bold">${trecho.nome}</strong>
+        </div>
+        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+          ${trecho.distanciaKm} km
+        </span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-1.5 text-xs mb-2">
+        <div class="bg-slate-950/80 p-2 rounded border border-slate-700/60">
+          <span class="text-[9px] text-slate-400 block uppercase font-semibold">Tubulação</span>
+          <strong class="text-slate-100 text-xs font-mono">${trecho.tubulacao || 'PEAD PN10'}</strong>
+        </div>
+        <div class="bg-slate-950/80 p-2 rounded border border-slate-700/60">
+          <span class="text-[9px] text-slate-400 block uppercase font-semibold">Vol. no Tubo</span>
+          <strong class="text-purple-300 text-xs font-mono">${volTubulacaoM3.toLocaleString('pt-BR')} m³</strong>
+        </div>
+        <div class="bg-slate-950/80 p-2 rounded border border-slate-700/60">
+          <span class="text-[9px] text-slate-400 block uppercase font-semibold">Pressão Média</span>
+          <strong class="text-emerald-400 text-xs font-mono">~4.8 bar</strong>
+        </div>
+        <div class="bg-slate-950/80 p-2 rounded border border-slate-700/60">
+          <span class="text-[9px] text-slate-400 block uppercase font-semibold" title="Tempo a 120 m³/h">Tempo Trânsito</span>
+          <strong class="text-amber-300 text-xs font-mono">~${tempoTransitoMin} min</strong>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-1 border-t border-slate-800 text-[10px] text-cyan-400">
+        <span class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span> Telemetria Ativa
+        </span>
+        <span class="text-slate-400">Clique para simular</span>
+      </div>
+    </div>
+  `;
+}
+
 function _desenharAdutoras() {
   TRECHOS_ADUTORA.forEach(trecho => {
-    // 1. Linha de base (glow exterior)
+    // 1. Linha de base (glow exterior) - Apenas visual
     const baseLine = L.polyline(trecho.pontos, {
       color: '#083344',
       weight: 8,
       opacity: 0.7,
       lineCap: 'round',
-      interactive: true
+      interactive: false
     }).addTo(_map);
 
-    // 2. Linha interna condutora de fluido (animada)
+    // 2. Linha interna condutora de fluido (animada) - Apenas visual
     const flowLine = L.polyline(trecho.pontos, {
       color: '#06b6d4',
       weight: 3.5,
       opacity: 0.95,
       className: 'adutora-anim-flow',
-      interactive: true
+      interactive: false
     }).addTo(_map);
 
     // 3. HITBOX TRANSPARENTE ULTRA-PRECISA (30px de largura)
-    // Garante que 100% dos cliques na adutora sejam capturados mesmo no celular ou zoom afastado
+    // Responde ao simples PASSAR DO MOUSE (Hover Instantâneo) e ao clique
     const hitLine = L.polyline(trecho.pontos, {
       color: '#06b6d4',
       weight: 30,
@@ -388,66 +435,77 @@ function _desenharAdutoras() {
       className: 'cursor-pointer'
     }).addTo(_map);
 
-    // Tooltip rápido no hover
-    flowLine.bindTooltip(`<strong>${trecho.nome}</strong><br>Distância: ${trecho.distanciaKm} km — Clique para detalhes`, {
+    // TOOLTIP INSTANTÂNEO NO HOVER (SEM PRECISAR CLICAR!)
+    // O card de dados segue o cursor suavemente pela tubulação
+    hitLine.bindTooltip(_gerarTooltipTrechoHTML(trecho), {
       sticky: true,
-      className: 'bg-slate-900 text-white rounded-lg px-2 py-1 text-xs border border-slate-700 shadow'
+      opacity: 1,
+      direction: 'top',
+      offset: [0, -12],
+      className: 'adutora-leaflet-tooltip'
     });
 
-    // Vincula manipulador de clique robusto em TODAS as camadas da adutora
-    const onClickTrecho = (e) => {
-      if (e && e.originalEvent) {
-        L.DomEvent.stopPropagation(e);
-      }
+    // Hover effect: ilumina o trecho ao passar o mouse
+    hitLine.on('mouseover', () => {
+      flowLine.setStyle({ weight: 5.5, color: '#38bdf8' });
+      baseLine.setStyle({ weight: 12, opacity: 0.9 });
+      const cardEl = document.getElementById(`card-trecho-${trecho.id}`);
+      if (cardEl) cardEl.classList.add('ring-2', 'ring-cyan-400');
+    });
+
+    hitLine.on('mouseout', () => {
+      flowLine.setStyle({ weight: 3.5, color: '#06b6d4' });
+      baseLine.setStyle({ weight: 8, opacity: 0.7 });
+      const cardEl = document.getElementById(`card-trecho-${trecho.id}`);
+      if (cardEl) cardEl.classList.remove('ring-2', 'ring-cyan-400');
+    });
+
+    // Ao clicar, abre o popup fixo com botão para disparar o simulador
+    hitLine.on('click', (e) => {
       const latlng = e?.latlng || [
         (trecho.pontos[0][0] + trecho.pontos[1][0]) / 2,
         (trecho.pontos[0][1] + trecho.pontos[1][1]) / 2
       ];
       _abrirPopupTrecho(trecho, latlng);
-    };
-
-    hitLine.on('click', onClickTrecho);
-    flowLine.on('click', onClickTrecho);
-    baseLine.on('click', onClickTrecho);
-
-    // Hover effect: ilumina o trecho ao passar o mouse
-    const onMouseOver = () => {
-      flowLine.setStyle({ weight: 5.5, color: '#38bdf8' });
-      baseLine.setStyle({ weight: 12, opacity: 0.9 });
-    };
-    const onMouseOut = () => {
-      flowLine.setStyle({ weight: 3.5, color: '#06b6d4' });
-      baseLine.setStyle({ weight: 8, opacity: 0.7 });
-    };
-
-    hitLine.on('mouseover', onMouseOver);
-    hitLine.on('mouseout', onMouseOut);
-    flowLine.on('mouseover', onMouseOver);
-    flowLine.on('mouseout', onMouseOut);
+    });
 
     _pipeLines[trecho.id] = { baseLine, flowLine, hitLine };
 
-    // Adiciona badge de distância no ponto médio do trecho (agora clicável!)
+    // Badge de distância no ponto médio do trecho (também exibe o tooltip no hover!)
     const midLat = (trecho.pontos[0][0] + trecho.pontos[1][0]) / 2;
     const midLng = (trecho.pontos[0][1] + trecho.pontos[1][1]) / 2;
     const distIcon = L.divIcon({
       className: 'custom-distance-marker',
-      html: `<div class="map-distance-chip shadow-lg cursor-pointer" title="Clique para detalhes da tubulação ${trecho.nome}">${trecho.distanciaKm} km</div>`,
+      html: `<div class="map-distance-chip shadow-lg cursor-pointer">${trecho.distanciaKm} km</div>`,
       iconSize: [64, 24],
       iconAnchor: [32, 12]
     });
     const distMarker = L.marker([midLat, midLng], { icon: distIcon }).addTo(_map);
-    distMarker.on('click', (e) => {
-      if (e && e.originalEvent) L.DomEvent.stopPropagation(e);
+
+    distMarker.bindTooltip(_gerarTooltipTrechoHTML(trecho), {
+      opacity: 1,
+      direction: 'top',
+      offset: [0, -12],
+      className: 'adutora-leaflet-tooltip'
+    });
+
+    distMarker.on('click', () => {
       _abrirPopupTrecho(trecho, [midLat, midLng]);
     });
+
     _distanceMarkers.push(distMarker);
 
-    // Conecta o card do trecho na parte inferior da tela para focar e abrir o popup
+    // Conecta o card do trecho na parte inferior da tela
     const cardEl = document.getElementById(`card-trecho-${trecho.id}`);
     if (cardEl) {
       cardEl.style.cursor = 'pointer';
-      cardEl.title = 'Clique para localizar e detalhar este trecho no mapa';
+      cardEl.title = 'Passe o mouse ou clique para detalhar no mapa';
+      cardEl.onmouseenter = () => {
+        flowLine.setStyle({ weight: 5.5, color: '#38bdf8' });
+      };
+      cardEl.onmouseleave = () => {
+        flowLine.setStyle({ weight: 3.5, color: '#06b6d4' });
+      };
       cardEl.onclick = () => {
         if (_map) {
           _map.flyTo([midLat, midLng], 14, { duration: 1.0 });
@@ -643,7 +701,9 @@ function _abrirPopupTrecho(trecho, latlng) {
   L.popup({
     className: 'adutora-custom-popup',
     offset: [0, -5],
-    maxWidth: 320
+    maxWidth: 320,
+    autoClose: true,
+    closeOnClick: false
   })
     .setLatLng(popupPos)
     .setContent(popupContent)
