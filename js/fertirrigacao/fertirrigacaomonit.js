@@ -139,7 +139,7 @@ export async function executarPollLeituras() {
       _healthData[cfg.firebaseId] = {
         lagoaId: +id, nome: cfg.name, mac: 'Firestore',
         ultimaVezVisto: tsLeitura > 0 ? new Date(tsLeitura) : null,
-        ultimaDataHora: (raw.data || '-') + ' ' + (raw.hora_ultima || '-'),
+        ultimaDataHora: raw.data_hora || ((raw.data || '-') + ' - ' + (raw.hora_ultima || '-')),
         statusSensor: 'OK', nivel, online: isRecent,
         idadeMinutos: Math.round(idadeMs / 60000),
         totalLeituras: 1, erros: 0, sistemaAtivo: true
@@ -147,6 +147,7 @@ export async function executarPollLeituras() {
 
       cb({
         nivel, hora: raw.hora_ultima, data: raw.data,
+        data_hora: raw.data_hora || ((raw.data || '-') + ' - ' + (raw.hora_ultima || '-')),
         mac: 'Firestore', status: 'OK',
         isStale: !isRecent,
         idadeMin: Math.round(idadeMs / 60000)

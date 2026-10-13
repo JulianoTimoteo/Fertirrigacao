@@ -70,9 +70,17 @@ export function formatarTimestampFixo(timestamp) {
             }
         }
         
-        // CASO 3: String ISO
+        // CASO 3: String (formato brasileiro DD/MM/YYYY - HH:mm:ss ou ISO)
         if (typeof timestamp === 'string') {
-            const date = new Date(timestamp);
+            const str = timestamp.trim();
+            // Formato brasileiro: 13/10/2026 - 08:00:00 ou 13/10/2026 08:00:00
+            const brMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s*-\s*|\s+)(\d{2}):(\d{2})(?::(\d{2}))?/);
+            if (brMatch) {
+                const [, d, m, y, hh, mm, ss] = brMatch;
+                return new Date(+y, +m - 1, +d, +hh, +mm, +ss || 0);
+            }
+            // Formato ISO ou padrão
+            const date = new Date(str);
             if (!isNaN(date.getTime())) {
                 return date;
             }

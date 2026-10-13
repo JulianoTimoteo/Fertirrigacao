@@ -53,16 +53,25 @@ export function formatTimestamp(timestamp) {
     if (!timestamp) return 'N/A';
     
     try {
+        if (typeof timestamp === 'string') {
+            const trimmed = timestamp.trim();
+            if (/^\d{2}\/\d{2}\/\d{4}\s*-\s*\d{2}:\d{2}:\d{2}$/.test(trimmed)) {
+                return trimmed;
+            }
+        }
         const date = formatarTimestampFixo(timestamp);
         
         if (isNaN(date.getTime()) || date.getFullYear() < 2000) {
             return 'Data não disponível';
         }
         
-        return date.toLocaleString('pt-BR', { 
-            dateStyle: 'short', 
-            timeStyle: 'medium' 
-        });
+        const dia = String(date.getDate()).padStart(2, '0');
+        const mes = String(date.getMonth() + 1).padStart(2, '0');
+        const ano = date.getFullYear();
+        const hora = String(date.getHours()).padStart(2, '0');
+        const min = String(date.getMinutes()).padStart(2, '0');
+        const seg = String(date.getSeconds()).padStart(2, '0');
+        return `${dia}/${mes}/${ano} - ${hora}:${min}:${seg}`;
     } catch (e) {
         console.error("Erro ao formatar timestamp:", e);
         return 'Erro na data';

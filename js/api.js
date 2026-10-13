@@ -193,6 +193,7 @@ export async function getLeiturasESP(identificador, desde = null, ate = null, li
 
             leituras.push({
                 timestamp: ts,
+                data_hora: data.data_hora || `${data.data || ''} - ${data.hora_ultima || ''}`,
                 media_cm: media.toFixed(2),
                 leitura_sensor_cm: nivel.toFixed(2),
                 status: 'Trabalhando Ideal',

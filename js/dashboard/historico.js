@@ -195,7 +195,7 @@ function updateHistoricoTable(leituras) {
     tbody.innerHTML = '';
     
     leituras.slice(0, 100).forEach(leitura => {
-        const timestamp = new Date(leitura.timestamp * 1000);
+        const timestamp = leitura.data_hora ? leitura.data_hora : leitura.timestamp;
         const leituraCm = leitura.media_cm || leitura.leitura_sensor_cm || leitura.leitura || 0;
         const status = leitura.statusRecalculado || leitura.status || 'Desconhecido';
         
@@ -233,8 +233,8 @@ function updateHistoricoTable(leituras) {
         }
         
         row.innerHTML = `
-            <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">${formatTimestamp(timestamp)}</td>
-            <td class="px-6 py-3 whitespace-nowrap text-sm font-mono font-bold text-gray-700">${leituraCm.toFixed(2)} cm</td>
+            <td class="px-6 py-3 whitespace-nowrap text-sm font-mono font-medium text-gray-700">${formatTimestamp(timestamp)}</td>
+            <td class="px-6 py-3 whitespace-nowrap text-sm font-mono font-bold text-gray-800">${Number(leituraCm).toFixed(2)} cm</td>
             <td class="px-6 py-3 whitespace-nowrap text-sm ${statusClass}">
                 <span class="px-2 py-1 rounded-md border ${bgStatus}" title="${tooltipText}">${status}</span>
             </td>
@@ -480,48 +480,101 @@ async function handleSDImport(event) {
             const lines = text.split('\n');
             const leituras = [];
 
-            for (let line of lines) {
-                line = line.trim();
-                if (!line || line.startsWith('data_hora') || line.length < 10) continue;
+            for (let rawLine of lines) {
+                const line = rawLine.trim();
+                if (!line || line.startsWith('data_hora') || line.length < 5) continue;
 
-                // Formato padrão SD: data_hora,no_origem,nivel_cm,media_cm,total,status
-                // Exemplo: 12/10/2026 14:18:57,T4,68.17,68.17,1,LORA_MESH_OFFLINE
-                const parts = line.split(',');
-                if (parts.length >= 3) {
-                    const dataHoraStr = parts[0].trim();
-                    const noOrigem = parts[1].trim();
-                    const nivel = parseFloat(parts[2]) || 0;
-                    const media = parts[3] ? (parseFloat(parts[3]) || nivel) : nivel;
-                    const statusStr = parts[5] ? parts[5].trim() : 'SD_OFFLINE';
+                let dataHoraFormatada = '';
+                let nivel = NaN;
+                let media = NaN;
+                let noOrigem = 'T4';
+                let statusStr = 'SD_IMPORT';
+                let ts = Date.now();
 
-                    let ts = Date.now();
-                    const dtParts = dataHoraStr.split(' ');
-                    if (dtParts.length === 2) {
-                        const [d, m, y] = dtParts[0].split('/');
-                        const [hh, mm, ss] = dtParts[1].split(':');
-                        if (d && m && y) {
-                            ts = new Date(+y, +m - 1, +d, +hh || 0, +mm || 0, +ss || 0).getTime();
+                // 1) Novo formato brasileiro com separador " - " (ex: "13/10/2026 - 08:00:00  37.77" ou com tab/vírgula)
+                const brMatch = line.match(/^(\d{2}\/\d{2}\/\d{4})\s*-\s*(\d{2}:\d{2}:\d{2})(?:[\t, ]+)([\d\.]+)(?:[\t, ]+(.*))?$/);
+                if (brMatch) {
+                    const [, dataStr, horaStr, nivelStr, resto] = brMatch;
+                    dataHoraFormatada = `${dataStr} - ${horaStr}`;
+                    nivel = parseFloat(nivelStr);
+                    media = nivel;
+                    const [d, m, y] = dataStr.split('/');
+                    const [hh, mm, ss] = horaStr.split(':');
+                    ts = new Date(+y, +m - 1, +d, +hh || 0, +mm || 0, +ss || 0).getTime();
+
+                    if (resto) {
+                        const subParts = resto.split(/[\t,]+/);
+                        if (subParts[0] && isNaN(subParts[0])) noOrigem = subParts[0].trim();
+                        if (subParts[1] && !isNaN(subParts[1])) media = parseFloat(subParts[1]);
+                        if (subParts[3]) statusStr = subParts[3].trim();
+                    }
+                }
+                // 2) Formato ISO legado (ex: "2026-07-18T14:40:53-03:00\t33.69" ou "2026-10-03T12:04:31-03:00  37.77")
+                else {
+                    const isoMatch = line.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[^\t, ]*)[\t, ]+([\d\.]+)(?:[\t, ]+(.*))?$/);
+                    if (isoMatch) {
+                        const [, isoStr, nivelStr, resto] = isoMatch;
+                        const dObj = new Date(isoStr);
+                        if (!isNaN(dObj.getTime())) {
+                            ts = dObj.getTime();
+                            const dia = String(dObj.getDate()).padStart(2, '0');
+                            const mes = String(dObj.getMonth() + 1).padStart(2, '0');
+                            const ano = dObj.getFullYear();
+                            const hora = String(dObj.getHours()).padStart(2, '0');
+                            const min = String(dObj.getMinutes()).padStart(2, '0');
+                            const seg = String(dObj.getSeconds()).padStart(2, '0');
+                            dataHoraFormatada = `${dia}/${mes}/${ano} - ${hora}:${min}:${seg}`;
+                        }
+                        nivel = parseFloat(nivelStr);
+                        media = nivel;
+                        if (resto) {
+                            const subParts = resto.split(/[\t,]+/);
+                            if (subParts[0] && isNaN(subParts[0])) noOrigem = subParts[0].trim();
                         }
                     }
+                    // 3) Formato TSV / CSV tradicional (delimitado por \t, vírgula ou ponto-e-vírgula)
+                    else {
+                        const parts = line.split(/[\t,;]+/);
+                        if (parts.length >= 2) {
+                            const dataHoraRaw = parts[0].trim();
+                            nivel = parseFloat(parts[1]);
+                            media = parts[3] ? (parseFloat(parts[3]) || nivel) : nivel;
+                            if (parts[2] && isNaN(parts[2])) noOrigem = parts[2].trim();
+                            if (parts[5]) statusStr = parts[5].trim();
 
+                            const dObj = formatarTimestampFixo(dataHoraRaw);
+                            ts = dObj.getTime();
+                            const dia = String(dObj.getDate()).padStart(2, '0');
+                            const mes = String(dObj.getMonth() + 1).padStart(2, '0');
+                            const ano = dObj.getFullYear();
+                            const hora = String(dObj.getHours()).padStart(2, '0');
+                            const min = String(dObj.getMinutes()).padStart(2, '0');
+                            const seg = String(dObj.getSeconds()).padStart(2, '0');
+                            dataHoraFormatada = `${dia}/${mes}/${ano} - ${hora}:${min}:${seg}`;
+                        }
+                    }
+                }
+
+                if (dataHoraFormatada && !isNaN(nivel)) {
                     leituras.push({
                         timestamp: ts,
-                        media_cm: media.toFixed(2),
+                        data_hora: dataHoraFormatada,
+                        media_cm: (isNaN(media) ? nivel : media).toFixed(2),
                         leitura_sensor_cm: nivel.toFixed(2),
                         status: 'Trabalhando Ideal',
                         statusRecalculado: 'Trabalhando Ideal',
-                        desvio_cm: Math.abs(nivel - media).toFixed(2),
+                        desvio_cm: Math.abs(nivel - (isNaN(media) ? nivel : media)).toFixed(2),
                         pacote_id: `SD_${ts}`,
                         tanque: noOrigem,
                         mac: `SD Card (${statusStr})`,
-                        data: dtParts[0] || '',
-                        hora: dtParts[1] || ''
+                        data: dataHoraFormatada.split(' - ')[0] || '',
+                        hora: dataHoraFormatada.split(' - ')[1] || ''
                     });
                 }
             }
 
             if (leituras.length === 0) {
-                showMessage('Aviso', 'Nenhuma leitura válida encontrada no arquivo CSV.', 'warning');
+                showMessage('Aviso', 'Nenhuma leitura válida encontrada no arquivo.', 'warning');
                 return;
             }
 

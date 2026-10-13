@@ -241,9 +241,10 @@ export function onLeituraESP32(lagoaId, dados) {
   };
 
   // Label da última leitura com aviso de dado antigo
+  const dataHoraTexto = dados.data_hora || (dados.data && dados.hora ? `${dados.data} - ${dados.hora}` : (dados.hora || '–'));
   const labelHora = isStale
-    ? `${dados.data} ${dados.hora} — ⚠️ ${dados.idadeMin ?? '?'}min atrás`
-    : `${dados.data} ${dados.hora} — ${dados.status}`;
+    ? `${dataHoraTexto} — ⚠️ ${dados.idadeMin ?? '?'}min atrás`
+    : `${dataHoraTexto} — ${dados.status}`;
 
   _atualizarCardUI(lagoaId, {
     alturaM, percent, volumeL, volumeM3, nivelCm,
