@@ -90,17 +90,35 @@ async function _fetchLatestReadings() {
     const m = key.match(/^(T[1-5])_(\d{2})-(\d{2})-(\d{4})$/);
     if (!m) return;
 
-    const tanque = m[1];
+    const tanque  = m[1];
     const dataDoc = `${m[2]}-${m[3]}-${m[4]}`;
-    const ts = new Date(+m[4], +m[3] - 1, +m[2]).getTime();
+    const raw     = doc.data();
+
+    // Usa o campo timestamp real do Firestore (mais preciso que a data do ID)
+    let tsReal = 0;
+    if (raw.timestamp) {
+      if (typeof raw.timestamp.toDate === 'function') {
+        tsReal = raw.timestamp.toDate().getTime();
+      } else if (typeof raw.timestamp === 'number') {
+        tsReal = raw.timestamp > 1e12 ? raw.timestamp : raw.timestamp * 1000;
+      } else if (typeof raw.timestamp === 'string') {
+        tsReal = new Date(raw.timestamp).getTime() || 0;
+      }
+    }
+    // Fallback para a data do ID (hora do meio-dia para desambiguação)
+    if (!tsReal || tsReal < 1e12) {
+      tsReal = new Date(+m[4], +m[3] - 1, +m[2], 12, 0, 0).getTime();
+    }
 
     if (_dataFiltroAtiva) {
       if (dataDoc === _dataFiltroAtiva) {
-        porTanque[tanque] = { ts, data: doc.data() };
+        if (!porTanque[tanque] || tsReal > porTanque[tanque].ts) {
+          porTanque[tanque] = { ts: tsReal, data: raw };
+        }
       }
     } else {
-      if (!porTanque[tanque] || ts > porTanque[tanque].ts) {
-        porTanque[tanque] = { ts, data: doc.data() };
+      if (!porTanque[tanque] || tsReal > porTanque[tanque].ts) {
+        porTanque[tanque] = { ts: tsReal, data: raw };
       }
     }
   });
