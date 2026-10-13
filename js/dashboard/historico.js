@@ -31,6 +31,12 @@ export function setupHistoricoTab() {
     if (endInput) {
         endInput.value = hoje.toISOString().split('T')[0];
     }
+
+    // Listener para importação direta de arquivo CSV do SD Card
+    const importInput = document.getElementById('import-sd-file');
+    if (importInput) {
+        importInput.addEventListener('change', handleSDImport);
+    }
 }
 
 async function populateEquipamentoSelector() {
@@ -38,16 +44,40 @@ async function populateEquipamentoSelector() {
     if (!select) return;
     
     try {
+        select.innerHTML = '<option value="">-- Selecione o Tanque ou Equipamento --</option>';
+        
+        // 1. Grupo de Tanques de Fertirrigação / Módulos ESP32
+        const tanquesFerti = [
+            { codigo: 'T4', nome: 'Tanque T4 - CASTANHA (ESP32 LoRa Mesh)', mac: '84:1F:E8:38:F9:1C' },
+            { codigo: 'T1', nome: 'Tanque T1 - Carregamento Usina A', mac: 'ESP32_T1' },
+            { codigo: 'T2', nome: 'Tanque T2 - Carregamento Usina B', mac: 'ESP32_T2' },
+            { codigo: 'T3', nome: 'Tanque T3 - EUCALIPTO CHEIRO', mac: 'ESP32_T3' },
+            { codigo: 'T5', nome: 'Tanque T5 - SANTA THERESINHA', mac: 'ESP32_T5' }
+        ];
+
+        const optGroupTanques = document.createElement('optgroup');
+        optGroupTanques.label = '🌊 Tanques de Vinhaça / Fertirrigação (IoT)';
+        tanquesFerti.forEach(t => {
+            const option = document.createElement('option');
+            option.value = t.codigo;
+            option.text = `${t.codigo} - ${t.nome}`;
+            option.dataset.mac = t.codigo;
+            option.dataset.hmesa = 100;
+            option.dataset.min = 10;
+            option.dataset.max = 70;
+            if (t.codigo === 'T4') option.selected = true; // Pré-seleciona T4
+            optGroupTanques.appendChild(option);
+        });
+        select.appendChild(optGroupTanques);
+
+        // 2. Grupo de Frota Agrícola (Tratores / Sulcadores)
         const equipamentos = await getEquipamentos();
-        
-        select.innerHTML = '<option value="">-- Selecione um equipamento com sensor --</option>';
-        
-        let hasOptions = false;
+        const optGroupFrota = document.createElement('optgroup');
+        optGroupFrota.label = '🚜 Frota Agrícola (Tratos / Preparo)';
         
         equipamentos.forEach(equip => {
             const mac = equip.macVinculado || equip.mac;
             if (mac && mac.length > 5) {
-                hasOptions = true;
                 const option = document.createElement('option');
                 option.value = equip.codigo;
                 option.text = `${equip.codigo || 'Sem código'} - ${equip.descricao || 'Sem descrição'} (${mac})`;
@@ -55,14 +85,13 @@ async function populateEquipamentoSelector() {
                 option.dataset.hmesa = equip.hMesa || equip.hmesa || 100;
                 option.dataset.min = equip.produtivoMin || equip.min || 10;
                 option.dataset.max = equip.produtivoMax || equip.max || 45;
-                select.appendChild(option);
+                optGroupFrota.appendChild(option);
             }
         });
-        
-        if (!hasOptions) {
-            select.innerHTML = '<option value="">Nenhum equipamento com sensor vinculado</option>';
+
+        if (optGroupFrota.children.length > 0) {
+            select.appendChild(optGroupFrota);
         }
-        
     } catch (error) {
         console.error("Erro ao carregar equipamentos:", error);
         showMessage('Erro', 'Não foi possível carregar a lista de equipamentos.', 'error');
@@ -439,3 +468,82 @@ export function destroyHistoricoChart() {
         historicoChart = null;
     }
 }
+
+async function handleSDImport(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const text = e.target.result;
+            const lines = text.split('\n');
+            const leituras = [];
+
+            for (let line of lines) {
+                line = line.trim();
+                if (!line || line.startsWith('data_hora') || line.length < 10) continue;
+
+                // Formato padrão SD: data_hora,no_origem,nivel_cm,media_cm,total,status
+                // Exemplo: 12/10/2026 14:18:57,T4,68.17,68.17,1,LORA_MESH_OFFLINE
+                const parts = line.split(',');
+                if (parts.length >= 3) {
+                    const dataHoraStr = parts[0].trim();
+                    const noOrigem = parts[1].trim();
+                    const nivel = parseFloat(parts[2]) || 0;
+                    const media = parts[3] ? (parseFloat(parts[3]) || nivel) : nivel;
+                    const statusStr = parts[5] ? parts[5].trim() : 'SD_OFFLINE';
+
+                    let ts = Date.now();
+                    const dtParts = dataHoraStr.split(' ');
+                    if (dtParts.length === 2) {
+                        const [d, m, y] = dtParts[0].split('/');
+                        const [hh, mm, ss] = dtParts[1].split(':');
+                        if (d && m && y) {
+                            ts = new Date(+y, +m - 1, +d, +hh || 0, +mm || 0, +ss || 0).getTime();
+                        }
+                    }
+
+                    leituras.push({
+                        timestamp: ts,
+                        media_cm: media.toFixed(2),
+                        leitura_sensor_cm: nivel.toFixed(2),
+                        status: 'Trabalhando Ideal',
+                        statusRecalculado: 'Trabalhando Ideal',
+                        desvio_cm: Math.abs(nivel - media).toFixed(2),
+                        pacote_id: `SD_${ts}`,
+                        tanque: noOrigem,
+                        mac: `SD Card (${statusStr})`,
+                        data: dtParts[0] || '',
+                        hora: dtParts[1] || ''
+                    });
+                }
+            }
+
+            if (leituras.length === 0) {
+                showMessage('Aviso', 'Nenhuma leitura válida encontrada no arquivo CSV.', 'warning');
+                return;
+            }
+
+            leituras.sort((a, b) => b.timestamp - a.timestamp);
+
+            const equipamento = {
+                mac: 'SD_CARD',
+                hMesa: 100,
+                produtivoMin: 10,
+                produtivoMax: 70,
+                isActive: true
+            };
+
+            const leiturasRecalculadas = recalcularStatusHistorico(leituras, equipamento);
+            updateHistoricoTable(leiturasRecalculadas);
+            updateHistoricoChart(leiturasRecalculadas, 100, 10, 70);
+
+            showMessage('Sucesso', `${leituras.length} leituras importadas do Cartão SD com sucesso!`, 'success');
+        } catch (err) {
+            console.error('Erro ao importar CSV:', err);
+            showMessage('Erro', 'Falha ao processar arquivo do SD Card: ' + err.message, 'error');
+        }
+    };
+    reader.readAsText(file);
+}

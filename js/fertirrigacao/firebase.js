@@ -8,5 +8,8 @@ export {
   subscribeLagoa,
   unsubscribeAllLagoas,
   getESP32Health,
-  forcarPollLeituras
+  forcarPollLeituras,
+  setDataVisualizacao,
+  getDataVisualizacao,
+  obterHistoricoMedidas
 } from './fertirrigacaomonit.js';

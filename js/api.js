@@ -21,6 +21,7 @@ import {
     fbSaveEquipe,
     fbDeleteEquipe
 } from './firebase-service.js';
+import { db, collection, getDocs } from './firebase-config.js';
 
 // ============================================================================
 // ROTEADOR API GET (Agora direto no Firebase)
@@ -136,9 +137,87 @@ export async function getSensoresAtivos() {
     return fbGetSensoresAtivos();
 }
 
-// Leituras ESP32 para implementos (tratos e histórico)
-export async function getLeiturasESP(mac, desde = null, ate = null, limite = 100) {
-    // Leituras simuladas/históricas caso o sensor específico esteja operando
+// Leituras ESP32 para implementos, tanques e histórico direto do Firestore
+export async function getLeiturasESP(identificador, desde = null, ate = null, limite = 500) {
+    try {
+        const snap = await getDocs(collection(db, 'medidas'));
+        const leituras = [];
+        let idFiltro = identificador ? String(identificador).toUpperCase().trim() : '';
+
+        // Mapeamento caso venha o MAC do ESP32 ou nome da lagoa
+        if (idFiltro.includes('84:1F:E8:38:F9:1C') || idFiltro.includes('CASTANHA')) idFiltro = 'T4';
+        else if (idFiltro.includes('USINA A')) idFiltro = 'T1';
+        else if (idFiltro.includes('USINA B')) idFiltro = 'T2';
+        else if (idFiltro.includes('EUCALIPTO')) idFiltro = 'T3';
+        else if (idFiltro.includes('THERESINHA')) idFiltro = 'T5';
+
+        snap.forEach(docSnap => {
+            const docId = docSnap.id;
+            const data = docSnap.data();
+            const tanque = (data.tanque || docId.split('_')[0] || '').toUpperCase();
+
+            // Se um identificador de tanque foi solicitado (ex: T4), filtra por ele
+            if (idFiltro && idFiltro.startsWith('T') && idFiltro.length <= 3) {
+                if (!docId.startsWith(idFiltro) && tanque !== idFiltro) return;
+            }
+
+            // Calcula timestamp em milissegundos
+            let ts = 0;
+            if (data.timestamp) {
+                if (typeof data.timestamp.toDate === 'function') {
+                    ts = data.timestamp.toDate().getTime();
+                } else if (typeof data.timestamp === 'string') {
+                    ts = new Date(data.timestamp).getTime();
+                } else if (typeof data.timestamp === 'number') {
+                    ts = data.timestamp;
+                }
+            }
+
+            if (!ts && data.data) {
+                const partes = String(data.data).split('/');
+                if (partes.length === 3) {
+                    const horaParts = String(data.hora_ultima || '12:00:00').split(':');
+                    ts = new Date(+partes[2], +partes[1] - 1, +partes[0], +horaParts[0] || 0, +horaParts[1] || 0, +horaParts[2] || 0).getTime();
+                }
+            }
+
+            if (!ts) ts = Date.now();
+            const tsSegundos = Math.floor(ts / 1000);
+
+            // Filtro por período de datas (desde / ate em segundos)
+            if (desde && tsSegundos < desde) return;
+            if (ate && tsSegundos > ate) return;
+
+            const nivel = parseFloat(data.ultima_medicao != null ? data.ultima_medicao : data.media_dia) || 0;
+            const media = parseFloat(data.media_dia != null ? data.media_dia : nivel) || nivel;
+
+            leituras.push({
+                timestamp: ts,
+                media_cm: media.toFixed(2),
+                leitura_sensor_cm: nivel.toFixed(2),
+                status: 'Trabalhando Ideal',
+                statusRecalculado: 'Trabalhando Ideal',
+                desvio_cm: Math.abs(nivel - media).toFixed(2),
+                pacote_id: docId,
+                tanque: tanque || idFiltro || docId,
+                grupo: 'Vinhaça',
+                equipe: 'Fertirrigação',
+                mac: data.mac || 'ESP32 LoRa Mesh',
+                data: data.data || '',
+                hora: data.hora_ultima || ''
+            });
+        });
+
+        // Se encontrou dados reais no Firestore, ordena por timestamp e retorna
+        if (leituras.length > 0) {
+            leituras.sort((a, b) => b.timestamp - a.timestamp); // mais recentes primeiro
+            return leituras.slice(0, limite);
+        }
+    } catch (e) {
+        console.warn('Erro ao ler medidas reais do Firestore:', e);
+    }
+
+    // Fallback: se o equipamento for TR-01/02/03 sem telemetria, gera simulação suave
     const leituras = [];
     const agora = Date.now();
     for (let i = 0; i < Math.min(limite, 50); i++) {
@@ -153,7 +232,7 @@ export async function getLeiturasESP(mac, desde = null, ate = null, limite = 100
             pacote_id: 1000 - i,
             grupo: 'Sulcador',
             equipe: 'Tratos',
-            mac: mac
+            mac: identificador
         });
     }
     return leituras;

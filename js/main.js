@@ -1024,11 +1024,15 @@ function getHistoricoTabHTML() {
                            class="mt-1 block w-full rounded-md focus:ring-2 focus:ring-blue-500" style="background:var(--bg-input);color:var(--text-1);border:1px solid var(--border-1)">
                 </div>
             </div>
-            <div class="mt-4">
+            <div class="mt-4 flex flex-wrap items-center gap-3">
                 <button id="search-historico-btn" 
-                        class="w-full md:w-auto bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
-                    Buscar Histórico
+                        class="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow">
+                    <span class="material-symbols-outlined text-sm">search</span> Buscar Histórico
                 </button>
+                <label class="cursor-pointer bg-slate-700 hover:bg-slate-800 text-white font-bold py-2.5 px-5 rounded-lg text-sm inline-flex items-center gap-2 transition-colors shadow">
+                    <span class="material-symbols-outlined text-sm">upload_file</span> Importar Log do SD Card (.csv)
+                    <input type="file" id="import-sd-file" accept=".csv,.txt" class="hidden">
+                </label>
             </div>
         </div>
 

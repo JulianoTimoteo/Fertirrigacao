@@ -43,6 +43,42 @@ export function initFertiFirebase() {
   }
 }
 
+let _dataFiltroAtiva = null; // null = tempo real / última leitura; 'DD-MM-YYYY' = data histórica
+
+export function setDataVisualizacao(dataStr) {
+  if (!dataStr || dataStr === 'hoje' || dataStr === 'realtime') {
+    _dataFiltroAtiva = null;
+    return;
+  }
+  let s = String(dataStr).trim().replace(/\//g, '-');
+  const parts = s.split('-');
+  if (parts.length === 3) {
+    if (parts[0].length === 4) {
+      // YYYY-MM-DD -> DD-MM-YYYY
+      _dataFiltroAtiva = `${parts[2].padStart(2, '0')}-${parts[1].padStart(2, '0')}-${parts[0]}`;
+    } else {
+      _dataFiltroAtiva = `${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}-${parts[2]}`;
+    }
+  } else {
+    _dataFiltroAtiva = s;
+  }
+}
+
+export function getDataVisualizacao() {
+  return _dataFiltroAtiva;
+}
+
+export async function obterHistoricoMedidas() {
+  if (!_db) return [];
+  const medidasRef = collection(_db, 'medidas');
+  const snap = await getDocs(medidasRef);
+  const docs = [];
+  snap.forEach(d => {
+    docs.push({ id: d.id, ...d.data() });
+  });
+  return docs;
+}
+
 async function _fetchLatestReadings() {
   const medidasRef = collection(_db, 'medidas');
   const snap = await getDocs(medidasRef);
@@ -55,9 +91,17 @@ async function _fetchLatestReadings() {
     if (!m) return;
 
     const tanque = m[1];
+    const dataDoc = `${m[2]}-${m[3]}-${m[4]}`;
     const ts = new Date(+m[4], +m[3] - 1, +m[2]).getTime();
-    if (!porTanque[tanque] || ts > porTanque[tanque].ts) {
-      porTanque[tanque] = { ts, data: doc.data() };
+
+    if (_dataFiltroAtiva) {
+      if (dataDoc === _dataFiltroAtiva) {
+        porTanque[tanque] = { ts, data: doc.data() };
+      }
+    } else {
+      if (!porTanque[tanque] || ts > porTanque[tanque].ts) {
+        porTanque[tanque] = { ts, data: doc.data() };
+      }
     }
   });
 

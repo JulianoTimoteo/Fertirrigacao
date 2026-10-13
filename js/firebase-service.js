@@ -34,6 +34,61 @@ const DEFAULT_MASTER_USER = {
 
 const DEFAULT_EQUIPAMENTOS = [
     {
+        codigo: 'T4',
+        descricao: 'Tanque 4 - CASTANHA (ESP32 LoRa Mesh)',
+        grupo: 'Vinhaça',
+        equipe: 'Fertirrigação',
+        hMesa: 100.0,
+        produtivoMin: 10.0,
+        produtivoMax: 70.0,
+        ativo: '1',
+        macVinculado: '84:1F:E8:38:F9:1C'
+    },
+    {
+        codigo: 'T1',
+        descricao: 'Tanque 1 - Carregamento Usina A',
+        grupo: 'Vinhaça',
+        equipe: 'Fertirrigação',
+        hMesa: 100.0,
+        produtivoMin: 10.0,
+        produtivoMax: 70.0,
+        ativo: '1',
+        macVinculado: 'ESP32_T1'
+    },
+    {
+        codigo: 'T2',
+        descricao: 'Tanque 2 - Carregamento Usina B',
+        grupo: 'Vinhaça',
+        equipe: 'Fertirrigação',
+        hMesa: 100.0,
+        produtivoMin: 10.0,
+        produtivoMax: 70.0,
+        ativo: '1',
+        macVinculado: 'ESP32_T2'
+    },
+    {
+        codigo: 'T3',
+        descricao: 'Tanque 3 - EUCALIPTO CHEIRO',
+        grupo: 'Vinhaça',
+        equipe: 'Fertirrigação',
+        hMesa: 100.0,
+        produtivoMin: 10.0,
+        produtivoMax: 70.0,
+        ativo: '1',
+        macVinculado: 'ESP32_T3'
+    },
+    {
+        codigo: 'T5',
+        descricao: 'Tanque 5 - SANTA THERESINHA',
+        grupo: 'Vinhaça',
+        equipe: 'Fertirrigação',
+        hMesa: 100.0,
+        produtivoMin: 10.0,
+        produtivoMax: 70.0,
+        ativo: '1',
+        macVinculado: 'ESP32_T5'
+    },
+    {
         codigo: 'TR-01',
         descricao: 'Trator Case Magnum 340',
         grupo: 'Sulcador',
@@ -68,8 +123,8 @@ const DEFAULT_EQUIPAMENTOS = [
     }
 ];
 
-const DEFAULT_GRUPOS = ['Sulcador', 'Grade', 'Subsolador', 'Pulverizador', 'Plantadeira', 'Colheitadeira'];
-const DEFAULT_EQUIPES = ['Tratos', 'Preparo', 'Herbicida', 'Plantio', 'Colheita'];
+const DEFAULT_GRUPOS = ['Vinhaça', 'Sulcador', 'Grade', 'Subsolador', 'Pulverizador', 'Plantadeira', 'Colheitadeira'];
+const DEFAULT_EQUIPES = ['Fertirrigação', 'Tratos', 'Preparo', 'Herbicida', 'Plantio', 'Colheita'];
 
 // Cache e persistência local de contingência
 function getLocal(key, defaultVal = []) {

@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { setupConfigTanquesTab }                                              from './input.js';
-import { initFertiFirebase, subscribeLagoa, unsubscribeAllLagoas, LAGOA_CONFIG, forcarPollLeituras } from './firebase.js';
+import { initFertiFirebase, subscribeLagoa, unsubscribeAllLagoas, LAGOA_CONFIG, forcarPollLeituras, setDataVisualizacao, getDataVisualizacao } from './firebase.js';
 import { getLagoasCardsHTML, initLagoasOffline, onLeituraESP32, getEstadoLagoas, clearOfflineTimers } from './lagoas.js';
 import { renderLagoasChart, destroyLagoasChart, getGraficoHTML }              from './chart.js';
 import { getVazaoHTML, getSummaryCardHTML, atualizarAcumulados, setupMetaInput, resetAcumulados, recalcularVolumeFromEstado } from './vazao.js';
@@ -13,7 +13,7 @@ import { getInsightsHTML, atualizarInsights, resetInsights, renderInsightsFromEs
 // ─── HTML principal ──────────────────────────────────────────────────────────
 export function getFertirrigacaoTabHTML() {
   return `
-  <div class="flex justify-between items-center mb-6">
+  <div class="flex justify-between items-center mb-4">
     <nav id="fertirrigacao-sub-tabs" class="flex gap-2 items-center flex-wrap">
       <button class="fert-sub-tab active" data-tab="niveis-content">Níveis Atuais</button>
       <button class="fert-sub-tab" data-tab="vazao-content">Vazão e Acumulado</button>
@@ -26,6 +26,25 @@ export function getFertirrigacaoTabHTML() {
     <button id="play-pause-btn" class="flex items-center gap-2 px-4 py-2 text-sm bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition">
       <span class="material-symbols-outlined">play_arrow</span> Autoplay
     </button>
+  </div>
+
+  <!-- Barra de Filtro de Histórico / Data das Lagoas -->
+  <div class="flex flex-wrap items-center justify-between gap-3 p-3.5 mb-6 rounded-xl" style="background:var(--bg-2);border:1px solid var(--border-1);box-shadow:var(--shadow-sm)">
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="material-symbols-outlined text-emerald-500 text-lg">calendar_month</span>
+      <span class="text-xs font-bold uppercase tracking-wider" style="color:var(--text-1)">Data das Leituras:</span>
+      <button id="btn-ferti-hoje" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all bg-emerald-600 text-white shadow">Hoje (Tempo Real)</button>
+      <button id="btn-ferti-ontem" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all hover:bg-gray-200 dark:hover:bg-gray-700" style="background:var(--bg-3);color:var(--text-1)">Ontem (12/10)</button>
+      <div class="flex items-center gap-1.5 ml-1">
+        <span class="text-xs" style="color:var(--text-3)">Outra data:</span>
+        <input type="date" id="ferti-data-filtro" class="px-2.5 py-1 text-xs rounded-lg" style="background:var(--bg-input);color:var(--text-1);border:1px solid var(--border-1)">
+      </div>
+    </div>
+    <div id="ferti-banner-historico" class="hidden text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-500 border border-amber-500/30 flex items-center gap-2">
+      <span class="material-symbols-outlined text-sm">history</span>
+      <span>Visualizando Histórico de: <strong id="ferti-data-exibida" class="font-bold underline">-</strong></span>
+      <button id="btn-voltar-tempo-real" class="ml-1 text-xs font-bold underline hover:opacity-80">Voltar ao Tempo Real</button>
+    </div>
   </div>
 
   <!-- Aba: Níveis Atuais -->
@@ -82,6 +101,7 @@ export function initFertirrigacao() {
   initLagoasOffline();
   setupFertirrigacaoSubTabs();
   setupMetaInput();
+  _setupFiltroDataHistorico();
   setTimeout(() => setupConfigTanquesTab(), 200);
 
   // FIX: renderiza o chart imediatamente na inicialização (mesmo com dados zerados)
@@ -173,6 +193,66 @@ function _onLeituraAtualizada() {
   // Sempre atualiza os dados internos do chart.
   // Se a aba não estiver visível, o chart aguarda — mas terá dados ao abrir.
   renderLagoasChart();
+}
+
+// ─── Controle de Histórico por Data ──────────────────────────────────────────
+function _setupFiltroDataHistorico() {
+  const btnHoje = document.getElementById('btn-ferti-hoje');
+  const btnOntem = document.getElementById('btn-ferti-ontem');
+  const inputData = document.getElementById('ferti-data-filtro');
+  const banner = document.getElementById('ferti-banner-historico');
+  const dataExibida = document.getElementById('ferti-data-exibida');
+  const btnVoltar = document.getElementById('btn-voltar-tempo-real');
+
+  function ativarData(dataStr, label) {
+    setDataVisualizacao(dataStr);
+    if (!dataStr) {
+      // Modo Tempo Real
+      btnHoje?.classList.add('bg-emerald-600', 'text-white', 'shadow');
+      btnOntem?.classList.remove('bg-emerald-600', 'text-white', 'shadow');
+      banner?.classList.add('hidden');
+    } else {
+      btnHoje?.classList.remove('bg-emerald-600', 'text-white', 'shadow');
+      if (label && label.startsWith('Ontem')) {
+        btnOntem?.classList.add('bg-emerald-600', 'text-white', 'shadow');
+      } else {
+        btnOntem?.classList.remove('bg-emerald-600', 'text-white', 'shadow');
+      }
+      banner?.classList.remove('hidden');
+      if (dataExibida) dataExibida.textContent = label || dataStr;
+    }
+    forcarPollLeituras();
+  }
+
+  btnHoje?.addEventListener('click', () => {
+    if (inputData) inputData.value = '';
+    ativarData(null, null);
+  });
+
+  btnOntem?.addEventListener('click', () => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    const dia = String(d.getDate()).padStart(2, '0');
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const ano = d.getFullYear();
+    const dataFormatada = `${dia}-${mes}-${ano}`;
+    if (inputData) inputData.value = `${ano}-${mes}-${dia}`;
+    ativarData(dataFormatada, `Ontem (${dia}/${mes}/${ano})`);
+  });
+
+  inputData?.addEventListener('change', e => {
+    if (e.target.value) {
+      const [ano, mes, dia] = e.target.value.split('-');
+      ativarData(`${dia}-${mes}-${ano}`, `${dia}/${mes}/${ano}`);
+    } else {
+      ativarData(null, null);
+    }
+  });
+
+  btnVoltar?.addEventListener('click', () => {
+    if (inputData) inputData.value = '';
+    ativarData(null, null);
+  });
 }
 
 // ─── Status bar ──────────────────────────────────────────────────────────────
