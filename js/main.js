@@ -1,7 +1,7 @@
 import { 
     apiGet,
     apiPost
-} from './api.js?v=8.4.6';
+} from './api.js?v=8.4.7';
 
 import { 
     setupAuthListeners, 
@@ -9,7 +9,7 @@ import {
     setCurrentUserProfile,
     handlePasswordReset,
     handleLogout
-} from './auth.js?v=8.4.6';
+} from './auth.js?v=8.4.7';
 
 import { 
     setupImplementosSelector,
@@ -17,30 +17,30 @@ import {
     destroyCharts,
     setRefreshTime,
     forcarAtualizacaoImplementos
-} from './dashboard/tratos.js?v=8.4.6';
+} from './dashboard/tratos.js?v=8.4.7';
 
 import { 
     setupHistoricoTab,
     destroyHistoricoChart
-} from './dashboard/historico.js?v=8.4.6';
+} from './dashboard/historico.js?v=8.4.7';
 
 import { 
     setupEquipamentosTab
-} from './equipamentos/equipamentos.js?v=8.4.6';
+} from './equipamentos/equipamentos.js?v=8.4.7';
 
 import { 
     setupAdminTabs,
     loadAdminData,
     handleAddUser
-} from './admin/users.js?v=8.4.6';
+} from './admin/users.js?v=8.4.7';
 
-import { formatarTimestampFixo } from './dashboard/regras.js?v=8.4.6';
+import { formatarTimestampFixo } from './dashboard/regras.js?v=8.4.7';
 
 // x IMPORTA!ÒO DO MDULO DE FERTIRRIGA!ÒO
-import fertirrigacao from './fertirrigacao/index.js?v=8.4.6';
+import fertirrigacao from './fertirrigacao/index.js?v=8.4.7';
 
 // xRx IMPORTA!ÒO DO SUBMENU DE PERFIL / AVATAR
-import { setupProfileMenu } from './dashboard/perfil.js?v=8.4.6';
+import { setupProfileMenu } from './dashboard/perfil.js?v=8.4.7';
 
 // Variável global do perfil do usuário
 let currentUserProfile = null;
@@ -591,43 +591,52 @@ function setupMobileMenu() {
 // TEMA CLARO / ESCURO
 // ============================================================================
 
-function setupThemeToggle() {
-    const btn    = document.getElementById('theme-toggle');
-    const icon   = document.getElementById('theme-icon');
-    const label  = document.getElementById('theme-label');
-    if (!btn) return;
-
-    // Carrega preferência salva ou usa escuro como padrão
-    const saved = localStorage.getItem('agro_theme') || 'dark';
-    _applyTheme(saved, icon, label);
-
-    btn.addEventListener('click', () => {
-        const current = document.documentElement.dataset.theme || 'dark';
-        const next    = current === 'dark' ? 'light' : 'dark';
-        localStorage.setItem('agro_theme', next);
-        _applyTheme(next, icon, label);
-    });
-}
-
-function _applyTheme(theme, icon, label) {
-    document.documentElement.dataset.theme = theme;
+function _applyTheme(theme) {
+    const html = document.documentElement;
+    html.setAttribute('data-theme', theme);
+    html.dataset.theme = theme;
+    if (document.body) {
+        document.body.setAttribute('data-theme', theme);
+        document.body.dataset.theme = theme;
+    }
+    const icon  = document.getElementById('theme-icon');
+    const label = document.getElementById('theme-label');
     if (theme === 'light') {
-        if (icon)  icon.textContent  = 'light_mode';
+        if (icon)  icon.textContent  = 'dark_mode';
         if (label) label.textContent = 'Escuro';
     } else {
-        if (icon)  icon.textContent  = 'dark_mode';
+        if (icon)  icon.textContent  = 'light_mode';
         if (label) label.textContent = 'Claro';
     }
 }
 
+function setupThemeToggle() {
+    const saved = localStorage.getItem('agro_theme') || 'dark';
+    _applyTheme(saved);
+
+    // Listener global no document para funcionar sempre mesmo após re-render
+    if (document.body && !document.body.dataset.themeBound) {
+        document.body.dataset.themeBound = 'true';
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('#theme-toggle');
+            if (!btn) return;
+            e.preventDefault();
+
+            const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+            const next    = current === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('agro_theme', next);
+            _applyTheme(next);
+        });
+    }
+}
+
 // ============================================================================
-// CRONMETRO DE ATUALIZA!ÒO AUTOMÁTICA SINCRONIZADO COM ESP32
-// Sem F5  sincroniza com a transmissão do ESP32 em tempo real
+// CRONÔMETRO DE ATUALIZAÇÃO AUTOMÁTICA
 // ============================================================================
 
 let _autoRefreshTimer = null;
-let _currentCycleSeconds = 30; // 30s para fertirrigação por padrão
-let _remainingSeconds = 30;
+let _currentCycleSeconds = 120; // 2 minutos (120s) para operação suave e estável
+let _remainingSeconds = 120;
 let _activeAppTab = 'fertirrigacao';
 let _isAutoRefreshing = false;
 
@@ -636,7 +645,12 @@ function setupAutoRefresh() {
     const countEl = document.getElementById('auto-refresh-countdown');
     if (!widget || !countEl) return;
 
-    // Garante que o timer e eventos não sejam duplicados se chamado novamente
+    function _fmt(s) {
+        const m = Math.floor(Math.max(0, s) / 60);
+        const sec = Math.max(0, s) % 60;
+        return `${m}:${String(sec).padStart(2, '0')}`;
+    }
+
     if (widget.dataset.bound === 'true') {
         _remainingSeconds = _currentCycleSeconds;
         countEl.textContent = _fmt(_remainingSeconds);
@@ -645,21 +659,16 @@ function setupAutoRefresh() {
     widget.dataset.bound = 'true';
 
     _remainingSeconds = _currentCycleSeconds;
-
-    function _fmt(s) {
-        const m = Math.floor(Math.max(0, s) / 60);
-        const sec = Math.max(0, s) % 60;
-        return `${m}:${String(sec).padStart(2, '0')}`;
-    }
+    countEl.textContent = _fmt(_remainingSeconds);
 
     const _executarAtualizacao = async () => {
         if (_isAutoRefreshing) return;
         _isAutoRefreshing = true;
 
         widget.classList.add('refreshing');
-        countEl.textContent = '...';
 
-        try {
+        // Requisição com timeout de 4 segundos para NUNCA travar a interface
+        const refreshPromise = (async () => {
             if (_activeAppTab === 'fertirrigacao') {
                 if (typeof fertirrigacao.refresh === 'function') {
                     await fertirrigacao.refresh();
@@ -667,12 +676,16 @@ function setupAutoRefresh() {
                     fertirrigacao.stop();
                     fertirrigacao.init();
                 }
-                // Dispara recálculo de volumes e mapa se carregado
                 window.dispatchEvent(new CustomEvent('ferti:recalcularVolumes'));
             } else if (_activeAppTab === 'implementos') {
                 forcarAtualizacaoImplementos();
             }
+        })();
 
+        const timeoutPromise = new Promise(resolve => setTimeout(resolve, 4000));
+
+        try {
+            await Promise.race([refreshPromise, timeoutPromise]);
             // Flash verde de confirmação
             countEl.style.color = '#10b981';
             setTimeout(() => { if (countEl) countEl.style.color = ''; }, 700);
@@ -686,19 +699,9 @@ function setupAutoRefresh() {
             setTimeout(() => {
                 widget.classList.remove('refreshing');
                 _isAutoRefreshing = false;
-            }, 400);
+            }, 500);
         }
     };
-
-    // Sincronização sob demanda por eventos externos (se configurado)
-    window.addEventListener('esp32:syncCycle', (e) => {
-        const interval = e.detail?.intervalSeconds;
-        if (interval && interval > 0 && interval !== _currentCycleSeconds) {
-            _currentCycleSeconds = interval;
-            _remainingSeconds = interval;
-            countEl.textContent = _fmt(_remainingSeconds);
-        }
-    });
 
     const _tick = () => {
         if (_isAutoRefreshing) return;
@@ -706,7 +709,7 @@ function setupAutoRefresh() {
         _remainingSeconds--;
         countEl.textContent = _fmt(_remainingSeconds);
 
-        if (_remainingSeconds <= 5) {
+        if (_remainingSeconds <= 10) {
             countEl.style.color = 'var(--c-red, #ef4444)';
             countEl.classList.add('animate-pulse');
         } else {
@@ -722,15 +725,15 @@ function setupAutoRefresh() {
     if (_autoRefreshTimer) clearInterval(_autoRefreshTimer);
     _autoRefreshTimer = setInterval(_tick, 1000);
 
-    // Clique manual no widget força refresh imediato e reseta o ciclo
+    // Clique manual no widget força refresh imediato e reinicia a contagem
     widget.style.cursor = 'pointer';
     widget.title = 'Sincronizado com os tanques — Clique para atualizar agora';
-    widget.addEventListener('click', (e) => {
+    widget.onclick = (e) => {
         e.preventDefault();
         _executarAtualizacao();
-    });
+    };
 
-    console.log('[AutoRefresh] Sincronizado com ciclo do ESP32:', _currentCycleSeconds, 's');
+    console.log('[AutoRefresh] Ciclo configurado para:', _currentCycleSeconds, 's');
 }
 
 // ============================================================================

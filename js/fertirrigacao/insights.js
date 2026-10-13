@@ -133,6 +133,20 @@ export function getTotalEntrada() { return _totalEntrada; }
 export function getTotalSaida()   { return _totalSaida; }
 export function resetInsights()   { _totalEntrada = 0; _totalSaida = 0; Object.keys(_prevVolumes).forEach(k => delete _prevVolumes[k]); }
 
+export function definirTaxasHistoricas(taxasCalculadas) {
+  if (!taxasCalculadas || typeof taxasCalculadas !== 'object') return;
+  let atualizou = false;
+  Object.entries(taxasCalculadas).forEach(([id, taxa]) => {
+    if (typeof taxa === 'number' && !isNaN(taxa)) {
+      _taxas[id] = taxa;
+      atualizou = true;
+    }
+  });
+  if (atualizou) {
+    _renderInsights();
+  }
+}
+
 // Renderiza insights a partir do estado atual (inclui dados stale)
 // Chamado após page load para mostrar análise mesmo offline
 export function renderInsightsFromEstado(estado) {
@@ -145,15 +159,13 @@ export function renderInsightsFromEstado(estado) {
     if (!e || e.volume === undefined) return;
     if (!_historico[id]) _historico[id] = [];
     if (e.volume > 0 && _historico[id].length === 0) {
-      // Seed do histórico com o dado atual
       _historico[id].push({ ts: Date.now() - 60000, volumeL: e.volume });
       _historico[id].push({ ts: Date.now(),          volumeL: e.volume });
     }
-    // Taxa zero para dados estáticos (sem variação entre leituras)
     if (_taxas[id] === undefined) _taxas[id] = 0;
   });
 
-  // Gera alertas baseados no estado atual (nível crítico, etc.)
+  _renderInsights();
   _gerarAlertasDeEstado(estado);
 }
 

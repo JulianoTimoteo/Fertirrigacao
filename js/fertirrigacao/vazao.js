@@ -29,6 +29,7 @@ import { LAGOA_CONFIG } from './firebase.js';
 import { getEstadoLagoas, getTanqueConfig } from './lagoas.js';
 import { obterHistoricoTodosTanques } from './fertirrigacaomonit.js';
 import { calcularVolumeTronco } from './regras.js';
+import { definirTaxasHistoricas } from './insights.js';
 
 // ── Estado interno ───────────────────────────────────────────────────────────
 let _totalVolumeIn   = 0;   // snapshot atual (soma dos tanques)
@@ -503,13 +504,20 @@ export async function carregarHistoricoRealVazao(dataDoc) {
         if (_historicoVazao[id].length >= 2) {
           const pAnt = _historicoVazao[id][_historicoVazao[id].length - 2];
           const pRec = _historicoVazao[id][_historicoVazao[id].length - 1];
-          variacoesPorLagoa[cfg.name] = pRec.volumeL - pAnt.volumeL;
+          const deltaVol = pRec.volumeL - pAnt.volumeL;
+          variacoesPorLagoa[cfg.name] = deltaVol;
+
+          const dtMin = Math.max(0.5, (pRec.ts - pAnt.ts) / 60000);
+          if (dtMin <= 180) {
+            taxasCalculadas[id] = deltaVol / dtMin;
+          }
         }
 
         _atualizarVazaoTabela(id);
       }
     }
 
+    definirTaxasHistoricas(taxasCalculadas);
     _gerarBalancoMovimentacao(variacoesPorLagoa);
   } catch (e) {
     console.warn('[Vazao] Erro ao carregar histórico para vazão:', e.message);

@@ -17,6 +17,7 @@ let _pipeLines = {};
 let _markers = {};
 let _distanceMarkers = [];
 let _activeFlowTrechos = new Set();
+let _modoCamada = 'satellite';
 
 export const PONTOS_ADUTORA = {
   usina: {
@@ -300,9 +301,12 @@ export function initMapaAdutoras() {
     opacity: 0.85
   }).addTo(_map);
 
-  _layers.dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; CartoDB',
-    maxZoom: 18
+  // Camada CARTO Dark Oficial com API Key autorizada do Juliano
+  const CARTO_KEY = 'cb1_4jhd_1_e7101fd1f03c32c103ac51dc';
+  _layers.dark = L.tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`, {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    maxZoom: 18,
+    subdomains: 'abcd'
   });
 
   // Traça as linhas de tubulação da adutora
@@ -418,8 +422,16 @@ function _abrirPopupPonto(marker, ponto) {
     const e = estado[id] || {};
     const online = e.online && !e.isStale;
     const volM3 = e.volume ? (e.volume / 1000).toFixed(0) : '--';
-    const nivel = e.nivel != null ? `${e.nivel.toFixed(1)} cm` : '--';
-    const pct = e.percent != null ? `${e.percent.toFixed(1)}%` : '--';
+    
+    // Suporte aos formatos de nivel: nivelCm, nivel ou ultimaLeitura
+    const rawNivel = e.nivelCm != null ? e.nivelCm : (e.nivel != null ? e.nivel : e.ultimaLeitura?.nivel);
+    const nivel = rawNivel != null && !isNaN(rawNivel) ? `${parseFloat(rawNivel).toFixed(1)} cm` : '--';
+
+    // Lâmina d'água útil
+    const rawLamina = e.alturaCm != null ? (e.alturaCm / 100) : (e.altura != null ? e.altura : null);
+    const lamina = rawLamina != null && !isNaN(rawLamina) ? `${parseFloat(rawLamina).toFixed(2)} m` : '--';
+
+    const pct = e.percent != null && !isNaN(e.percent) ? `${e.percent.toFixed(1)}%` : '--';
 
     lagoasHtml += `
       <div class="p-3 bg-slate-800/80 rounded-lg border border-slate-700/80 mb-2">
@@ -429,7 +441,7 @@ function _abrirPopupPonto(marker, ponto) {
             ${online ? 'ONLINE' : 'OFFLINE'}
           </span>
         </div>
-        <div class="grid grid-cols-3 gap-2 text-center text-xs">
+        <div class="grid grid-cols-4 gap-2 text-center text-xs">
           <div>
             <span class="text-[10px] text-slate-400 block">Capacidade</span>
             <strong class="text-cyan-400">${pct}</strong>
@@ -439,8 +451,12 @@ function _abrirPopupPonto(marker, ponto) {
             <strong class="text-purple-400">${volM3} m³</strong>
           </div>
           <div>
-            <span class="text-[10px] text-slate-400 block">Nível Sensor</span>
+            <span class="text-[10px] text-slate-400 block" title="Distância do sensor até a lâmina">Dist. Sensor</span>
             <strong class="text-slate-200">${nivel}</strong>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-400 block" title="Lâmina de vinhaça acumulada">Lâmina</span>
+            <strong class="text-emerald-400">${lamina}</strong>
           </div>
         </div>
       </div>
@@ -476,22 +492,25 @@ function _conectarBotoesControle() {
     if (_map) _map.flyTo([PONTOS_ADUTORA.castanha.lat, PONTOS_ADUTORA.castanha.lng], 15, { duration: 1.2 });
   });
 
-  let modoSatelite = true;
-  document.getElementById('btn-map-toggle-layer')?.addEventListener('click', () => {
-    if (!_map) return;
-    modoSatelite = !modoSatelite;
-    const lbl = document.getElementById('lbl-layer-mode');
+  const btnToggleLayer = document.getElementById('btn-map-toggle-layer');
+  const lblLayerMode = document.getElementById('lbl-layer-mode');
 
-    if (modoSatelite) {
-      if (_map.hasLayer(_layers.dark)) _map.removeLayer(_layers.dark);
-      _map.addLayer(_layers.satellite);
-      _map.addLayer(_layers.labels);
-      if (lbl) lbl.textContent = 'Satélite';
+  btnToggleLayer?.addEventListener('click', () => {
+    if (!_map) return;
+    if (_modoCamada === 'satellite') {
+      if (_layers.satellite && _map.hasLayer(_layers.satellite)) _map.removeLayer(_layers.satellite);
+      if (_layers.labels && _map.hasLayer(_layers.labels)) _map.removeLayer(_layers.labels);
+      if (_layers.dark) _layers.dark.addTo(_map);
+      _modoCamada = 'dark';
+      if (lblLayerMode) lblLayerMode.textContent = 'Modo Dark';
+      btnToggleLayer.classList.add('bg-cyan-900/40', 'border-cyan-500/50', 'text-cyan-300');
     } else {
-      if (_map.hasLayer(_layers.satellite)) _map.removeLayer(_layers.satellite);
-      if (_map.hasLayer(_layers.labels)) _map.removeLayer(_layers.labels);
-      _map.addLayer(_layers.dark);
-      if (lbl) lbl.textContent = 'Modo Dark';
+      if (_layers.dark && _map.hasLayer(_layers.dark)) _map.removeLayer(_layers.dark);
+      if (_layers.satellite) _layers.satellite.addTo(_map);
+      if (_layers.labels) _layers.labels.addTo(_map);
+      _modoCamada = 'satellite';
+      if (lblLayerMode) lblLayerMode.textContent = 'Satélite';
+      btnToggleLayer.classList.remove('bg-cyan-900/40', 'border-cyan-500/50', 'text-cyan-300');
     }
   });
 }
