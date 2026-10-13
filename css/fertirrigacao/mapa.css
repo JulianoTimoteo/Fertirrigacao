@@ -6,11 +6,17 @@
 .adutoras-map-container {
     position: relative;
     width: 100%;
-    height: 640px;
+    height: 720px;
     border-radius: 1.25rem;
     overflow: hidden;
     box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.1);
     background: #020617;
+}
+
+@media (min-width: 1536px) {
+    .adutoras-map-container {
+        height: 760px;
+    }
 }
 
 #adutoras-leaflet-map {
@@ -60,8 +66,8 @@
 }
 
 .lagoa-marker-icon {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -71,16 +77,33 @@
     font-size: 13px;
     letter-spacing: 0.5px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), inset 0 2px 5px rgba(255, 255, 255, 0.5);
-    border: 3.5px solid #ffffff !important;
+    border: 3px solid #ffffff !important;
     position: relative;
     text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.8);
+}
+
+/* Estilo dedicado anti-colisão e de alta precisão para os carregamentos gêmeos T1 e T2 */
+.badge-ponto-t1 .lagoa-marker-icon,
+.badge-ponto-t2 .lagoa-marker-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 12px;
+    border-width: 2.5px !important;
+}
+
+.badge-ponto-t1 .lagoa-marker-label {
+    transform: translateX(-14px);
+}
+
+.badge-ponto-t2 .lagoa-marker-label {
+    transform: translateX(14px);
 }
 
 .lagoa-marker-label {
     margin-top: 5px;
     background: #020617 !important;
     color: #ffffff !important;
-    padding: 3px 10px;
+    padding: 3px 9px;
     border-radius: 9999px;
     font-size: 11px;
     font-weight: 800;
@@ -89,7 +112,7 @@
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8);
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     letter-spacing: 0.5px;
 }
 

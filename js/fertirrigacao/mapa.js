@@ -20,27 +20,27 @@ let _activeFlowTrechos = new Set();
 let _modoCamada = 'satellite';
 
 export const PONTOS_ADUTORA = {
-  t1: {
-    chave: 't1',
-    nome: 'CARREGAMENTO USINA A',
-    subtitulo: 'Tanque 1 (T1)',
-    lat: -21.04508601802594,
-    lng: -48.260840316946286,
-    ordem: 0,
-    lagoas: [1],
-    cor: '#06b6d4',
-    badge: 'T1'
-  },
   t2: {
     chave: 't2',
     nome: 'CARREGAMENTO USINA B',
     subtitulo: 'Tanque 2 (T2)',
     lat: -21.044852715210126,
     lng: -48.260317960320975,
-    ordem: 1,
+    ordem: 0,
     lagoas: [2],
     cor: '#0ea5e9',
     badge: 'T2'
+  },
+  t1: {
+    chave: 't1',
+    nome: 'CARREGAMENTO USINA A',
+    subtitulo: 'Tanque 1 (T1)',
+    lat: -21.04508601802594,
+    lng: -48.260840316946286,
+    ordem: 1,
+    lagoas: [1],
+    cor: '#06b6d4',
+    badge: 'T1'
   },
   eucalipto: {
     chave: 'eucalipto',
@@ -79,28 +79,28 @@ export const PONTOS_ADUTORA = {
 
 export const TRECHOS_ADUTORA = [
   {
-    id: 't1-t2',
-    origem: 't1',
-    destino: 't2',
-    nome: 'Carregamento A ⇄ Carregamento B',
+    id: 't2-t1',
+    origem: 't2',
+    destino: 't1',
+    nome: 'Carregamento B ⇄ Carregamento A',
     distanciaKm: 0.06,
     diametroMm: 300,
     tubulacao: 'PEAD PN10 De 315mm (Interligação)',
     pontos: [
-      [-21.04508601802594, -48.260840316946286],
-      [-21.044852715210126, -48.260317960320975]
+      [-21.044852715210126, -48.260317960320975],
+      [-21.04508601802594, -48.260840316946286]
     ]
   },
   {
-    id: 't2-eucalipto',
-    origem: 't2',
+    id: 't1-eucalipto',
+    origem: 't1',
     destino: 'eucalipto',
     nome: 'Carregamento Usina ➔ Eucalipto Cheiroso',
     distanciaKm: 1.90,
     diametroMm: 300,
     tubulacao: 'PEAD PN10 De 315mm',
     pontos: [
-      [-21.044852715210126, -48.260317960320975],
+      [-21.04508601802594, -48.260840316946286],
       [-21.048171179817402, -48.27849805552853]
     ]
   },
@@ -201,107 +201,144 @@ export function getMapaHTML() {
       </div>
     </div>
 
-    <!-- Simulador Operacional de Fluxos Futuros -->
-    <div class="vazao-panel rounded-xl p-5 shadow-lg border border-slate-700 bg-slate-900/80">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-3 border-b border-slate-700">
-        <div class="flex items-center gap-2">
-          <span class="material-symbols-outlined text-amber-400 text-2xl">swap_horiz</span>
-          <div>
-            <h4 class="text-base font-bold text-white">Simulador Dinâmico de Fluxos Futuros</h4>
-            <p class="text-xs text-slate-400">Simule bombeamentos programados, visualize a direção do fluido no mapa e calcule o tempo estimado de transferência</p>
-          </div>
-        </div>
-        <span class="text-xs font-mono px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1">
-          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span> Linha Viva
-        </span>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-end">
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Lagoa de Origem (Saída)</label>
-          <select id="sim-origem" class="w-full p-2.5 text-xs rounded-lg bg-slate-800 border border-slate-600 text-white font-medium focus:border-cyan-400 outline-none">
-            <option value="t1" selected>Carregamento Usina A (T1)</option>
-            <option value="t2">Carregamento Usina B (T2)</option>
-            <option value="eucalipto">Eucalipto Cheiroso (T3)</option>
-            <option value="castanha">Castanha (T4)</option>
-            <option value="theresinha">Santa Theresinha (T5)</option>
-          </select>
-        </div>
-        <div class="flex items-center justify-center pb-0.5">
-          <button id="btn-inverter-sentido" type="button" title="Inverter Sentido (Origem ⇄ Destino)" class="w-full sm:w-auto px-3 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-cyan-400 hover:text-cyan-300 flex items-center justify-center gap-1.5 transition shadow cursor-pointer text-xs font-semibold">
-            <span class="material-symbols-outlined text-base">swap_horiz</span> Inverter
-          </button>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Lagoa de Destino (Chegada)</label>
-          <select id="sim-destino" class="w-full p-2.5 text-xs rounded-lg bg-slate-800 border border-slate-600 text-white font-medium focus:border-cyan-400 outline-none">
-            <option value="t1">Carregamento Usina A (T1)</option>
-            <option value="t2">Carregamento Usina B (T2)</option>
-            <option value="eucalipto">Eucalipto Cheiroso (T3)</option>
-            <option value="castanha" selected>Castanha (T4)</option>
-            <option value="theresinha">Santa Theresinha (T5)</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Vazão da Bomba (m³/h)</label>
-          <input type="number" id="sim-vazao" value="120" min="10" max="800" step="10" class="w-full p-2.5 text-xs rounded-lg bg-slate-800 border border-slate-600 text-white font-mono focus:border-cyan-400 outline-none">
-        </div>
-        <div class="flex gap-2">
-          <button id="btn-simular-fluxo" class="flex-1 py-2.5 px-3 text-xs font-bold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white transition flex items-center justify-center gap-1.5 shadow cursor-pointer">
-            <span class="material-symbols-outlined text-sm">play_arrow</span> Ativar Fluxo
-          </button>
-          <button id="btn-reset-fluxo" class="py-2.5 px-3 text-xs font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 transition cursor-pointer">
-            Parar
-          </button>
-        </div>
-      </div>
-
-      <!-- Resumo da Projeção de Fluxo -->
-      <div id="sim-resultado" class="mt-4 p-4 rounded-lg bg-slate-800/90 border border-cyan-500/40 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs">
+    <!-- Painel de Controle e Simulador de Adutoras (Minimizado por Padrão para Prioridade Total ao Mapa) -->
+    <div class="vazao-panel rounded-xl shadow-lg border border-slate-700 bg-slate-900/95 overflow-hidden transition-all duration-300">
+      
+      <!-- Barra de Controle Clicável (Sempre visível) -->
+      <button id="btn-toggle-simulador" type="button" class="w-full p-3.5 px-5 flex items-center justify-between hover:bg-slate-800/80 transition cursor-pointer text-left select-none outline-none">
         <div class="flex items-center gap-3">
-          <span class="material-symbols-outlined text-cyan-400 text-2xl">airwave</span>
+          <span class="material-symbols-outlined text-cyan-400 text-xl">tune</span>
           <div>
-            <strong class="text-white text-sm" id="sim-trajeto-label">T1 ➔ Castanha (Distância: 6.22 km)</strong>
-            <p class="text-slate-400 mt-0.5" id="sim-detalhes-label">Fluxo simulado a 120 m³/h passando pelas adutoras.</p>
+            <h4 class="text-xs font-bold text-white flex items-center gap-2">
+              <span>Simulador de Fluxos & Monitoramento de Trechos</span>
+              <span id="badge-simulador-resumo" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-800 text-cyan-300 border border-slate-700">
+                4 Trechos · 12.32 km
+              </span>
+            </h4>
+            <p class="text-[11px] text-slate-400">Clique para abrir ou recolher o simulador de vazão, estimativas de trânsito e detalhes das tubulações</p>
           </div>
         </div>
-        <div class="flex items-center gap-5 text-right flex-wrap">
-          <div>
-            <span class="text-slate-400 block text-[11px]">Tempo Est. p/ 500 m³</span>
-            <strong class="text-amber-400 text-sm font-mono" id="sim-tempo-estimado">~4h 10min</strong>
-          </div>
-          <div>
-            <span class="text-slate-400 block text-[11px]">Velocidade no Duto</span>
-            <strong class="text-cyan-400 text-sm font-mono" id="sim-velocidade-duto">~1.4 m/s</strong>
-          </div>
-          <div>
-            <span class="text-slate-400 block text-[11px]">Pressão Estimada</span>
-            <strong class="text-emerald-400 text-sm font-mono" id="sim-pressao-estimada">~4.8 bar</strong>
-          </div>
+        <div class="flex items-center gap-2 text-cyan-400 font-semibold text-xs">
+          <span id="lbl-toggle-simulador">Abrir Simulador</span>
+          <span id="icon-toggle-simulador" class="material-symbols-outlined text-lg transition-transform duration-300">expand_more</span>
         </div>
-      </div>
-    </div>
+      </button>
 
-    <!-- Painel de Trechos da Adutora (4 trechos) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      ${TRECHOS_ADUTORA.map((t, idx) => `
-        <div class="vazao-panel rounded-xl p-4 shadow border border-slate-700 relative overflow-hidden" id="card-trecho-${t.id}">
-          <div class="flex items-center justify-between mb-2 pb-1 border-b border-slate-700">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Trecho ${idx + 1}</span>
-            <span class="map-distance-chip">
-              <span class="material-symbols-outlined text-[12px]">straighten</span> ${t.distanciaKm} km
+      <!-- Conteúdo Retrátil (Minimizado por Padrão) -->
+      <div id="conteudo-simulador" class="hidden border-t border-slate-800 p-5 space-y-6">
+        
+        <!-- Simulador Operacional de Fluxos Futuros -->
+        <div class="p-4 rounded-xl border border-slate-700/80 bg-slate-800/40">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-3 border-b border-slate-700">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-amber-400 text-xl">swap_horiz</span>
+              <div>
+                <h4 class="text-sm font-bold text-white">Simulador Dinâmico de Fluxos Futuros</h4>
+                <p class="text-xs text-slate-400">Simule bombeamentos programados, visualize a direção do fluido no mapa e calcule o tempo estimado de transferência</p>
+              </div>
+            </div>
+            <span class="text-xs font-mono px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span> Linha Viva
             </span>
           </div>
-          <h4 class="text-sm font-bold text-slate-100 mb-1">${t.nome}</h4>
-          <p class="text-xs text-slate-400 mb-2">Tubulação de alta pressão interligando reservatórios</p>
-          <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-800">
-            <span class="text-slate-400">Fluxo no Trecho:</span>
-            <span id="pipe-flow-${t.id}" class="font-mono text-cyan-400 font-bold flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span> Estável
-            </span>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-end">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Lagoa de Origem (Saída)</label>
+              <select id="sim-origem" class="w-full p-2.5 text-xs rounded-lg bg-slate-800 border border-slate-600 text-white font-medium focus:border-cyan-400 outline-none">
+                <option value="t1" selected>Carregamento Usina A (T1)</option>
+                <option value="t2">Carregamento Usina B (T2)</option>
+                <option value="eucalipto">Eucalipto Cheiroso (T3)</option>
+                <option value="castanha">Castanha (T4)</option>
+                <option value="theresinha">Santa Theresinha (T5)</option>
+              </select>
+            </div>
+            <div class="flex items-center justify-center pb-0.5">
+              <button id="btn-inverter-sentido" type="button" title="Inverter Sentido (Origem ⇄ Destino)" class="w-full sm:w-auto px-3 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-cyan-400 hover:text-cyan-300 flex items-center justify-center gap-1.5 transition shadow cursor-pointer text-xs font-semibold">
+                <span class="material-symbols-outlined text-base">swap_horiz</span> Inverter
+              </button>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Lagoa de Destino (Chegada)</label>
+              <select id="sim-destino" class="w-full p-2.5 text-xs rounded-lg bg-slate-800 border border-slate-600 text-white font-medium focus:border-cyan-400 outline-none">
+                <option value="t1">Carregamento Usina A (T1)</option>
+                <option value="t2">Carregamento Usina B (T2)</option>
+                <option value="eucalipto">Eucalipto Cheiroso (T3)</option>
+                <option value="castanha" selected>Castanha (T4)</option>
+                <option value="theresinha">Santa Theresinha (T5)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Vazão da Bomba (m³/h)</label>
+              <input type="number" id="sim-vazao" value="120" min="10" max="800" step="10" class="w-full p-2.5 text-xs rounded-lg bg-slate-800 border border-slate-600 text-white font-mono focus:border-cyan-400 outline-none">
+            </div>
+            <div class="flex gap-2">
+              <button id="btn-simular-fluxo" class="flex-1 py-2.5 px-3 text-xs font-bold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white transition flex items-center justify-center gap-1.5 shadow cursor-pointer">
+                <span class="material-symbols-outlined text-sm">play_arrow</span> Ativar Fluxo
+              </button>
+              <button id="btn-reset-fluxo" class="py-2.5 px-3 text-xs font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 transition cursor-pointer">
+                Parar
+              </button>
+            </div>
+          </div>
+
+          <!-- Resumo da Projeção de Fluxo -->
+          <div id="sim-resultado" class="mt-4 p-4 rounded-lg bg-slate-800/90 border border-cyan-500/40 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-outlined text-cyan-400 text-2xl">airwave</span>
+              <div>
+                <strong class="text-white text-sm" id="sim-trajeto-label">T1 ➔ Castanha (Distância: 6.16 km)</strong>
+                <p class="text-slate-400 mt-0.5" id="sim-detalhes-label">Fluxo simulado a 120 m³/h passando pelas adutoras.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-5 text-right flex-wrap">
+              <div>
+                <span class="text-slate-400 block text-[11px]">Tempo Est. p/ 500 m³</span>
+                <strong class="text-amber-400 text-sm font-mono" id="sim-tempo-estimado">~4h 10min</strong>
+              </div>
+              <div>
+                <span class="text-slate-400 block text-[11px]">Velocidade no Duto</span>
+                <strong class="text-cyan-400 text-sm font-mono" id="sim-velocidade-duto">~1.4 m/s</strong>
+              </div>
+              <div>
+                <span class="text-slate-400 block text-[11px]">Pressão Estimada</span>
+                <strong class="text-emerald-400 text-sm font-mono" id="sim-pressao-estimada">~4.8 bar</strong>
+              </div>
+            </div>
           </div>
         </div>
-      `).join('')}
+
+        <!-- Painel de Trechos da Adutora (4 trechos) -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h5 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-sm text-cyan-400">segment</span> Trechos Georreferenciados da Rede
+            </h5>
+            <span class="text-[11px] text-slate-400">Passe o mouse ou clique em qualquer trecho para inspecionar no mapa</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            ${TRECHOS_ADUTORA.map((t, idx) => `
+              <div class="vazao-panel rounded-xl p-4 shadow border border-slate-700 relative overflow-hidden transition hover:border-cyan-500/50" id="card-trecho-${t.id}">
+                <div class="flex items-center justify-between mb-2 pb-1 border-b border-slate-700">
+                  <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Trecho ${idx + 1}</span>
+                  <span class="map-distance-chip">
+                    <span class="material-symbols-outlined text-[12px]">straighten</span> ${t.distanciaKm} km
+                  </span>
+                </div>
+                <h4 class="text-sm font-bold text-slate-100 mb-1">${t.nome}</h4>
+                <p class="text-xs text-slate-400 mb-2">${t.tubulacao}</p>
+                <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-800">
+                  <span class="text-slate-400">Fluxo no Trecho:</span>
+                  <span id="pipe-flow-${t.id}" class="font-mono text-cyan-400 font-bold flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span> Estável
+                  </span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+      </div>
     </div>
 
   </div>`;
@@ -504,29 +541,31 @@ function _desenharAdutoras() {
 
     _pipeLines[trecho.id] = { baseLine, flowLine, hitLine };
 
-    // Badge de distância no ponto médio do trecho (também exibe o tooltip no hover!)
-    const midLat = (trecho.pontos[0][0] + trecho.pontos[1][0]) / 2;
-    const midLng = (trecho.pontos[0][1] + trecho.pontos[1][1]) / 2;
-    const distIcon = L.divIcon({
-      className: 'custom-distance-marker',
-      html: `<div class="map-distance-chip shadow-lg cursor-pointer">${trecho.distanciaKm} km</div>`,
-      iconSize: [64, 24],
-      iconAnchor: [32, 12]
-    });
-    const distMarker = L.marker([midLat, midLng], { icon: distIcon }).addTo(_map);
+    // Badge de distância no ponto médio do trecho (só exibido em trechos com mais de 200m para não cobrir tanques próximos)
+    if (trecho.distanciaKm >= 0.2) {
+      const midLat = (trecho.pontos[0][0] + trecho.pontos[1][0]) / 2;
+      const midLng = (trecho.pontos[0][1] + trecho.pontos[1][1]) / 2;
+      const distIcon = L.divIcon({
+        className: 'custom-distance-marker',
+        html: `<div class="map-distance-chip shadow-lg cursor-pointer">${trecho.distanciaKm} km</div>`,
+        iconSize: [64, 24],
+        iconAnchor: [32, 12]
+      });
+      const distMarker = L.marker([midLat, midLng], { icon: distIcon }).addTo(_map);
 
-    distMarker.bindTooltip(_gerarTooltipTrechoHTML(trecho), {
-      opacity: 1,
-      direction: 'top',
-      offset: [0, -12],
-      className: 'adutora-leaflet-tooltip'
-    });
+      distMarker.bindTooltip(_gerarTooltipTrechoHTML(trecho), {
+        opacity: 1,
+        direction: 'top',
+        offset: [0, -12],
+        className: 'adutora-leaflet-tooltip'
+      });
 
-    distMarker.on('click', () => {
-      _abrirPopupTrecho(trecho, [midLat, midLng]);
-    });
+      distMarker.on('click', () => {
+        _abrirPopupTrecho(trecho, [midLat, midLng]);
+      });
 
-    _distanceMarkers.push(distMarker);
+      _distanceMarkers.push(distMarker);
+    }
 
     // Conecta o card do trecho na parte inferior da tela
     const cardEl = document.getElementById(`card-trecho-${trecho.id}`);
@@ -601,7 +640,7 @@ function _criarIconePonto(ponto, estado) {
   return L.divIcon({
     className: 'lagoa-map-marker',
     html: `
-      <div class="lagoa-marker-badge" title="${ponto.nome} (${ponto.badge}) — Passe o mouse para telemetria">
+      <div class="lagoa-marker-badge badge-ponto-${ponto.chave}" title="${ponto.nome} (${ponto.badge}) — Passe o mouse para telemetria">
         <div class="lagoa-marker-icon" style="background:${ponto.cor}">
           ${pulseHtml}
           <span>${ponto.badge}</span>
@@ -750,9 +789,14 @@ function _abrirPopupTrecho(trecho, latlng) {
         </div>
       </div>
 
-      <button id="btn-popup-simular-${trecho.id}" class="w-full py-1.5 px-3 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white transition flex items-center justify-center gap-1.5 shadow cursor-pointer">
-        <span class="material-symbols-outlined text-xs">play_arrow</span> Simular Bombeamento Neste Trecho
-      </button>
+      <div class="grid grid-cols-2 gap-2 mt-2">
+        <button id="btn-popup-direto-${trecho.id}" class="py-2 px-2.5 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white transition flex items-center justify-center gap-1 shadow cursor-pointer" title="Bombear no sentido direto">
+          <span class="material-symbols-outlined text-xs">play_arrow</span> Fluxo Direto
+        </button>
+        <button id="btn-popup-reverso-${trecho.id}" class="py-2 px-2.5 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white transition flex items-center justify-center gap-1 shadow cursor-pointer" title="Inverter o fluxo (bombear no sentido contrário)">
+          <span class="material-symbols-outlined text-xs">swap_horiz</span> Inverter Fluxo
+        </button>
+      </div>
     </div>
   `;
 
@@ -769,18 +813,50 @@ function _abrirPopupTrecho(trecho, latlng) {
     .openOn(_map);
 
   setTimeout(() => {
-    document.getElementById(`btn-popup-simular-${trecho.id}`)?.addEventListener('click', () => {
+    // 1. Botão Fluxo Direto
+    document.getElementById(`btn-popup-direto-${trecho.id}`)?.addEventListener('click', () => {
       _map.closePopup();
+      _expandirSimulador();
       const selOrigem = document.getElementById('sim-origem');
       const selDestino = document.getElementById('sim-destino');
       if (selOrigem && selDestino) {
         selOrigem.value = trecho.origem;
         selDestino.value = trecho.destino;
-        document.getElementById('btn-sim-executar')?.click();
-        document.getElementById('card-trecho-' + trecho.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.getElementById('btn-simular-fluxo')?.click();
+        setTimeout(() => {
+          document.getElementById('card-trecho-' + trecho.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 150);
+      }
+    });
+
+    // 2. Botão Inverter Fluxo
+    document.getElementById(`btn-popup-reverso-${trecho.id}`)?.addEventListener('click', () => {
+      _map.closePopup();
+      _expandirSimulador();
+      const selOrigem = document.getElementById('sim-origem');
+      const selDestino = document.getElementById('sim-destino');
+      if (selOrigem && selDestino) {
+        // Sentido contrário: o Destino passa a ser Origem, e Origem vira Destino
+        selOrigem.value = trecho.destino;
+        selDestino.value = trecho.origem;
+        document.getElementById('btn-simular-fluxo')?.click();
+        setTimeout(() => {
+          document.getElementById('card-trecho-' + trecho.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 150);
       }
     });
   }, 100);
+}
+
+function _expandirSimulador() {
+  const conteudo = document.getElementById('conteudo-simulador');
+  const lblToggle = document.getElementById('lbl-toggle-simulador');
+  const iconToggle = document.getElementById('icon-toggle-simulador');
+  if (conteudo && conteudo.classList.contains('hidden')) {
+    conteudo.classList.remove('hidden');
+    if (lblToggle) lblToggle.textContent = 'Minimizar Simulador';
+    if (iconToggle) iconToggle.classList.add('rotate-180');
+  }
 }
 
 function _conectarBotoesControle() {
@@ -816,6 +892,26 @@ function _conectarBotoesControle() {
       _modoCamada = 'satellite';
       if (lblLayerMode) lblLayerMode.textContent = 'Satélite';
       btnToggleLayer.classList.remove('bg-cyan-900/40', 'border-cyan-500/50', 'text-cyan-300');
+    }
+  });
+
+  // Toggle do Painel Retrátil do Simulador
+  const btnToggleSimulador = document.getElementById('btn-toggle-simulador');
+  const conteudoSimulador = document.getElementById('conteudo-simulador');
+  const lblToggle = document.getElementById('lbl-toggle-simulador');
+  const iconToggle = document.getElementById('icon-toggle-simulador');
+
+  btnToggleSimulador?.addEventListener('click', () => {
+    if (!conteudoSimulador) return;
+    const isHidden = conteudoSimulador.classList.contains('hidden');
+    if (isHidden) {
+      conteudoSimulador.classList.remove('hidden');
+      if (lblToggle) lblToggle.textContent = 'Minimizar Simulador';
+      if (iconToggle) iconToggle.classList.add('rotate-180');
+    } else {
+      conteudoSimulador.classList.add('hidden');
+      if (lblToggle) lblToggle.textContent = 'Abrir Simulador';
+      if (iconToggle) iconToggle.classList.remove('rotate-180');
     }
   });
 }

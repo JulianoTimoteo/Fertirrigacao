@@ -9,7 +9,7 @@ import { renderLagoasChart, destroyLagoasChart, getGraficoHTML, carregarHistoric
 import { getVazaoHTML, getSummaryCardHTML, atualizarAcumulados, setupMetaInput, resetAcumulados, recalcularVolumeFromEstado, carregarHistoricoRealVazao } from './vazao.js';
 import { setupFertirrigacaoSubTabs, stopAutoplay }                            from './subtabs.js';
 import { getInsightsHTML, atualizarInsights, resetInsights, renderInsightsFromEstado } from './insights.js';
-import { getMapaHTML, initMapaAdutoras, destroyMapaAdutoras }                     from './mapa.js?v=8.4.14';
+import { getMapaHTML, initMapaAdutoras, destroyMapaAdutoras }                     from './mapa.js?v=8.4.15';
 
 // ─── HTML principal ──────────────────────────────────────────────────────────
 export function getFertirrigacaoTabHTML() {
