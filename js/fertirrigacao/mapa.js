@@ -192,20 +192,27 @@ export function getMapaHTML() {
         </span>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-end">
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">Lagoa de Origem (Saída)</label>
           <select id="sim-origem" class="w-full p-2.5 text-xs rounded-lg bg-slate-800 border border-slate-600 text-white font-medium focus:border-cyan-400 outline-none">
-            <option value="usina">Carregamento Usina (A/B)</option>
+            <option value="usina" selected>Carregamento Usina (A/B - T1/T2)</option>
             <option value="eucalipto">Eucalipto Cheiroso (T3)</option>
             <option value="castanha">Castanha (T4)</option>
+            <option value="theresinha">Santa Theresinha (T5)</option>
           </select>
+        </div>
+        <div class="flex items-center justify-center pb-0.5">
+          <button id="btn-inverter-sentido" type="button" title="Inverter Sentido (Origem ⇄ Destino)" class="w-full sm:w-auto px-3 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-cyan-400 hover:text-cyan-300 flex items-center justify-center gap-1.5 transition shadow cursor-pointer text-xs font-semibold">
+            <span class="material-symbols-outlined text-base">swap_horiz</span> Inverter
+          </button>
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">Lagoa de Destino (Chegada)</label>
           <select id="sim-destino" class="w-full p-2.5 text-xs rounded-lg bg-slate-800 border border-slate-600 text-white font-medium focus:border-cyan-400 outline-none">
-            <option value="castanha" selected>Castanha (T4)</option>
+            <option value="usina">Carregamento Usina (A/B - T1/T2)</option>
             <option value="eucalipto">Eucalipto Cheiroso (T3)</option>
+            <option value="castanha" selected>Castanha (T4)</option>
             <option value="theresinha">Santa Theresinha (T5)</option>
           </select>
         </div>
@@ -524,11 +531,22 @@ function _criarMarcadoresLagoas() {
     const marker = L.marker([ponto.lat, ponto.lng], { icon: customIcon }).addTo(_map);
 
     // TOOLTIP NO HOVER DOS "Ts" (INSTANTÂNEO NO MOUSE - IGUAL ÀS ADUTORAS!)
-    marker.bindTooltip(() => _gerarHTMLTooltipPonto(ponto), {
+    const htmlTooltip = _gerarHTMLTooltipPonto(ponto);
+    marker.bindTooltip(htmlTooltip, {
       opacity: 1,
       direction: 'top',
       offset: [0, -35],
       className: 'adutora-leaflet-tooltip'
+    });
+
+    // Eventos explícitos para garantir exibição imediata no hover e atualização em tempo real
+    marker.on('mouseover', () => {
+      marker.setTooltipContent(_gerarHTMLTooltipPonto(ponto));
+      marker.openTooltip();
+    });
+
+    marker.on('mouseout', () => {
+      marker.closeTooltip();
     });
 
     // CLIQUE FIXA A JANELA POPUP
@@ -776,6 +794,7 @@ function _conectarBotoesControle() {
 function _conectarSimuladorFluxo() {
   const btnSimular = document.getElementById('btn-simular-fluxo');
   const btnReset = document.getElementById('btn-reset-fluxo');
+  const btnInverter = document.getElementById('btn-inverter-sentido');
   const selOrigem = document.getElementById('sim-origem');
   const selDestino = document.getElementById('sim-destino');
   const inputVazao = document.getElementById('sim-vazao');
@@ -788,6 +807,26 @@ function _conectarSimuladorFluxo() {
     const pOrig = PONTOS_ADUTORA[orig];
     const pDest = PONTOS_ADUTORA[dest];
     if (!pOrig || !pDest) return;
+
+    const lblTrajeto = document.getElementById('sim-trajeto-label');
+    const lblDetalhes = document.getElementById('sim-detalhes-label');
+    const lblTempo = document.getElementById('sim-tempo-estimado');
+    const lblVel = document.getElementById('sim-velocidade-duto');
+    const lblPressao = document.getElementById('sim-pressao-estimada');
+
+    // Validação: Origem e Destino iguais
+    if (orig === dest) {
+      if (lblTrajeto) {
+        lblTrajeto.innerHTML = `<span class="text-amber-400 font-bold">Origem e Destino são iguais (${pOrig.badge})</span>`;
+      }
+      if (lblDetalhes) {
+        lblDetalhes.textContent = 'Selecione reservatórios diferentes ou use o botão "Inverter" para simular a rota de bombeamento.';
+      }
+      if (lblTempo) lblTempo.textContent = '--';
+      if (lblVel) lblVel.textContent = '--';
+      if (lblPressao) lblPressao.textContent = '--';
+      return null;
+    }
 
     // Determina trechos percorridos no trajeto
     const i1 = Math.min(pOrig.ordem, pDest.ordem);
@@ -804,20 +843,19 @@ function _conectarSimuladorFluxo() {
     }
 
     const sentidoReverso = pOrig.ordem > pDest.ordem;
+    const seta = sentidoReverso ? '⮜' : '➔';
+    const badgeSentido = sentidoReverso
+      ? '<span class="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">FLUXO REVERSO</span>'
+      : '<span class="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">FLUXO DIRETO</span>';
 
     // Atualiza resumo no DOM
-    const lblTrajeto = document.getElementById('sim-trajeto-label');
-    const lblDetalhes = document.getElementById('sim-detalhes-label');
-    const lblTempo = document.getElementById('sim-tempo-estimado');
-    const lblVel = document.getElementById('sim-velocidade-duto');
-    const lblPressao = document.getElementById('sim-pressao-estimada');
-
     if (lblTrajeto) {
-      lblTrajeto.textContent = `${pOrig.badge} ➔ ${pDest.badge} (${pOrig.nome} ➔ ${pDest.nome}) — ${distTotal.toFixed(2)} km`;
+      lblTrajeto.innerHTML = `${pOrig.badge} ${seta} ${pDest.badge} (${pOrig.nome} ${seta} ${pDest.nome}) — ${distTotal.toFixed(2)} km ${badgeSentido}`;
     }
 
     if (lblDetalhes) {
-      lblDetalhes.textContent = `Fluxo ${sentidoReverso ? 'reverso' : 'direto'} programado a ${vazao} m³/h atravessando ${trechosEnvolvidos.length} trecho(s) de adutora.`;
+      const dirText = sentidoReverso ? 'reverso (retorno de vinhaça)' : 'direto (distribuição)';
+      lblDetalhes.textContent = `Fluxo ${dirText} programado a ${vazao} m³/h atravessando ${trechosEnvolvidos.length} trecho(s) de adutora.`;
     }
 
     // Tempo estimado para transferir 500 m³
@@ -836,6 +874,15 @@ function _conectarSimuladorFluxo() {
 
     return { trechosEnvolvidos, sentidoReverso, vazao };
   }
+
+  // Botão de Inversão Rápida de Sentido (Origem ⇄ Destino)
+  btnInverter?.addEventListener('click', () => {
+    if (!selOrigem || !selDestino) return;
+    const temp = selOrigem.value;
+    selOrigem.value = selDestino.value;
+    selDestino.value = temp;
+    atualizarCalculosSimulacao();
+  });
 
   selOrigem?.addEventListener('change', atualizarCalculosSimulacao);
   selDestino?.addEventListener('change', atualizarCalculosSimulacao);
@@ -856,23 +903,30 @@ function _conectarSimuladorFluxo() {
       }
     });
 
-    // Ativa animação intensa e cores vibrantes nos trechos envolvidos
+    // Ativa animação intensa e cores vibrantes nos trechos envolvidos com sentido real
     res.trechosEnvolvidos.forEach(t => {
       const p = _pipeLines[t.id];
       if (p) {
         const animClass = res.sentidoReverso ? 'adutora-anim-flow-reverse' : 'adutora-anim-flow';
+        const corLinha = res.sentidoReverso ? '#f59e0b' : '#22d3ee';
+        const badgeDot = res.sentidoReverso ? 'bg-amber-400' : 'bg-cyan-400';
+        const setaBadge = res.sentidoReverso ? '⬅' : '➔';
+
         p.flowLine._path?.classList.add(animClass);
-        p.flowLine.setStyle({ color: '#22d3ee', weight: 5 });
+        p.flowLine.setStyle({ color: corLinha, weight: 5.5 });
+
         const badgeEl = document.getElementById(`pipe-flow-${t.id}`);
         if (badgeEl) {
-          badgeEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span> <strong>${res.vazao} m³/h ${res.sentidoReverso ? '⬅' : '➔'}</strong>`;
+          badgeEl.innerHTML = `<span class="w-2 h-2 rounded-full ${badgeDot} animate-ping"></span> <strong>${res.vazao} m³/h ${setaBadge}</strong>`;
         }
       }
     });
 
     const statusEl = document.getElementById('map-flow-status');
     if (statusEl) {
-      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span> Bombeamento Ativo (${res.vazao} m³/h)`;
+      const pingCor = res.sentidoReverso ? 'bg-amber-400' : 'bg-cyan-400';
+      const modoTexto = res.sentidoReverso ? 'Fluxo Reverso Ativo' : 'Bombeamento Ativo';
+      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full ${pingCor} animate-ping"></span> ${modoTexto} (${res.vazao} m³/h)`;
     }
   });
 

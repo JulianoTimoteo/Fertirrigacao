@@ -1,4 +1,4 @@
-﻿import { 
+import { 
     apiGet,
     apiPost
 } from './api.js?v=8.4.12';
@@ -37,7 +37,7 @@ import {
 import { formatarTimestampFixo } from './dashboard/regras.js?v=8.4.12';
 
 // x IMPORTA!ÒO DO MDULO DE FERTIRRIGA!ÒO
-import fertirrigacao from './fertirrigacao/index.js?v=8.4.12';
+import fertirrigacao from './fertirrigacao/index.js?v=8.4.13';
 
 // xRx IMPORTA!ÒO DO SUBMENU DE PERFIL / AVATAR
 import { setupProfileMenu } from './dashboard/perfil.js?v=8.4.12';
