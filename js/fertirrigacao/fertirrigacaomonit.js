@@ -18,7 +18,7 @@ const FIREBASE_CONFIG = {
 };
 
 export const POLL_INTERVAL_MS    = 30 * 1000; // 30s sincronizado com o cronômetro do dashboard
-const ONLINE_THRESHOLD_MS = 35 * 60 * 1000; // 35 min: margem para ciclo de 10 min do ESP32 mais tolerância
+const ONLINE_THRESHOLD_MS = 45 * 60 * 1000; // 45 min: margem para ciclo de 10 min do ESP32 mais tolerância e chaveamento de AP
 
 export const LAGOA_CONFIG = {
   1: { name: 'Carregamento Usina A', firebaseId: 'T1', tanqueId: 'T1' },
