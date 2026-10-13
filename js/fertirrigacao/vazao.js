@@ -474,6 +474,7 @@ export async function carregarHistoricoRealVazao(dataDoc) {
   try {
     const todosPontos = await obterHistoricoTodosTanques(dataDoc);
     const variacoesPorLagoa = {};
+    const taxasCalculadas = {};
 
     for (const [id, cfg] of Object.entries(LAGOA_CONFIG)) {
       const pontos = todosPontos[cfg.firebaseId] || [];
@@ -502,15 +503,30 @@ export async function carregarHistoricoRealVazao(dataDoc) {
         _historicoVazao[id] = unique;
 
         if (_historicoVazao[id].length >= 2) {
-          const pAnt = _historicoVazao[id][_historicoVazao[id].length - 2];
-          const pRec = _historicoVazao[id][_historicoVazao[id].length - 1];
+          const n = _historicoVazao[id].length;
+          const pRec = _historicoVazao[id][n - 1];
+
+          // Busca um ponto anterior com janela de 5 a 60 min para taxa de qualidade
+          let pAnt = _historicoVazao[id][n - 2];
+          for (let i = n - 2; i >= 0; i--) {
+            const dt = (pRec.ts - _historicoVazao[id][i].ts) / 60000;
+            if (dt >= 5 && dt <= 90) {
+              pAnt = _historicoVazao[id][i];
+              break;
+            }
+          }
+
           const deltaVol = pRec.volumeL - pAnt.volumeL;
           variacoesPorLagoa[cfg.name] = deltaVol;
 
-          const dtMin = Math.max(0.5, (pRec.ts - pAnt.ts) / 60000);
+          const dtMin = Math.max(1.0, (pRec.ts - pAnt.ts) / 60000);
           if (dtMin <= 180) {
             taxasCalculadas[id] = deltaVol / dtMin;
+          } else {
+            taxasCalculadas[id] = 0;
           }
+        } else if (_historicoVazao[id].length === 1) {
+          taxasCalculadas[id] = 0;
         }
 
         _atualizarVazaoTabela(id);

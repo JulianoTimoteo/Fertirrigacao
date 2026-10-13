@@ -25,9 +25,24 @@ export function setupAuthListeners() {
     }
 
     loginScreen.addEventListener('click', e => {
-        if (e.target.id === 'login-button') handleLogin();
-        if (e.target.id === 'request-login-button') document.getElementById('request-login-modal')?.classList.remove('hidden');
+        if (e.target.id === 'login-button' || e.target.closest('#login-button')) handleLogin();
+        if (e.target.id === 'request-login-button' || e.target.closest('#request-login-button')) document.getElementById('request-login-modal')?.classList.remove('hidden');
         if (e.target.id === 'request-login-modal' || e.target.closest('#close-modal-button')) document.getElementById('request-login-modal')?.classList.add('hidden');
+
+        const togglePwd = e.target.closest('#toggle-pwd-btn');
+        if (togglePwd) {
+            const pwdInput = document.getElementById('password');
+            const icon = togglePwd.querySelector('span');
+            if (pwdInput) {
+                if (pwdInput.type === 'password') {
+                    pwdInput.type = 'text';
+                    if (icon) icon.textContent = 'visibility_off';
+                } else {
+                    pwdInput.type = 'password';
+                    if (icon) icon.textContent = 'visibility';
+                }
+            }
+        }
     });
     
     const passwordInput = document.getElementById('password');

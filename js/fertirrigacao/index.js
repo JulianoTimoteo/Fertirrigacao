@@ -151,17 +151,16 @@ export function initFertirrigacao() {
     renderInsightsFromEstado(estadoAtual);
   });
 
-  // Após 3s: renderiza insights e volumes com qualquer dado já carregado (stale ou fresco)
+  // Após 2s: renderiza insights, volumes e calcula taxas reais com dados historicos
   setTimeout(() => {
     const estadoAtual = getEstadoLagoas();
     const temDados = Object.values(estadoAtual).some(e => e && e.percent > 0);
     if (temDados) {
-      // Recalcula volume total a partir do estado atual (inclui dados históricos)
       recalcularVolumeFromEstado(estadoAtual);
-      // Renderiza análise de insights
       renderInsightsFromEstado(estadoAtual);
     }
-  }, 3000);
+    carregarHistoricoRealVazao(getDataVisualizacao());
+  }, 2000);
 
   console.log('✅ [Fertirrigacao] Módulo inicializado.');
 }
@@ -199,9 +198,9 @@ function _onDados(lagoaId, dados) {
 
 // ─── Atualiza chart a cada leitura (sempre, não só quando aba está ativa) ────
 function _onLeituraAtualizada() {
-  // Sempre atualiza os dados internos do chart.
-  // Se a aba não estiver visível, o chart aguarda — mas terá dados ao abrir.
+  // Sempre atualiza os dados internos do chart e recalcula vazao real
   renderLagoasChart();
+  carregarHistoricoRealVazao(getDataVisualizacao());
 }
 
 // ─── Controle de Histórico por Data ──────────────────────────────────────────

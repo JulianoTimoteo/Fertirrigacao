@@ -61,6 +61,10 @@ function _ativarAba(container, tabId) {
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent('ferti:renderMap'));
     }, 60);
+  } else if (tabId === 'vazao-content' || tabId === 'insights-content') {
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('ferti:recalcularVolumes'));
+    }, 60);
   }
 }
 

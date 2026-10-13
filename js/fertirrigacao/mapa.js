@@ -108,7 +108,7 @@ export function getMapaHTML() {
   <div class="space-y-6">
 
     <!-- Cabeçalho do Mapa -->
-    <div class="vazao-panel rounded-xl p-5 shadow-lg border border-slate-700 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="vazao-panel rounded-xl p-5 shadow-lg border flex flex-col md:flex-row md:items-center justify-between gap-4" style="background:var(--bg-2);border-color:var(--border-1)">
       <div>
         <div class="flex items-center gap-2 mb-1">
           <span class="material-symbols-outlined text-cyan-400 text-2xl">route</span>
@@ -124,17 +124,17 @@ export function getMapaHTML() {
 
       <!-- Filtros Rápidos de Visão -->
       <div class="flex flex-wrap items-center gap-2">
-        <button id="btn-map-fit-all" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white transition flex items-center gap-1 shadow cursor-pointer">
+        <button id="btn-map-fit-all" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white transition flex items-center gap-1.5 shadow cursor-pointer">
           <span class="material-symbols-outlined text-xs">zoom_out_map</span> Ver Linha Completa
         </button>
-        <button id="btn-map-focus-usina" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 transition cursor-pointer">
+        <button id="btn-map-focus-usina" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer" style="background:var(--bg-3);color:var(--text-1);border:1px solid var(--border-1)">
           Usina A/B
         </button>
-        <button id="btn-map-focus-castanha" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-900/40 hover:bg-purple-800/60 text-purple-300 border border-purple-500/40 transition cursor-pointer">
+        <button id="btn-map-focus-castanha" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-900/30 hover:bg-purple-800/50 text-purple-300 border border-purple-500/40 transition cursor-pointer">
           Castanha (Online)
         </button>
-        <button id="btn-map-toggle-layer" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 transition flex items-center gap-1 cursor-pointer">
-          <span class="material-symbols-outlined text-xs">layers</span> <span id="lbl-layer-mode">Satélite</span>
+        <button id="btn-map-toggle-layer" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer" style="background:var(--bg-3);color:var(--text-1);border:1px solid var(--border-1)">
+          <span class="material-symbols-outlined text-xs text-cyan-400">layers</span> <span id="lbl-layer-mode">Satélite</span>
         </button>
       </div>
     </div>
@@ -143,27 +143,27 @@ export function getMapaHTML() {
     <div class="adutoras-map-container">
       <div id="adutoras-leaflet-map"></div>
 
-      <!-- Overlay Flutuante com Métricas do Enlace -->
+      <!-- Overlay Flutuante com Métricas do Enlace (Glassmorphism de Alta Legibilidade) -->
       <div class="map-floating-overlay">
-        <div class="flex items-center justify-between border-b border-slate-700/80 pb-2 mb-2">
-          <div class="flex items-center gap-1.5">
-            <span class="material-symbols-outlined text-emerald-400 text-sm">sensors</span>
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-200">Rede de Campo</span>
+        <div class="map-overlay-header">
+          <div class="map-overlay-title-group">
+            <span class="material-symbols-outlined text-emerald-400 text-base">sensors</span>
+            <span class="map-overlay-title">Rede de Campo</span>
           </div>
-          <span id="map-telemetry-nodes" class="text-[11px] font-bold text-cyan-400">4 Estações Interligadas</span>
+          <span id="map-telemetry-nodes" class="map-overlay-badge">4 Estações</span>
         </div>
-        <div class="space-y-1.5 text-xs">
-          <div class="flex justify-between text-slate-300">
-            <span>Extensão Total:</span>
-            <strong class="text-slate-100 font-mono">12.28 km</strong>
+        <div class="space-y-1.5">
+          <div class="map-overlay-row">
+            <span class="map-overlay-label">Extensão Total:</span>
+            <span class="map-overlay-value text-slate-100">12.28 km</span>
           </div>
-          <div class="flex justify-between text-slate-300">
-            <span>Armazenado na Linha:</span>
-            <strong id="map-total-stored" class="text-cyan-400 font-mono">-- m³</strong>
+          <div class="map-overlay-row">
+            <span class="map-overlay-label">Armazenado na Linha:</span>
+            <span id="map-total-stored" class="map-overlay-value text-cyan-400">-- m³</span>
           </div>
-          <div class="flex justify-between text-slate-300">
-            <span>Status do Fluxo:</span>
-            <span id="map-flow-status" class="text-emerald-400 font-medium flex items-center gap-1">
+          <div class="map-overlay-row">
+            <span class="map-overlay-label">Status Operacional:</span>
+            <span id="map-flow-status" class="map-overlay-value text-emerald-400 flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Em Operação
             </span>
           </div>

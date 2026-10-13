@@ -1,7 +1,7 @@
 import { 
     apiGet,
     apiPost
-} from './api.js?v=8.4.7';
+} from './api.js?v=8.4.8';
 
 import { 
     setupAuthListeners, 
@@ -9,7 +9,7 @@ import {
     setCurrentUserProfile,
     handlePasswordReset,
     handleLogout
-} from './auth.js?v=8.4.7';
+} from './auth.js?v=8.4.8';
 
 import { 
     setupImplementosSelector,
@@ -17,30 +17,30 @@ import {
     destroyCharts,
     setRefreshTime,
     forcarAtualizacaoImplementos
-} from './dashboard/tratos.js?v=8.4.7';
+} from './dashboard/tratos.js?v=8.4.8';
 
 import { 
     setupHistoricoTab,
     destroyHistoricoChart
-} from './dashboard/historico.js?v=8.4.7';
+} from './dashboard/historico.js?v=8.4.8';
 
 import { 
     setupEquipamentosTab
-} from './equipamentos/equipamentos.js?v=8.4.7';
+} from './equipamentos/equipamentos.js?v=8.4.8';
 
 import { 
     setupAdminTabs,
     loadAdminData,
     handleAddUser
-} from './admin/users.js?v=8.4.7';
+} from './admin/users.js?v=8.4.8';
 
-import { formatarTimestampFixo } from './dashboard/regras.js?v=8.4.7';
+import { formatarTimestampFixo } from './dashboard/regras.js?v=8.4.8';
 
 // x IMPORTA!ÒO DO MDULO DE FERTIRRIGA!ÒO
-import fertirrigacao from './fertirrigacao/index.js?v=8.4.7';
+import fertirrigacao from './fertirrigacao/index.js?v=8.4.8';
 
 // xRx IMPORTA!ÒO DO SUBMENU DE PERFIL / AVATAR
-import { setupProfileMenu } from './dashboard/perfil.js?v=8.4.7';
+import { setupProfileMenu } from './dashboard/perfil.js?v=8.4.8';
 
 // Variável global do perfil do usuário
 let currentUserProfile = null;
@@ -338,80 +338,131 @@ function runInitialAnimation() {
 
 function getLoginHTML() { 
     return `
-    <div id="login-card" class="animated-border login-card-border-top max-w-md w-full shadow-2xl" style="background:var(--bg-2)">
-        <div class="card-content-wrapper space-y-6">
+    <div id="login-card" class="max-w-md w-full shadow-2xl relative" style="background:var(--bg-2)">
+        <div class="card-content-wrapper space-y-6 p-8">
             <div class="text-center">
-                <img class="mx-auto h-20 w-auto" src="https://usinapitangueiras.com.br/wp-content/uploads/2020/04/usina-pitangueiras-logo.png" alt="Logo Usina Pitangueiras">
-                <h2 class="mt-4 text-3xl font-extrabold" style="color:var(--text-1)">Acessar Sistema</h2>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold tracking-wider uppercase mb-3">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> AGROANALYTICS IOT • USINA PITANGUEIRAS
+                </div>
+                <div class="relative inline-block mb-1">
+                    <img class="mx-auto h-16 w-auto filter drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition transform hover:scale-105 duration-300" 
+                         src="https://usinapitangueiras.com.br/wp-content/uploads/2020/04/usina-pitangueiras-logo.png" 
+                         alt="Logo Usina Pitangueiras">
+                </div>
+                <h2 class="mt-2 text-2xl font-black tracking-tight" style="color:var(--text-1)">Centro de Telemetria</h2>
+                <p class="text-xs mt-1 font-medium" style="color:var(--text-3)">Gestão Integrada de Fertirrigação & Profundidade Agrícola</p>
             </div>
             
             <form id="login-form" class="space-y-4" onsubmit="return false;">
                 <div>
-                    <input id="email" type="text" autocomplete="username" required 
-                            class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#40800c] focus:border-[#40800c]" 
-                           placeholder="Usuário ou e-mail">
+                    <label class="block text-xs font-semibold mb-1.5" style="color:var(--text-2)">Credencial de Acesso</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">person</span>
+                        <input id="email" type="text" autocomplete="username" required 
+                               class="w-full pl-10 pr-3 py-2.5 rounded-xl text-sm font-medium transition-all" 
+                               placeholder="Usuário ou e-mail corporativo">
+                    </div>
                 </div>
                 <div>
-                    <input id="password" type="password" autocomplete="current-password" required 
-                            class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#40800c] focus:border-[#40800c]" 
-                           placeholder="Senha">
+                    <label class="block text-xs font-semibold mb-1.5" style="color:var(--text-2)">Senha de Segurança</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none">lock</span>
+                        <input id="password" type="password" autocomplete="current-password" required 
+                               class="w-full pl-10 pr-10 py-2.5 rounded-xl text-sm font-medium transition-all" 
+                               placeholder="Sua senha de acesso">
+                        <button type="button" id="toggle-pwd-btn" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition cursor-pointer">
+                            <span class="material-symbols-outlined text-lg">visibility</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="flex items-center">
-                    <input id="remember-me" type="checkbox" class="h-4 w-4 text-[#40800c] rounded">
-                    <label for="remember-me" class="ml-2 block text-sm" style="color:var(--text-1)">Lembrar usuário</label>
+                <div class="flex items-center justify-between text-xs pt-1">
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input id="remember-me" type="checkbox" class="h-4 w-4 rounded accent-emerald-500 cursor-pointer">
+                        <span style="color:var(--text-2)">Salvar credencial</span>
+                    </label>
+                    <span class="text-slate-500 font-mono text-[11px]">Enlace Seguro</span>
                 </div>
-                <div id="login-error" class="text-red-600 text-sm text-center hidden"></div>
-                <div class="flex items-center gap-2 pt-2">
+                <div id="login-error" class="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs text-center hidden font-semibold"></div>
+                <div class="space-y-2.5 pt-2">
                     <button type="button" id="login-button" 
-                            class="w-full py-2 bg-[#40800c] hover:bg-[#306009] text-white rounded-md transition-colors font-medium">
-                        Entrar
+                            class="w-full py-3 px-4 rounded-xl font-extrabold text-sm text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 shadow-[0_10px_25px_rgba(16,185,129,0.35)] transition-all flex items-center justify-center gap-2 cursor-pointer">
+                        <span class="material-symbols-outlined text-lg">login</span> Acessar Plataforma
                     </button>
                     <button type="button" id="request-login-button" 
-                            class="w-full py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors font-medium">
-                        Solicitar Login
+                            class="w-full py-2.5 px-4 rounded-xl font-bold text-xs text-slate-300 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 transition cursor-pointer flex items-center justify-center gap-1.5">
+                        <span class="material-symbols-outlined text-sm">how_to_reg</span> Solicitar Credencial de Acesso
                     </button>
                 </div>
             </form>
+
+            <div class="pt-4 border-t border-slate-800/80 flex items-center justify-center gap-3 text-[10px] text-slate-500 font-mono flex-wrap">
+                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> TLS 256-Bit</span>
+                <span>•</span>
+                <span>LoRa Mesh 433MHz</span>
+                <span>•</span>
+                <span>Cloud Firestore</span>
+            </div>
         </div>
     </div>
-    <div id="request-login-modal" class="modal-container hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
-        <div class="modal-content rounded-xl shadow-2xl p-8 max-w-md w-full relative" style="background:var(--bg-2);border:1px solid var(--border-1)" onclick="event.stopPropagation()">
-            <h2 class="text-2xl font-bold mb-6" style="color:var(--text-1)">Solicitar Acesso</h2>
-            <button id="close-modal-button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 text-3xl leading-none">&times;</button>
-            <form id="request-login-form" class="space-y-4">
+
+    <!-- Modal de Solicitação de Acesso -->
+    <div id="request-login-modal" class="modal-container hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+        <div class="modal-content rounded-2xl shadow-2xl p-7 max-w-md w-full relative border border-slate-700/80 bg-slate-900" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-emerald-400 text-xl">contact_mail</span>
+                    <h2 class="text-lg font-bold text-white">Solicitar Acesso ao Sistema</h2>
+                </div>
+                <button id="close-modal-button" class="text-slate-400 hover:text-white text-2xl leading-none cursor-pointer">&times;</button>
+            </div>
+            <form id="request-login-form" class="space-y-3.5">
                 <div>
-                    <label for="req-nome" class="block text-sm font-medium" style="color:var(--text-1)">Nome Completo <span class="text-red-500">*</span></label>
-                    <input id="req-nome" name="nome" type="text" required class="mt-1 w-full p-2 border rounded-md">
+                    <label for="req-nome" class="block text-xs font-semibold text-slate-300 mb-1">Nome Completo <span class="text-red-400">*</span></label>
+                    <input id="req-nome" name="nome" type="text" required class="w-full p-2.5 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white outline-none focus:border-emerald-500">
                 </div>
                 <div>
-                    <label for="req-id" class="block text-sm font-medium" style="color:var(--text-1)">ID (Opcional)</label>
-                    <input id="req-id" name="id" type="text" class="mt-1 w-full p-2 border rounded-md">
+                    <label for="req-id" class="block text-xs font-semibold text-slate-300 mb-1">ID / Matrícula (Opcional)</label>
+                    <input id="req-id" name="id" type="text" class="w-full p-2.5 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white outline-none focus:border-emerald-500">
                 </div>
                 <div>
-                    <label for="req-email" class="block text-sm font-medium" style="color:var(--text-1)">E-mail <span class="text-red-500">*</span></label>
-                    <input id="req-email" name="email" type="email" required class="mt-1 w-full p-2 border rounded-md">
+                    <label for="req-email" class="block text-xs font-semibold text-slate-300 mb-1">E-mail Corporativo <span class="text-red-400">*</span></label>
+                    <input id="req-email" name="email" type="email" required class="w-full p-2.5 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white outline-none focus:border-emerald-500">
                 </div>
                 <div>
-                    <label for="req-telefone" class="block text-sm font-medium" style="color:var(--text-1)">Telefone <span class="text-red-500">*</span></label>
-                    <input id="req-telefone" name="telefone" type="tel" required class="mt-1 w-full p-2 border rounded-md">
+                    <label for="req-telefone" class="block text-xs font-semibold text-slate-300 mb-1">Telefone / Ramal <span class="text-red-400">*</span></label>
+                    <input id="req-telefone" name="telefone" type="tel" required class="w-full p-2.5 text-xs rounded-lg bg-slate-800 border border-slate-700 text-white outline-none focus:border-emerald-500">
                 </div>
                 <button type="submit" id="send-request-button" 
-                        class="w-full py-2 px-4 bg-[#40800c] hover:bg-[#306009] text-white font-medium rounded-md transition-colors">
-                    Enviar Solicitação
+                        class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition shadow mt-2 cursor-pointer">
+                    Enviar Solicitação à Administração
                 </button>
             </form>
         </div>
     </div>`; 
 }
 
-// ============================================================================
-// SPLASH HTML
-// ============================================================================
-
 function getSplashHTML() { 
-    return `<img id="splash-logo" src="https://usinapitangueiras.com.br/wp-content/uploads/2020/04/usina-pitangueiras-logo.png" 
-                alt="Logo Usina Pitangueiras" class="opacity-0 scale-125 h-36">
-            <p id="splash-slogan" style="color:var(--text-2)" class="text-xl font-semibold opacity-0 mt-4">A energia que move a região</p>`; 
+    return `
+    <div class="flex flex-col items-center justify-center p-8 max-w-sm w-full text-center">
+        <div class="relative mb-6">
+            <div class="absolute -inset-4 rounded-full bg-emerald-500/20 blur-xl animate-pulse"></div>
+            <img id="splash-logo" src="https://usinapitangueiras.com.br/wp-content/uploads/2020/04/usina-pitangueiras-logo.png" 
+                 alt="Logo Usina Pitangueiras" class="relative opacity-0 scale-95 h-24 filter drop-shadow-[0_8px_20px_rgba(0,0,0,0.8)] transition-all duration-700">
+        </div>
+        <p id="splash-slogan" class="text-lg font-extrabold text-white opacity-0 tracking-tight transition-all duration-700">
+            Usina Pitangueiras
+        </p>
+        <p class="text-xs text-emerald-400 font-semibold tracking-wider uppercase mt-1 opacity-80">
+            Agroanalytics Enterprise • IoT v8.5
+        </p>
+        <div class="w-48 h-1.5 bg-slate-800 rounded-full mt-6 overflow-hidden relative">
+            <div class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 rounded-full animate-pulse w-full"></div>
+        </div>
+        <p class="text-[11px] font-mono text-slate-400 mt-3 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            Carregando telemetria em tempo real...
+        </p>
+    </div>`; 
 }
 
 // ============================================================================
