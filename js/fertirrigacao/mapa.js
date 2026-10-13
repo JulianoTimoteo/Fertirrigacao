@@ -20,24 +20,35 @@ let _activeFlowTrechos = new Set();
 let _modoCamada = 'satellite';
 
 export const PONTOS_ADUTORA = {
-  usina: {
-    chave: 'usina',
-    nome: 'CARREGAMENTO USINA (A e B)',
-    subtitulo: 'Lagoas 1 e 2',
-    lat: -21.04496856073156,
-    lng: -48.26058559247929,
+  t1: {
+    chave: 't1',
+    nome: 'CARREGAMENTO USINA A',
+    subtitulo: 'Tanque 1 (T1)',
+    lat: -21.04508601802594,
+    lng: -48.260840316946286,
     ordem: 0,
-    lagoas: [1, 2],
+    lagoas: [1],
     cor: '#06b6d4',
-    badge: 'USINA'
+    badge: 'T1'
+  },
+  t2: {
+    chave: 't2',
+    nome: 'CARREGAMENTO USINA B',
+    subtitulo: 'Tanque 2 (T2)',
+    lat: -21.044852715210126,
+    lng: -48.260317960320975,
+    ordem: 1,
+    lagoas: [2],
+    cor: '#0ea5e9',
+    badge: 'T2'
   },
   eucalipto: {
     chave: 'eucalipto',
     nome: 'EUCALIPTO CHEIROSO',
-    subtitulo: 'Lagoa 3',
+    subtitulo: 'Lagoa 3 (T3)',
     lat: -21.048171179817402,
     lng: -48.27849805552853,
-    ordem: 1,
+    ordem: 2,
     lagoas: [3],
     cor: '#f59e0b',
     badge: 'T3'
@@ -45,10 +56,10 @@ export const PONTOS_ADUTORA = {
   castanha: {
     chave: 'castanha',
     nome: 'CASTANHA',
-    subtitulo: 'Lagoa 4',
+    subtitulo: 'Lagoa 4 (T4)',
     lat: -21.080929846011003,
     lng: -48.30075955155999,
-    ordem: 2,
+    ordem: 3,
     lagoas: [4],
     cor: '#8b5cf6',
     badge: 'T4'
@@ -56,10 +67,10 @@ export const PONTOS_ADUTORA = {
   theresinha: {
     chave: 'theresinha',
     nome: 'SANTA THERESINHA',
-    subtitulo: 'Lagoa 5',
+    subtitulo: 'Lagoa 5 (T5)',
     lat: -21.104326364035728,
     lng: -48.35321793859342,
-    ordem: 3,
+    ordem: 4,
     lagoas: [5],
     cor: '#ec4899',
     badge: 'T5'
@@ -68,15 +79,28 @@ export const PONTOS_ADUTORA = {
 
 export const TRECHOS_ADUTORA = [
   {
-    id: 'usina-eucalipto',
-    origem: 'usina',
+    id: 't1-t2',
+    origem: 't1',
+    destino: 't2',
+    nome: 'Carregamento A ⇄ Carregamento B',
+    distanciaKm: 0.06,
+    diametroMm: 300,
+    tubulacao: 'PEAD PN10 De 315mm (Interligação)',
+    pontos: [
+      [-21.04508601802594, -48.260840316946286],
+      [-21.044852715210126, -48.260317960320975]
+    ]
+  },
+  {
+    id: 't2-eucalipto',
+    origem: 't2',
     destino: 'eucalipto',
-    nome: 'Usina ➔ Eucalipto Cheiroso',
-    distanciaKm: 1.92,
+    nome: 'Carregamento Usina ➔ Eucalipto Cheiroso',
+    distanciaKm: 1.90,
     diametroMm: 300,
     tubulacao: 'PEAD PN10 De 315mm',
     pontos: [
-      [-21.04496856073156, -48.26058559247929],
+      [-21.044852715210126, -48.260317960320975],
       [-21.048171179817402, -48.27849805552853]
     ]
   },
@@ -120,11 +144,11 @@ export function getMapaHTML() {
           <span class="material-symbols-outlined text-cyan-400 text-2xl">route</span>
           <h3 class="text-xl font-extrabold" style="color:var(--text-1)">Rede de Adutoras & Fluxo de Vinhaça</h3>
           <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/40">
-            12.28 km de extensão
+            12.32 km de extensão
           </span>
         </div>
         <p class="text-xs" style="color:var(--text-3)">
-          Traçado georreferenciado interligando Usina Pitangueiras, Eucalipto Cheiroso, Castanha e Santa Theresinha com telemetria dos sensores
+          Traçado georreferenciado interligando Carregamento Usina (T1 e T2), Eucalipto Cheiroso (T3), Castanha (T4) e Santa Theresinha (T5) com telemetria dedicada dos sensores
         </p>
       </div>
 
@@ -133,8 +157,8 @@ export function getMapaHTML() {
         <button id="btn-map-fit-all" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white transition flex items-center gap-1.5 shadow cursor-pointer">
           <span class="material-symbols-outlined text-xs">zoom_out_map</span> Ver Linha Completa
         </button>
-        <button id="btn-map-focus-usina" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer" style="background:var(--bg-3);color:var(--text-1);border:1px solid var(--border-1)">
-          Usina A/B
+        <button id="btn-map-focus-usina" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer" style="background:var(--bg-3);color:var(--text-1);border:1px solid var(--border-1)" title="Focar nos tanques gêmeos Carregamento A e B">
+          Carregamento A/B
         </button>
         <button id="btn-map-focus-castanha" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-900/30 hover:bg-purple-800/50 text-purple-300 border border-purple-500/40 transition cursor-pointer">
           Castanha (Online)
@@ -156,12 +180,12 @@ export function getMapaHTML() {
             <span class="material-symbols-outlined text-emerald-400 text-base">sensors</span>
             <span class="map-overlay-title">Rede de Campo</span>
           </div>
-          <span id="map-telemetry-nodes" class="map-overlay-badge">4 Estações</span>
+          <span id="map-telemetry-nodes" class="map-overlay-badge">5 Nós de Telemetria</span>
         </div>
         <div class="space-y-1.5">
           <div class="map-overlay-row">
             <span class="map-overlay-label">Extensão Total:</span>
-            <span class="map-overlay-value text-slate-100">12.28 km</span>
+            <span class="map-overlay-value text-slate-100">12.32 km</span>
           </div>
           <div class="map-overlay-row">
             <span class="map-overlay-label">Armazenado na Linha:</span>
@@ -196,7 +220,8 @@ export function getMapaHTML() {
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">Lagoa de Origem (Saída)</label>
           <select id="sim-origem" class="w-full p-2.5 text-xs rounded-lg bg-slate-800 border border-slate-600 text-white font-medium focus:border-cyan-400 outline-none">
-            <option value="usina" selected>Carregamento Usina (A/B - T1/T2)</option>
+            <option value="t1" selected>Carregamento Usina A (T1)</option>
+            <option value="t2">Carregamento Usina B (T2)</option>
             <option value="eucalipto">Eucalipto Cheiroso (T3)</option>
             <option value="castanha">Castanha (T4)</option>
             <option value="theresinha">Santa Theresinha (T5)</option>
@@ -210,7 +235,8 @@ export function getMapaHTML() {
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">Lagoa de Destino (Chegada)</label>
           <select id="sim-destino" class="w-full p-2.5 text-xs rounded-lg bg-slate-800 border border-slate-600 text-white font-medium focus:border-cyan-400 outline-none">
-            <option value="usina">Carregamento Usina (A/B - T1/T2)</option>
+            <option value="t1">Carregamento Usina A (T1)</option>
+            <option value="t2">Carregamento Usina B (T2)</option>
             <option value="eucalipto">Eucalipto Cheiroso (T3)</option>
             <option value="castanha" selected>Castanha (T4)</option>
             <option value="theresinha">Santa Theresinha (T5)</option>
@@ -235,8 +261,8 @@ export function getMapaHTML() {
         <div class="flex items-center gap-3">
           <span class="material-symbols-outlined text-cyan-400 text-2xl">airwave</span>
           <div>
-            <strong class="text-white text-sm" id="sim-trajeto-label">Usina ➔ Castanha (Distância: 6.18 km)</strong>
-            <p class="text-slate-400 mt-0.5" id="sim-detalhes-label">Fluxo simulado a 120 m³/h passando pelas adutoras 1 e 2.</p>
+            <strong class="text-white text-sm" id="sim-trajeto-label">T1 ➔ Castanha (Distância: 6.22 km)</strong>
+            <p class="text-slate-400 mt-0.5" id="sim-detalhes-label">Fluxo simulado a 120 m³/h passando pelas adutoras.</p>
           </div>
         </div>
         <div class="flex items-center gap-5 text-right flex-wrap">
@@ -256,8 +282,8 @@ export function getMapaHTML() {
       </div>
     </div>
 
-    <!-- Painel de Trechos da Adutora -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- Painel de Trechos da Adutora (4 trechos) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       ${TRECHOS_ADUTORA.map((t, idx) => `
         <div class="vazao-panel rounded-xl p-4 shadow border border-slate-700 relative overflow-hidden" id="card-trecho-${t.id}">
           <div class="flex items-center justify-between mb-2 pb-1 border-b border-slate-700">
@@ -761,7 +787,10 @@ function _conectarBotoesControle() {
   document.getElementById('btn-map-fit-all')?.addEventListener('click', _ajustarVisaoCompleta);
 
   document.getElementById('btn-map-focus-usina')?.addEventListener('click', () => {
-    if (_map) _map.flyTo([PONTOS_ADUTORA.usina.lat, PONTOS_ADUTORA.usina.lng], 15, { duration: 1.2 });
+    if (_map) {
+      // Foco detalhado (zoom 17) no pátio dos carregamentos gêmeos T1 e T2
+      _map.flyTo([-21.044969, -48.260579], 17, { duration: 1.2 });
+    }
   });
 
   document.getElementById('btn-map-focus-castanha')?.addEventListener('click', () => {
@@ -800,7 +829,7 @@ function _conectarSimuladorFluxo() {
   const inputVazao = document.getElementById('sim-vazao');
 
   function atualizarCalculosSimulacao() {
-    const orig = selOrigem?.value || 'usina';
+    const orig = selOrigem?.value || 't1';
     const dest = selDestino?.value || 'castanha';
     const vazao = parseFloat(inputVazao?.value) || 120;
 
