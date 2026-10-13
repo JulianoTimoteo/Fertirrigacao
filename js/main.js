@@ -1,7 +1,7 @@
 import { 
     apiGet,
     apiPost
-} from './api.js?v=8.4.4';
+} from './api.js?v=8.4.5';
 
 import { 
     setupAuthListeners, 
@@ -9,7 +9,7 @@ import {
     setCurrentUserProfile,
     handlePasswordReset,
     handleLogout
-} from './auth.js?v=8.4.4';
+} from './auth.js?v=8.4.5';
 
 import { 
     setupImplementosSelector,
@@ -17,30 +17,30 @@ import {
     destroyCharts,
     setRefreshTime,
     forcarAtualizacaoImplementos
-} from './dashboard/tratos.js?v=8.4.4';
+} from './dashboard/tratos.js?v=8.4.5';
 
 import { 
     setupHistoricoTab,
     destroyHistoricoChart
-} from './dashboard/historico.js?v=8.4.4';
+} from './dashboard/historico.js?v=8.4.5';
 
 import { 
     setupEquipamentosTab
-} from './equipamentos/equipamentos.js?v=8.4.4';
+} from './equipamentos/equipamentos.js?v=8.4.5';
 
 import { 
     setupAdminTabs,
     loadAdminData,
     handleAddUser
-} from './admin/users.js?v=8.4.4';
+} from './admin/users.js?v=8.4.5';
 
-import { formatarTimestampFixo } from './dashboard/regras.js?v=8.4.4';
+import { formatarTimestampFixo } from './dashboard/regras.js?v=8.4.5';
 
 // x IMPORTA!ÒO DO MDULO DE FERTIRRIGA!ÒO
-import fertirrigacao from './fertirrigacao/index.js?v=8.4.4';
+import fertirrigacao from './fertirrigacao/index.js?v=8.4.5';
 
 // xRx IMPORTA!ÒO DO SUBMENU DE PERFIL / AVATAR
-import { setupProfileMenu } from './dashboard/perfil.js?v=8.4.4';
+import { setupProfileMenu } from './dashboard/perfil.js?v=8.4.5';
 
 // Variável global do perfil do usuário
 let currentUserProfile = null;

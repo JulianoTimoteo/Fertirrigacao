@@ -9,6 +9,7 @@ import { renderLagoasChart, destroyLagoasChart, getGraficoHTML, carregarHistoric
 import { getVazaoHTML, getSummaryCardHTML, atualizarAcumulados, setupMetaInput, resetAcumulados, recalcularVolumeFromEstado, carregarHistoricoRealVazao } from './vazao.js';
 import { setupFertirrigacaoSubTabs, stopAutoplay }                            from './subtabs.js';
 import { getInsightsHTML, atualizarInsights, resetInsights, renderInsightsFromEstado } from './insights.js';
+import { getMapaHTML, initMapaAdutoras }                                        from './mapa.js';
 
 // ─── HTML principal ──────────────────────────────────────────────────────────
 export function getFertirrigacaoTabHTML() {
@@ -18,6 +19,9 @@ export function getFertirrigacaoTabHTML() {
       <button class="fert-sub-tab active" data-tab="niveis-content">Níveis Atuais</button>
       <button class="fert-sub-tab" data-tab="vazao-content">Vazão e Acumulado</button>
       <button class="fert-sub-tab" data-tab="grafico-content">Gráfico Geral</button>
+      <button class="fert-sub-tab" data-tab="mapa-content">
+        <span class="material-symbols-outlined text-sm align-middle">route</span> Mapa de Adutoras
+      </button>
       <button class="fert-sub-tab" data-tab="config-content">Configuração Tanques</button>
       <button class="fert-sub-tab" data-tab="insights-content">
         <span class="material-symbols-outlined text-sm align-middle">lightbulb</span> Análise
@@ -67,6 +71,11 @@ export function getFertirrigacaoTabHTML() {
   <!-- Aba: Gráfico Geral -->
   <div id="grafico-content" class="fert-sub-content">
     ${getGraficoHTML()}
+  </div>
+
+  <!-- Aba: Mapa de Adutoras & Linha de Fluxo -->
+  <div id="mapa-content" class="fert-sub-content">
+    ${getMapaHTML()}
   </div>
 
   <!-- Aba: Análise e Insights -->

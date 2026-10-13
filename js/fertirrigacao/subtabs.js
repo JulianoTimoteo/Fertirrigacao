@@ -57,6 +57,10 @@ function _ativarAba(container, tabId) {
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent('ferti:renderCharts'));
     }, 60);
+  } else if (tabId === 'mapa-content') {
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('ferti:renderMap'));
+    }, 60);
   }
 }
 
