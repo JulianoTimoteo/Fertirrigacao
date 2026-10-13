@@ -480,6 +480,8 @@ export function renderLagoasChart() {
     _barChart.options = options;
     _barChart.update('active');
   } else {
+    const existing = Chart.getChart(canvas);
+    if (existing) { try { existing.destroy(); } catch (e) {} }
     _barChart = new Chart(canvas.getContext('2d'), {
       type: 'bar',
       data: { labels, datasets: [dataset] },
@@ -593,6 +595,8 @@ function _renderConsolidadoChart(seriesPorLagoa, mediaGeralSerie) {
     _consolidadoChart.options = options;
     _consolidadoChart.update('active');
   } else {
+    const existing = Chart.getChart(canvas);
+    if (existing) { try { existing.destroy(); } catch (e) {} }
     _consolidadoChart = new Chart(canvas.getContext('2d'), {
       type: 'line',
       data: { labels: HORAS_DO_DIA, datasets },
@@ -686,6 +690,8 @@ function _renderIndividualCharts(seriesPorLagoa) {
       _individualCharts[id].options = options;
       _individualCharts[id].update('active');
     } else {
+      const existing = Chart.getChart(canvas);
+      if (existing) { try { existing.destroy(); } catch (e) {} }
       _individualCharts[id] = new Chart(canvas.getContext('2d'), {
         type: 'line',
         data: { labels: HORAS_DO_DIA, datasets: [dataset] },
