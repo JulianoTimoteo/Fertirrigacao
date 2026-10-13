@@ -11,5 +11,7 @@ export {
   forcarPollLeituras,
   setDataVisualizacao,
   getDataVisualizacao,
-  obterHistoricoMedidas
+  obterHistoricoMedidas,
+  obterHistoricoLagoa,
+  obterHistoricoTodosTanques
 } from './fertirrigacaomonit.js';

@@ -7,7 +7,8 @@
 // ============================================================================
 
 import { LAGOA_CONFIG } from './firebase.js';
-import { getEstadoLagoas } from './lagoas.js';
+import { getEstadoLagoas, getTanqueConfig } from './lagoas.js';
+import { obterHistoricoTodosTanques } from './fertirrigacaomonit.js';
 
 // Instâncias de gráficos mantidas para atualização suave e descarte limpo
 let _barChart = null;
@@ -702,6 +703,52 @@ function _renderIndividualCharts(seriesPorLagoa) {
 }
 
 // ============================================================================
+// CARREGAMENTO DO HISTÓRICO REAL DO FIRESTORE (SUBCOLEÇÃO 10-MIN)
+// ============================================================================
+
+let _carregandoHistorico = false;
+export async function carregarHistoricoParaGraficos(dataDoc) {
+  if (_carregandoHistorico) return;
+  _carregandoHistorico = true;
+  try {
+    const todosPontos = await obterHistoricoTodosTanques(dataDoc);
+    let hist = _carregarHistoricoHorario() || { 1: {}, 2: {}, 3: {}, 4: {}, 5: {} };
+    let temDadoReal = false;
+
+    for (const [id, cfg] of Object.entries(LAGOA_CONFIG)) {
+      const pontos = todosPontos[cfg.firebaseId] || [];
+      if (pontos.length > 0) {
+        if (!hist[id]) hist[id] = {};
+        const cfgT = getTanqueConfig(cfg.tanqueId);
+        const hMaxCm = (cfgT.H_max || 3.0) * 100;
+
+        pontos.forEach(p => {
+          if (p.timestamp) {
+            const d = new Date(p.timestamp);
+            const h = d.getHours();
+            if (!hist[id][h]) hist[id][h] = [];
+            const pct = Math.max(0, Math.min(100, ((hMaxCm - p.nivel) / hMaxCm) * 100));
+            hist[id][h].push(pct);
+            temDadoReal = true;
+          }
+        });
+      }
+    }
+
+    if (temDadoReal) {
+      _salvarHistoricoHorario(hist);
+      const { seriesPorLagoa, mediaGeralSerie } = _obterDadosMediasHorarias();
+      _renderConsolidadoChart(seriesPorLagoa, mediaGeralSerie);
+      _renderIndividualCharts(seriesPorLagoa);
+    }
+  } catch (e) {
+    console.warn('[Chart] Falha ao carregar histórico Firestore:', e.message);
+  } finally {
+    _carregandoHistorico = false;
+  }
+}
+
+// ============================================================================
 // DISPARADOR GERAL DE TODOS OS GRÁFICOS DE LINHAS
 // ============================================================================
 
@@ -709,6 +756,7 @@ export function renderAllLineCharts() {
   const { seriesPorLagoa, mediaGeralSerie } = _obterDadosMediasHorarias();
   _renderConsolidadoChart(seriesPorLagoa, mediaGeralSerie);
   _renderIndividualCharts(seriesPorLagoa);
+  carregarHistoricoParaGraficos();
 }
 
 // ============================================================================

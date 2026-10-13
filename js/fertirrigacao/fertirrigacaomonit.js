@@ -81,6 +81,47 @@ export async function obterHistoricoMedidas() {
   return docs;
 }
 
+export async function obterHistoricoLagoa(lagoaFirebaseId, dataDoc) {
+  if (!_db) return [];
+  try {
+    let dt = dataDoc || _dataFiltroAtiva;
+    if (!dt) {
+      const hoje = new Date();
+      dt = `${String(hoje.getDate()).padStart(2, '0')}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${hoje.getFullYear()}`;
+    }
+    const docId = `${lagoaFirebaseId}_${dt}`;
+    const histRef = collection(_db, 'medidas', docId, 'historico');
+    const snap = await getDocs(histRef);
+    const pontos = [];
+    snap.forEach(d => {
+      const data = d.data();
+      pontos.push({
+        id: d.id,
+        tanque: lagoaFirebaseId,
+        nivel: typeof data.nivel === 'number' ? data.nivel : parseFloat(data.nivel) || 0,
+        hora: data.hora || d.id.replace('-', ':'),
+        timestamp: data.timestamp?.toDate?.() || 
+                   (data.timestamp?.timestampValue ? new Date(data.timestamp.timestampValue) : null) || 
+                   (typeof data.timestamp === 'string' ? new Date(data.timestamp) : null) ||
+                   new Date()
+      });
+    });
+    pontos.sort((a, b) => (a.timestamp?.getTime() || 0) - (b.timestamp?.getTime() || 0));
+    return pontos;
+  } catch (e) {
+    console.warn(`[Fertirrigacaomonit] Erro ao buscar histórico de ${lagoaFirebaseId}:`, e.message);
+    return [];
+  }
+}
+
+export async function obterHistoricoTodosTanques(dataDoc) {
+  const resultado = {};
+  for (const cfg of Object.values(LAGOA_CONFIG)) {
+    resultado[cfg.firebaseId] = await obterHistoricoLagoa(cfg.firebaseId, dataDoc);
+  }
+  return resultado;
+}
+
 async function _fetchLatestReadings() {
   if (!_db) return {};
   const medidasRef = collection(_db, 'medidas');

@@ -34,7 +34,7 @@ const DEFAULT_CONFIG = {
   T5: { L_top: 45.0, W_top: 25.0, L_bottom: 38.0, W_bottom: 18.0, H_max: 3.5 }
 };
 
-function getTanqueConfig(tanqueId) {
+export function getTanqueConfig(tanqueId) {
   try {
     const saved = JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}');
     return saved[tanqueId] || DEFAULT_CONFIG[tanqueId] || DEFAULT_CONFIG.T1;

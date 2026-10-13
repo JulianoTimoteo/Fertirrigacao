@@ -26,7 +26,9 @@
 // ============================================================================
 
 import { LAGOA_CONFIG } from './firebase.js';
-import { getEstadoLagoas } from './lagoas.js';
+import { getEstadoLagoas, getTanqueConfig } from './lagoas.js';
+import { obterHistoricoTodosTanques } from './fertirrigacaomonit.js';
+import { calcularVolumeTronco } from './regras.js';
 
 // ── Estado interno ───────────────────────────────────────────────────────────
 let _totalVolumeIn   = 0;   // snapshot atual (soma dos tanques)
@@ -168,6 +170,28 @@ export function getVazaoHTML() {
           </thead>
           <tbody class="divide-y divide-slate-700/60 text-sm">${rows}</tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Balanço de Movimentação e Transferências -->
+    <div id="transfer-container" class="vazao-panel rounded-xl shadow-lg overflow-hidden border border-slate-700">
+      <div class="p-5 border-b border-slate-700 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-amber-400">sync_alt</span>
+          <div>
+            <h3 class="text-base font-bold" style="color:var(--text-1)">Balanço de Movimentação e Transferência entre Lagoas</h3>
+            <p class="text-xs mt-0.5" style="color:var(--text-3)">Rastreia transferências internas via adutoras e saídas para caminhões/aplicação</p>
+          </div>
+        </div>
+        <button id="btn-atualizar-balanco" class="px-3 py-1 text-xs rounded-lg border border-slate-600 hover:bg-slate-700 text-slate-300 flex items-center gap-1.5 transition cursor-pointer">
+          <span class="material-symbols-outlined text-xs">refresh</span> Atualizar Histórico
+        </button>
+      </div>
+      <div id="transfer-lista" class="p-5 space-y-3">
+        <div class="text-slate-400 text-sm flex items-center gap-2">
+          <span class="material-symbols-outlined text-cyan-400">info</span>
+          Calculando movimentações com base no histórico de 10 min do Firestore...
+        </div>
       </div>
     </div>
 
@@ -316,6 +340,17 @@ export function setupMetaInput() {
     console.log('[Vazao] Saída zerada para nova safra.');
   });
 
+  const btnBalanco = document.getElementById('btn-atualizar-balanco');
+  if (btnBalanco) {
+    btnBalanco.onclick = () => {
+      btnBalanco.classList.add('animate-pulse');
+      carregarHistoricoRealVazao().finally(() => btnBalanco.classList.remove('animate-pulse'));
+    };
+  }
+
+  // Carrega histórico real do Firestore ao montar a aba
+  carregarHistoricoRealVazao();
+
   _renderAcumulados();
 }
 
@@ -395,24 +430,177 @@ function _renderAcumulados() {
 // ─── Tabela de Vazão ──────────────────────────────────────────────────────────
 function _atualizarVazaoTabela(lagoaId) {
   const hist = _historicoVazao[lagoaId];
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.innerHTML = v; };
+  const acumM3 = (_prevVolumes[lagoaId] || 0) / 1000;
+  set(`flow-season-${lagoaId}`, `<span class="text-cyan-400">${acumM3.toFixed(0)} m³</span>`);
+
   if (!hist || hist.length < 2) return;
 
   const agora = Date.now();
   const pts1h = hist.filter(p => agora - p.ts <= 3_600_000);
   let vazao1h = '–';
   if (pts1h.length >= 2) {
-    const p0 = pts1h[0], p1 = pts1h[pts1h.length-1];
-    const dV = Math.abs(p1.volumeL - p0.volumeL) / 1000;
+    const p0 = pts1h[0], p1 = pts1h[pts1h.length - 1];
+    const dV = (p1.volumeL - p0.volumeL) / 1000;
     const dH = (p1.ts - p0.ts) / 3_600_000;
-    if (dH > 0) vazao1h = `${(dV/dH).toFixed(1)} m³/h`;
+    if (dH > 0.05) {
+      const q = dV / dH;
+      const sinal = q > 0 ? '+' : '';
+      const cor = q > 0 ? 'text-cyan-400' : (q < 0 ? 'text-amber-400' : 'text-slate-400');
+      vazao1h = `<span class="${cor}">${sinal}${q.toFixed(1)} m³/h</span>`;
+    }
   }
 
-  const acumM3 = (_prevVolumes[lagoaId] || 0) / 1000;
-  const set = (id, v) => { const el = document.getElementById(id); if (el) el.innerHTML = v; };
-  set(`flow-1h-${lagoaId}`,
-    vazao1h !== '–' ? `<span style="color:var(--text-2)">${vazao1h}</span>` : `<span style="color:var(--text-3)">–</span>`);
-  set(`flow-season-${lagoaId}`,
-    `<span class="text-cyan-400">${acumM3.toFixed(0)} m³</span>`);
+  const pts24h = hist.filter(p => agora - p.ts <= 86_400_000);
+  let vazao24h = '–';
+  if (pts24h.length >= 2) {
+    const p0 = pts24h[0], p1 = pts24h[pts24h.length - 1];
+    const dV = (p1.volumeL - p0.volumeL) / 1000;
+    const sinal = dV > 0 ? '+' : '';
+    const cor = dV > 0 ? 'text-cyan-400' : (dV < 0 ? 'text-amber-400' : 'text-slate-400');
+    vazao24h = `<span class="${cor}">${sinal}${dV.toFixed(0)} m³</span>`;
+  }
+
+  set(`flow-1h-${lagoaId}`, vazao1h !== '–' ? vazao1h : `<span style="color:var(--text-3)">–</span>`);
+  set(`flow-24h-${lagoaId}`, vazao24h !== '–' ? vazao24h : `<span style="color:var(--text-3)">–</span>`);
+}
+
+// ─── Carregamento do Histórico Real do Firestore para Vazão e Balanço ─────────
+let _carregandoVazao = false;
+export async function carregarHistoricoRealVazao(dataDoc) {
+  if (_carregandoVazao) return;
+  _carregandoVazao = true;
+  try {
+    const todosPontos = await obterHistoricoTodosTanques(dataDoc);
+    const variacoesPorLagoa = {};
+
+    for (const [id, cfg] of Object.entries(LAGOA_CONFIG)) {
+      const pontos = todosPontos[cfg.firebaseId] || [];
+      if (pontos.length > 0) {
+        if (!_historicoVazao[id]) _historicoVazao[id] = [];
+        const cfgT = getTanqueConfig(cfg.tanqueId);
+        const hMaxCm = (cfgT.H_max || 3.0) * 100;
+
+        pontos.forEach(p => {
+          const altM = Math.max(0, (hMaxCm - p.nivel) / 100);
+          const volL = calcularVolumeTronco(altM, cfgT);
+          const ts = p.timestamp instanceof Date ? p.timestamp.getTime() : new Date(p.timestamp).getTime();
+          _historicoVazao[id].push({ ts, volumeL: volL, nivel: p.nivel, hora: p.hora });
+        });
+
+        _historicoVazao[id].sort((a, b) => a.ts - b.ts);
+        const unique = [];
+        const seen = new Set();
+        for (const pt of _historicoVazao[id]) {
+          const chave = Math.round(pt.ts / 60000);
+          if (!seen.has(chave)) {
+            seen.add(chave);
+            unique.push(pt);
+          }
+        }
+        _historicoVazao[id] = unique;
+
+        if (_historicoVazao[id].length >= 2) {
+          const pAnt = _historicoVazao[id][_historicoVazao[id].length - 2];
+          const pRec = _historicoVazao[id][_historicoVazao[id].length - 1];
+          variacoesPorLagoa[cfg.name] = pRec.volumeL - pAnt.volumeL;
+        }
+
+        _atualizarVazaoTabela(id);
+      }
+    }
+
+    _gerarBalancoMovimentacao(variacoesPorLagoa);
+  } catch (e) {
+    console.warn('[Vazao] Erro ao carregar histórico para vazão:', e.message);
+  } finally {
+    _carregandoVazao = false;
+  }
+}
+
+function _gerarBalancoMovimentacao(variacoes) {
+  const container = document.getElementById('transfer-lista');
+  if (!container) return;
+
+  const cards = [];
+  const entradas = [];
+  const saidas = [];
+
+  for (const [nome, deltaL] of Object.entries(variacoes)) {
+    const deltaM3 = deltaL / 1000;
+    if (deltaM3 > 2) {
+      entradas.push({ nome, deltaM3 });
+    } else if (deltaM3 < -2) {
+      saidas.push({ nome, deltaM3: Math.abs(deltaM3) });
+    }
+  }
+
+  if (saidas.length > 0 && entradas.length > 0) {
+    saidas.forEach(s => {
+      entradas.forEach(e => {
+        const razao = Math.min(s.deltaM3, e.deltaM3) / Math.max(s.deltaM3, e.deltaM3);
+        if (razao >= 0.65) {
+          const volTransf = Math.round((s.deltaM3 + e.deltaM3) / 2);
+          cards.push({
+            tipo: 'transferencia',
+            icone: 'sync_alt',
+            titulo: `Transferência: ${s.nome} ➔ ${e.nome}`,
+            texto: `Bombeamento de aprox. <strong>${volTransf} m³</strong> entre reservatórios (${s.nome} esvaziou ${s.deltaM3.toFixed(1)} m³ e ${e.nome} recebeu ${e.deltaM3.toFixed(1)} m³).`
+          });
+        }
+      });
+    });
+  }
+
+  saidas.forEach(s => {
+    const jaContemplado = cards.some(c => c.titulo.includes(s.nome));
+    if (!jaContemplado) {
+      cards.push({
+        tipo: 'saida',
+        icone: 'local_shipping',
+        titulo: `Saída / Carregamento: ${s.nome}`,
+        texto: `Retirada de <strong>${s.deltaM3.toFixed(1)} m³</strong> para carretéis de fertirrigação ou caminhões tanque.`
+      });
+    }
+  });
+
+  entradas.forEach(e => {
+    const jaContemplado = cards.some(c => c.titulo.includes(e.nome));
+    if (!jaContemplado) {
+      cards.push({
+        tipo: 'entrada',
+        icone: 'water_drop',
+        titulo: `Entrada da Usina: ${e.nome}`,
+        texto: `Recebimento de vinhaça: <strong>+${e.deltaM3.toFixed(1)} m³</strong> recebidos da usina.`
+      });
+    }
+  });
+
+  if (cards.length === 0) {
+    cards.push({
+      tipo: 'estavel',
+      icone: 'check_circle',
+      titulo: 'Sistema em Equilíbrio',
+      texto: 'Nenhuma transferência de grande porte detectada no intervalo recente de 10 min.'
+    });
+  }
+
+  const C = {
+    transferencia: 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400',
+    saida: 'border-amber-500/50 bg-amber-500/10 text-amber-400',
+    entrada: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400',
+    estavel: 'border-slate-600 bg-slate-800/40 text-slate-300'
+  };
+
+  container.innerHTML = cards.map(c => `
+    <div class="flex items-start gap-3 p-3.5 rounded-lg border ${C[c.tipo]}">
+      <span class="material-symbols-outlined text-2xl flex-shrink-0 mt-0.5">${c.icone}</span>
+      <div>
+        <h4 class="font-bold text-sm mb-0.5">${c.titulo}</h4>
+        <p class="text-xs text-slate-300 leading-relaxed">${c.texto}</p>
+      </div>
+    </div>
+  `).join('');
 }
 
 // ─── Motor de Insights ────────────────────────────────────────────────────────

@@ -5,8 +5,8 @@
 import { setupConfigTanquesTab }                                              from './input.js';
 import { initFertiFirebase, subscribeLagoa, unsubscribeAllLagoas, LAGOA_CONFIG, forcarPollLeituras, setDataVisualizacao, getDataVisualizacao } from './firebase.js';
 import { getLagoasCardsHTML, initLagoasOffline, onLeituraESP32, getEstadoLagoas, clearOfflineTimers } from './lagoas.js';
-import { renderLagoasChart, destroyLagoasChart, getGraficoHTML }              from './chart.js';
-import { getVazaoHTML, getSummaryCardHTML, atualizarAcumulados, setupMetaInput, resetAcumulados, recalcularVolumeFromEstado } from './vazao.js';
+import { renderLagoasChart, destroyLagoasChart, getGraficoHTML, carregarHistoricoParaGraficos }              from './chart.js';
+import { getVazaoHTML, getSummaryCardHTML, atualizarAcumulados, setupMetaInput, resetAcumulados, recalcularVolumeFromEstado, carregarHistoricoRealVazao } from './vazao.js';
 import { setupFertirrigacaoSubTabs, stopAutoplay }                            from './subtabs.js';
 import { getInsightsHTML, atualizarInsights, resetInsights, renderInsightsFromEstado } from './insights.js';
 
@@ -222,6 +222,8 @@ function _setupFiltroDataHistorico() {
       if (dataExibida) dataExibida.textContent = label || dataStr;
     }
     forcarPollLeituras();
+    carregarHistoricoParaGraficos(dataStr);
+    carregarHistoricoRealVazao(dataStr);
   }
 
   btnHoje?.addEventListener('click', () => {
