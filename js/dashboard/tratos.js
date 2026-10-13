@@ -481,9 +481,18 @@ export function toggleChartTheme() {
 function updateChart(readings) {
     const ctxEl = document.getElementById('depth-chart');
     if (!ctxEl) return;
-    if (depthChart) depthChart.destroy();
 
-    // 🔥 PEGA APENAS AS 20 LEITURAS MAIS RECENTES
+    // Destrói qualquer instância prévia no canvas antes de renderizar (evita "Canvas is already in use")
+    const existingChart = Chart.getChart(ctxEl);
+    if (existingChart) {
+        try { existingChart.destroy(); } catch (e) {}
+    }
+    if (depthChart) {
+        try { depthChart.destroy(); } catch (e) {}
+        depthChart = null;
+    }
+
+    // PEGA APENAS AS LEITURAS MAIS RECENTES
     const ultimas20 = readings.slice(0, 60);
     const reversedReadings = [...ultimas20].reverse();
     
@@ -497,20 +506,8 @@ function updateChart(readings) {
         const leituraBruta = r.media_cm || r.leitura_sensor_cm || r.distancia_sensor_solo || r.leitura || 0;
         const sensor = parseFloat(leituraBruta);
         
-        // 🔥 TIMESTAMP CORRETO (igual ao da tabela)
-        let timestamp = r.timestamp;
-        if (r.timestamp_formatado) {
-            timestamp = r.timestamp_formatado;
-        } else if (r.timestamp) {
-            // Se for timestamp em segundos (Unix)
-            if (typeof r.timestamp === 'number') {
-                timestamp = new Date(r.timestamp * 1000);
-            } else {
-                timestamp = new Date(r.timestamp);
-            }
-        } else {
-            timestamp = new Date();
-        }
+        // Formata timestamp com suporte a Date, ms, segundos e data_hora brasileira
+        const timestamp = formatarTimestampFixo(r.timestamp_formatado || r.data_hora || r.timestamp);
         timestamps.push(timestamp);
 
         // 1. h_Mesa Atual (Posição no Ar)
@@ -523,144 +520,164 @@ function updateChart(readings) {
 
     const ctx = ctxEl.getContext('2d');
     
-    depthChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: timestamps,
-            datasets: [
-                {
-                    label: 'Altura do Implemento (Sensor)',
-                    data: hMesaAtual,
-                    borderColor: '#3b82f6',
-                    borderWidth: 3,
-                    pointRadius: 4,
-                    pointHoverRadius: 8,
-                    fill: false,
-                    tension: 0.2,
-                    zIndex: 10
-                },
-                {
-                    label: 'Inserção no Solo',
-                    data: insercaoReal,
-                    borderColor: '#40800c',
-                    backgroundColor: 'rgba(64, 128, 12, 0.2)',
-                    borderWidth: 4,
-                    fill: 'origin',
-                    zIndex: 11,
-                    segment: {
-                        borderColor: ctx => {
-                            const p = Math.abs(ctx.p0.parsed.y);
-                            if (p > 0) {
-                                if (p >= produtivoMin && p <= produtivoMax) return '#40800c';
-                                return p < produtivoMin ? '#f59e0b' : '#ef4444';
+    try {
+        depthChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timestamps,
+                datasets: [
+                    {
+                        label: 'Altura do Implemento (Sensor)',
+                        data: hMesaAtual,
+                        borderColor: '#3b82f6',
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointHoverRadius: 8,
+                        fill: false,
+                        tension: 0.2,
+                        zIndex: 10
+                    },
+                    {
+                        label: 'Inserção no Solo',
+                        data: insercaoReal,
+                        borderColor: '#40800c',
+                        backgroundColor: 'rgba(64, 128, 12, 0.2)',
+                        borderWidth: 4,
+                        fill: 'origin',
+                        zIndex: 11,
+                        segment: {
+                            borderColor: ctx => {
+                                const p = Math.abs(ctx.p0.parsed.y);
+                                if (p > 0) {
+                                    if (p >= produtivoMin && p <= produtivoMax) return '#40800c';
+                                    return p < produtivoMin ? '#f59e0b' : '#ef4444';
+                                }
+                                return 'transparent';
                             }
-                            return 'transparent';
                         }
+                    },
+                    {
+                        label: `h_Mesa FIXA (${hMesa}cm)`,
+                        data: timestamps.map(() => hMesa),
+                        borderColor: '#f97316',
+                        borderDash: [10, 5],
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    },
+                    {
+                        label: 'SOLO (0cm)',
+                        data: timestamps.map(() => 0),
+                        borderColor: '#ffffff',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        fill: false,
+                        zIndex: 5
+                    },
+                    {
+                        label: `Prof Min (${produtivoMin}cm)`,
+                        data: timestamps.map(() => -produtivoMin),
+                        borderColor: '#f59e0b',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    },
+                    {
+                        label: `Prof Max (${produtivoMax}cm)`,
+                        data: timestamps.map(() => -produtivoMax),
+                        borderColor: '#ef4444',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { 
+                        type: 'time',
+                        time: { 
+                            displayFormats: { 
+                                minute: 'HH:mm',
+                                hour: 'HH:mm',
+                                day: 'dd/MM',
+                                month: 'MM/yyyy'
+                            },
+                            tooltipFormat: 'dd/MM/yyyy - HH:mm:ss'
+                        },
+                        ticks: { 
+                            color: '#f1f5f9',
+                            maxRotation: 45,
+                            minRotation: 45,
+                            source: 'data',
+                            autoSkip: true,
+                            maxTicksLimit: 10
+                        },
+                        grid: { display: false }
+                    },
+                    y: {
+                        min: -60,
+                        max: 80,
+                        ticks: {
+                            color: '#f1f5f9',
+                            stepSize: 10,
+                            callback: (v) => {
+                                if (v === 0) return 'SOLO';
+                                if (v === hMesa) return `h_MESA (${hMesa}cm)`;
+                                if (v === -produtivoMin) return `${produtivoMin}cm`;
+                                if (v === -produtivoMax) return `${produtivoMax}cm`;
+                                return Math.abs(v) + 'cm';
+                            }
+                        },
+                        grid: { color: 'rgba(148, 163, 184, 0.2)' }
                     }
                 },
-                {
-                    label: `h_Mesa FIXA (${hMesa}cm)`,
-                    data: timestamps.map(() => hMesa),
-                    borderColor: '#f97316',
-                    borderDash: [10, 5],
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    fill: false
-                },
-                {
-                    label: 'SOLO (0cm)',
-                    data: timestamps.map(() => 0),
-                    borderColor: '#ffffff',
-                    borderWidth: 3,
-                    pointRadius: 0,
-                    fill: false,
-                    zIndex: 5
-                },
-                {
-                    label: `Prof Min (${produtivoMin}cm)`,
-                    data: timestamps.map(() => -produtivoMin),
-                    borderColor: '#f59e0b',
-                    borderDash: [5, 5],
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    fill: false
-                },
-                {
-                    label: `Prof Max (${produtivoMax}cm)`,
-                    data: timestamps.map(() => -produtivoMax),
-                    borderColor: '#ef4444',
-                    borderDash: [5, 5],
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    fill: false
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: { 
-                    type: 'time',
-                    time: { 
-                        unit: 'minute',
-                        displayFormats: { minute: 'HH:mm' },
-                        tooltipFormat: 'dd/MM/yyyy HH:mm:ss'
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: '#f1f5f9', usePointStyle: true }
                     },
-                    ticks: { 
-                        color: '#f1f5f9',
-                        maxRotation: 45,
-                        minRotation: 45,
-                        source: 'data' // 🔥 USA OS TIMESTAMPS REAIS DOS DADOS
-                    },
-                    grid: { display: false }
-                },
-                y: {
-                    min: -60,
-                    max: 80,
-                    ticks: {
-                        color: '#f1f5f9',
-                        stepSize: 10,
-                        callback: (v) => {
-                            if (v === 0) return 'SOLO';
-                            if (v === hMesa) return `h_MESA (${hMesa}cm)`;
-                            if (v === -produtivoMin) return `${produtivoMin}cm`;
-                            if (v === -produtivoMax) return `${produtivoMax}cm`;
-                            return Math.abs(v) + 'cm';
-                        }
-                    },
-                    grid: { color: 'rgba(148, 163, 184, 0.2)' }
-                }
-            },
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: { color: '#f1f5f9', usePointStyle: true }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: (ctx) => {
-                            const val = ctx.parsed.y;
-                            if (ctx.datasetIndex === 0) {
-                                const status = val > hMesa ? '🚜 Deslocamento' : 
-                                              val === hMesa ? '⚙️ Repouso' : '⛏️ Descendo';
-                                return `${status}: ${val.toFixed(1)}cm`;
+                    tooltip: {
+                        callbacks: {
+                            title: (context) => {
+                                if (!context || !context[0]) return '';
+                                const d = context[0].label || context[0].raw?.x;
+                                return formatTimestamp(d);
+                            },
+                            label: (ctx) => {
+                                const val = ctx.parsed.y;
+                                if (ctx.datasetIndex === 0) {
+                                    const status = val > hMesa ? '🚜 Deslocamento' : 
+                                                  val === hMesa ? '⚙️ Repouso' : '⛏️ Descendo';
+                                    return `${status}: ${val.toFixed(1)}cm`;
+                                }
+                                if (ctx.datasetIndex === 1 && val < 0) {
+                                    const prof = Math.abs(val);
+                                    let zona = '';
+                                    if (prof >= produtivoMin && prof <= produtivoMax) zona = 'Ideal';
+                                    else if (prof < produtivoMin) zona = 'Raso';
+                                    else zona = 'Fundo';
+                                    return `⛏️ Inserção (${zona}): ${prof.toFixed(1)}cm no solo`;
+                                }
+                                return null;
                             }
-                            if (ctx.datasetIndex === 1 && val < 0) {
-                                const prof = Math.abs(val);
-                                let zona = '';
-                                if (prof >= produtivoMin && prof <= produtivoMax) zona = 'Ideal';
-                                else if (prof < produtivoMin) zona = 'Raso';
-                                else zona = 'Fundo';
-                                return `⛏️ Inserção (${zona}): ${prof.toFixed(1)}cm no solo`;
-                            }
-                            return null;
                         }
                     }
                 }
             }
+        });
+    } catch (chartErr) {
+        console.warn('⚠️ Erro ao instanciar depthChart:', chartErr);
+        const chartCleanup = Chart.getChart(ctxEl);
+        if (chartCleanup) {
+            try { chartCleanup.destroy(); } catch (e) {}
         }
-    });
+        depthChart = null;
+    }
 }
 
 // 🔥 ADICIONAR BOTÃO DE TEMA NO DASHBOARD
@@ -754,6 +771,13 @@ export function unsubscribeAll() {
 }
 
 export function destroyCharts() { 
-    if (depthChart)      { depthChart.destroy();      depthChart      = null; }
-    if (productiveChart) { productiveChart.destroy(); productiveChart = null; }
+    const ctxEl = document.getElementById('depth-chart');
+    if (ctxEl) {
+        const existing = Chart.getChart(ctxEl);
+        if (existing) {
+            try { existing.destroy(); } catch (e) {}
+        }
+    }
+    if (depthChart)      { try { depthChart.destroy(); } catch (e) {} depthChart = null; }
+    if (productiveChart) { try { productiveChart.destroy(); } catch (e) {} productiveChart = null; }
 }
