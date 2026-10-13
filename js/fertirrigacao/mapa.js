@@ -73,6 +73,8 @@ export const TRECHOS_ADUTORA = [
     destino: 'eucalipto',
     nome: 'Usina ➔ Eucalipto Cheiroso',
     distanciaKm: 1.92,
+    diametroMm: 300,
+    tubulacao: 'PEAD PN10 De 315mm',
     pontos: [
       [-21.04496856073156, -48.26058559247929],
       [-21.048171179817402, -48.27849805552853]
@@ -84,6 +86,8 @@ export const TRECHOS_ADUTORA = [
     destino: 'castanha',
     nome: 'Eucalipto Cheiroso ➔ Castanha',
     distanciaKm: 4.26,
+    diametroMm: 300,
+    tubulacao: 'PEAD PN10 De 315mm',
     pontos: [
       [-21.048171179817402, -48.27849805552853],
       [-21.080929846011003, -48.30075955155999]
@@ -95,6 +99,8 @@ export const TRECHOS_ADUTORA = [
     destino: 'theresinha',
     nome: 'Castanha ➔ Santa Theresinha',
     distanciaKm: 6.10,
+    diametroMm: 250,
+    tubulacao: 'PEAD PN10 De 280mm',
     pontos: [
       [-21.080929846011003, -48.30075955155999],
       [-21.104326364035728, -48.35321793859342]
@@ -268,16 +274,42 @@ export function getMapaHTML() {
   </div>`;
 }
 
+// ─── Destruição Limpa do Mapa ────────────────────────────────────────────────
+export function destroyMapaAdutoras() {
+  if (_map) {
+    try {
+      _map.remove();
+    } catch (e) {
+      console.warn('Erro ao destruir mapa:', e);
+    }
+    _map = null;
+    _pipeLines = {};
+    _markers = {};
+    _distanceMarkers = [];
+  }
+}
+
 // ─── Inicialização do Mapa Leaflet ──────────────────────────────────────────
 export function initMapaAdutoras() {
   const container = document.getElementById('adutoras-leaflet-map');
   if (!container) return;
 
-  // Se já inicializado, apenas invalida o tamanho e atualiza dados
+  // Se o mapa já existe mas foi desanexado do DOM (ex: troca de abas no app),
+  // destrói a instância órfã anterior para que novos cliques e eventos funcionem 100%
   if (_map) {
-    _map.invalidateSize();
-    atualizarDadosMapa();
-    return;
+    const mapContainer = _map.getContainer();
+    if (!mapContainer || !mapContainer.isConnected || mapContainer !== container) {
+      destroyMapaAdutoras();
+    } else {
+      _map.invalidateSize();
+      atualizarDadosMapa();
+      return;
+    }
+  }
+
+  // Previne colisão do Leaflet caso o contêiner DOM tenha sido recriado
+  if (container._leaflet_id) {
+    delete container._leaflet_id;
   }
 
   // Centro da rede (próximo à Lagoa Castanha)
@@ -309,7 +341,7 @@ export function initMapaAdutoras() {
     subdomains: 'abcd'
   });
 
-  // Traça as linhas de tubulação da adutora
+  // Traça as linhas de tubulação da adutora com Hitbox de alta precisão
   _desenharAdutoras();
 
   // Cria os marcadores dos nós (lagoas)
@@ -333,35 +365,96 @@ function _desenharAdutoras() {
       color: '#083344',
       weight: 8,
       opacity: 0.7,
-      lineCap: 'round'
+      lineCap: 'round',
+      interactive: true
     }).addTo(_map);
 
-    // 2. Linha interna condutora de fluido
+    // 2. Linha interna condutora de fluido (animada)
     const flowLine = L.polyline(trecho.pontos, {
       color: '#06b6d4',
       weight: 3.5,
       opacity: 0.95,
-      className: 'adutora-anim-flow'
+      className: 'adutora-anim-flow',
+      interactive: true
     }).addTo(_map);
 
-    flowLine.bindTooltip(`<strong>${trecho.nome}</strong><br>Distância: ${trecho.distanciaKm} km`, {
+    // 3. HITBOX TRANSPARENTE ULTRA-PRECISA (30px de largura)
+    // Garante que 100% dos cliques na adutora sejam capturados mesmo no celular ou zoom afastado
+    const hitLine = L.polyline(trecho.pontos, {
+      color: '#06b6d4',
+      weight: 30,
+      opacity: 0.0001,
+      interactive: true,
+      className: 'cursor-pointer'
+    }).addTo(_map);
+
+    // Tooltip rápido no hover
+    flowLine.bindTooltip(`<strong>${trecho.nome}</strong><br>Distância: ${trecho.distanciaKm} km — Clique para detalhes`, {
       sticky: true,
       className: 'bg-slate-900 text-white rounded-lg px-2 py-1 text-xs border border-slate-700 shadow'
     });
 
-    _pipeLines[trecho.id] = { baseLine, flowLine };
+    // Vincula manipulador de clique robusto em TODAS as camadas da adutora
+    const onClickTrecho = (e) => {
+      if (e && e.originalEvent) {
+        L.DomEvent.stopPropagation(e);
+      }
+      const latlng = e?.latlng || [
+        (trecho.pontos[0][0] + trecho.pontos[1][0]) / 2,
+        (trecho.pontos[0][1] + trecho.pontos[1][1]) / 2
+      ];
+      _abrirPopupTrecho(trecho, latlng);
+    };
 
-    // Adiciona badge de distância no ponto médio do trecho
+    hitLine.on('click', onClickTrecho);
+    flowLine.on('click', onClickTrecho);
+    baseLine.on('click', onClickTrecho);
+
+    // Hover effect: ilumina o trecho ao passar o mouse
+    const onMouseOver = () => {
+      flowLine.setStyle({ weight: 5.5, color: '#38bdf8' });
+      baseLine.setStyle({ weight: 12, opacity: 0.9 });
+    };
+    const onMouseOut = () => {
+      flowLine.setStyle({ weight: 3.5, color: '#06b6d4' });
+      baseLine.setStyle({ weight: 8, opacity: 0.7 });
+    };
+
+    hitLine.on('mouseover', onMouseOver);
+    hitLine.on('mouseout', onMouseOut);
+    flowLine.on('mouseover', onMouseOver);
+    flowLine.on('mouseout', onMouseOut);
+
+    _pipeLines[trecho.id] = { baseLine, flowLine, hitLine };
+
+    // Adiciona badge de distância no ponto médio do trecho (agora clicável!)
     const midLat = (trecho.pontos[0][0] + trecho.pontos[1][0]) / 2;
     const midLng = (trecho.pontos[0][1] + trecho.pontos[1][1]) / 2;
     const distIcon = L.divIcon({
       className: 'custom-distance-marker',
-      html: `<div class="map-distance-chip shadow-lg">${trecho.distanciaKm} km</div>`,
-      iconSize: [60, 20],
-      iconAnchor: [30, 10]
+      html: `<div class="map-distance-chip shadow-lg cursor-pointer" title="Clique para detalhes da tubulação ${trecho.nome}">${trecho.distanciaKm} km</div>`,
+      iconSize: [64, 24],
+      iconAnchor: [32, 12]
     });
     const distMarker = L.marker([midLat, midLng], { icon: distIcon }).addTo(_map);
+    distMarker.on('click', (e) => {
+      if (e && e.originalEvent) L.DomEvent.stopPropagation(e);
+      _abrirPopupTrecho(trecho, [midLat, midLng]);
+    });
     _distanceMarkers.push(distMarker);
+
+    // Conecta o card do trecho na parte inferior da tela para focar e abrir o popup
+    const cardEl = document.getElementById(`card-trecho-${trecho.id}`);
+    if (cardEl) {
+      cardEl.style.cursor = 'pointer';
+      cardEl.title = 'Clique para localizar e detalhar este trecho no mapa';
+      cardEl.onclick = () => {
+        if (_map) {
+          _map.flyTo([midLat, midLng], 14, { duration: 1.0 });
+          _abrirPopupTrecho(trecho, [midLat, midLng]);
+        }
+      };
+    }
   });
 }
 
@@ -479,6 +572,96 @@ function _abrirPopupPonto(marker, ponto) {
   `;
 
   marker.bindPopup(popupContent, { maxWidth: 320 }).openPopup();
+}
+
+function _abrirPopupTrecho(trecho, latlng) {
+  if (!_map) return;
+  const p = _pipeLines[trecho.id];
+
+  // Destaque visual temporário da adutora
+  if (p && p.flowLine) {
+    p.flowLine.setStyle({ weight: 6, color: '#38bdf8' });
+    setTimeout(() => {
+      p.flowLine.setStyle({ weight: 3.5, color: '#06b6d4' });
+    }, 2500);
+  }
+
+  // Destaque visual do card de trecho correspondente
+  const cardEl = document.getElementById(`card-trecho-${trecho.id}`);
+  if (cardEl) {
+    cardEl.classList.add('ring-2', 'ring-cyan-400');
+    setTimeout(() => cardEl.classList.remove('ring-2', 'ring-cyan-400'), 2500);
+  }
+
+  // Volume interno da tubulação (m³)
+  const diametroMm = trecho.diametroMm || 300;
+  const raioM = (diametroMm / 1000) / 2;
+  const volTubulacaoM3 = Math.round(Math.PI * Math.pow(raioM, 2) * (trecho.distanciaKm * 1000));
+  const tempoTransitoMin = Math.round((volTubulacaoM3 / 120) * 60);
+
+  const popupContent = `
+    <div class="p-3.5" style="min-width: 270px;">
+      <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-700">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-cyan-400 text-lg">alt_route</span>
+          <div>
+            <h4 class="font-bold text-sm text-white">${trecho.nome}</h4>
+            <p class="text-[10px] text-cyan-300">Tubulação Georreferenciada</p>
+          </div>
+        </div>
+        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+          ${trecho.distanciaKm} km
+        </span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+        <div class="bg-slate-800/80 p-2 rounded border border-slate-700/60">
+          <span class="text-[10px] text-slate-400 block">Tubulação</span>
+          <strong class="text-slate-100 text-xs">${trecho.tubulacao || 'PEAD PN10'}</strong>
+        </div>
+        <div class="bg-slate-800/80 p-2 rounded border border-slate-700/60">
+          <span class="text-[10px] text-slate-400 block">Vol. na Linha</span>
+          <strong class="text-purple-300 text-xs">${volTubulacaoM3.toLocaleString('pt-BR')} m³</strong>
+        </div>
+        <div class="bg-slate-800/80 p-2 rounded border border-slate-700/60">
+          <span class="text-[10px] text-slate-400 block">Pressão Média</span>
+          <strong class="text-emerald-400 text-xs">~4.8 bar</strong>
+        </div>
+        <div class="bg-slate-800/80 p-2 rounded border border-slate-700/60">
+          <span class="text-[10px] text-slate-400 block" title="Tempo a 120 m³/h">Tempo Trânsito</span>
+          <strong class="text-amber-300 text-xs">~${tempoTransitoMin} min</strong>
+        </div>
+      </div>
+
+      <button id="btn-popup-simular-${trecho.id}" class="w-full py-1.5 px-3 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white transition flex items-center justify-center gap-1.5 shadow cursor-pointer">
+        <span class="material-symbols-outlined text-xs">play_arrow</span> Simular Bombeamento Neste Trecho
+      </button>
+    </div>
+  `;
+
+  const popupPos = Array.isArray(latlng) ? latlng : [latlng.lat, latlng.lng];
+  L.popup({
+    className: 'adutora-custom-popup',
+    offset: [0, -5],
+    maxWidth: 320
+  })
+    .setLatLng(popupPos)
+    .setContent(popupContent)
+    .openOn(_map);
+
+  setTimeout(() => {
+    document.getElementById(`btn-popup-simular-${trecho.id}`)?.addEventListener('click', () => {
+      _map.closePopup();
+      const selOrigem = document.getElementById('sim-origem');
+      const selDestino = document.getElementById('sim-destino');
+      if (selOrigem && selDestino) {
+        selOrigem.value = trecho.origem;
+        selDestino.value = trecho.destino;
+        document.getElementById('btn-sim-executar')?.click();
+        document.getElementById('card-trecho-' + trecho.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  }, 100);
 }
 
 function _conectarBotoesControle() {

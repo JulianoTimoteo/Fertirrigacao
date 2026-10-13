@@ -9,7 +9,7 @@ import { renderLagoasChart, destroyLagoasChart, getGraficoHTML, carregarHistoric
 import { getVazaoHTML, getSummaryCardHTML, atualizarAcumulados, setupMetaInput, resetAcumulados, recalcularVolumeFromEstado, carregarHistoricoRealVazao } from './vazao.js';
 import { setupFertirrigacaoSubTabs, stopAutoplay }                            from './subtabs.js';
 import { getInsightsHTML, atualizarInsights, resetInsights, renderInsightsFromEstado } from './insights.js';
-import { getMapaHTML, initMapaAdutoras }                                        from './mapa.js';
+import { getMapaHTML, initMapaAdutoras, destroyMapaAdutoras }                     from './mapa.js';
 
 // ─── HTML principal ──────────────────────────────────────────────────────────
 export function getFertirrigacaoTabHTML() {
@@ -279,6 +279,7 @@ export function stopFertirrigacao() {
   stopAutoplay();
   clearOfflineTimers();
   unsubscribeAllLagoas();
+  destroyMapaAdutoras();
   window.removeEventListener('ferti:leituraAtualizada', _onLeituraAtualizada);
   console.log('[Fertirrigacao] Parado e listeners removidos.');
 }
