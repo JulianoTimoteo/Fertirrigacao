@@ -523,6 +523,15 @@ function _criarMarcadoresLagoas() {
     const customIcon = _criarIconePonto(ponto, estado);
     const marker = L.marker([ponto.lat, ponto.lng], { icon: customIcon }).addTo(_map);
 
+    // TOOLTIP NO HOVER DOS "Ts" (INSTANTÂNEO NO MOUSE - IGUAL ÀS ADUTORAS!)
+    marker.bindTooltip(() => _gerarHTMLTooltipPonto(ponto), {
+      opacity: 1,
+      direction: 'top',
+      offset: [0, -35],
+      className: 'adutora-leaflet-tooltip'
+    });
+
+    // CLIQUE FIXA A JANELA POPUP
     marker.on('click', () => {
       _abrirPopupPonto(marker, ponto);
     });
@@ -548,7 +557,7 @@ function _criarIconePonto(ponto, estado) {
   return L.divIcon({
     className: 'lagoa-map-marker',
     html: `
-      <div class="lagoa-marker-badge">
+      <div class="lagoa-marker-badge" title="${ponto.nome} (${ponto.badge}) — Passe o mouse para telemetria">
         <div class="lagoa-marker-icon" style="background:${ponto.cor}">
           ${pulseHtml}
           <span>${ponto.badge}</span>
@@ -564,7 +573,7 @@ function _criarIconePonto(ponto, estado) {
   });
 }
 
-function _abrirPopupPonto(marker, ponto) {
+function _gerarHTMLTooltipPonto(ponto) {
   const estado = getEstadoLagoas();
   let lagoasHtml = '';
 
@@ -574,7 +583,7 @@ function _abrirPopupPonto(marker, ponto) {
     const online = e.online && !e.isStale;
     const volM3 = e.volume ? (e.volume / 1000).toFixed(0) : '--';
     
-    // Suporte aos formatos de nivel: nivelCm, nivel ou ultimaLeitura
+    // Suporte aos formatos de nível: nivelCm, nivel ou ultimaLeitura
     const rawNivel = e.nivelCm != null ? e.nivelCm : (e.nivel != null ? e.nivel : e.ultimaLeitura?.nivel);
     const nivel = rawNivel != null && !isNaN(rawNivel) ? `${parseFloat(rawNivel).toFixed(1)} cm` : '--';
 
@@ -585,51 +594,57 @@ function _abrirPopupPonto(marker, ponto) {
     const pct = e.percent != null && !isNaN(e.percent) ? `${e.percent.toFixed(1)}%` : '--';
 
     lagoasHtml += `
-      <div class="p-3 bg-slate-800/80 rounded-lg border border-slate-700/80 mb-2">
+      <div class="p-2.5 bg-slate-900/90 rounded-lg border border-slate-700/80 mb-1.5">
         <div class="flex items-center justify-between mb-1.5">
-          <strong class="text-sm text-slate-100">${cfg ? cfg.name : `Lagoa ${id}`}</strong>
-          <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${online ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-700 text-slate-400'}">
+          <strong class="text-xs text-slate-100 font-bold">${cfg ? cfg.name : `Lagoa ${id}`}</strong>
+          <span class="text-[9px] px-2 py-0.5 rounded-full font-bold ${online ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-slate-700 text-slate-400'}">
             ${online ? 'ONLINE' : 'OFFLINE'}
           </span>
         </div>
-        <div class="grid grid-cols-4 gap-2 text-center text-xs">
-          <div>
-            <span class="text-[10px] text-slate-400 block">Capacidade</span>
-            <strong class="text-cyan-400">${pct}</strong>
+        <div class="grid grid-cols-4 gap-1.5 text-center text-xs">
+          <div class="bg-slate-950/70 p-1 rounded">
+            <span class="text-[9px] text-slate-400 block uppercase font-semibold">Capac.</span>
+            <strong class="text-cyan-400 font-mono text-[11px]">${pct}</strong>
           </div>
-          <div>
-            <span class="text-[10px] text-slate-400 block">Volume</span>
-            <strong class="text-purple-400">${volM3} m³</strong>
+          <div class="bg-slate-950/70 p-1 rounded">
+            <span class="text-[9px] text-slate-400 block uppercase font-semibold">Volume</span>
+            <strong class="text-purple-300 font-mono text-[11px]">${volM3} m³</strong>
           </div>
-          <div>
-            <span class="text-[10px] text-slate-400 block" title="Distância do sensor até a lâmina">Dist. Sensor</span>
-            <strong class="text-slate-200">${nivel}</strong>
+          <div class="bg-slate-950/70 p-1 rounded" title="Distância do sensor">
+            <span class="text-[9px] text-slate-400 block uppercase font-semibold">Sensor</span>
+            <strong class="text-slate-200 font-mono text-[11px]">${nivel}</strong>
           </div>
-          <div>
-            <span class="text-[10px] text-slate-400 block" title="Lâmina de vinhaça acumulada">Lâmina</span>
-            <strong class="text-emerald-400">${lamina}</strong>
+          <div class="bg-slate-950/70 p-1 rounded" title="Lâmina de vinhaça">
+            <span class="text-[9px] text-slate-400 block uppercase font-semibold">Lâmina</span>
+            <strong class="text-emerald-400 font-mono text-[11px]">${lamina}</strong>
           </div>
         </div>
       </div>
     `;
   });
 
-  const popupContent = `
-    <div class="p-4" style="min-width: 260px;">
-      <div class="flex items-center gap-2 mb-2 pb-2 border-b border-slate-700">
-        <span class="w-3 h-3 rounded-full" style="background:${ponto.cor}"></span>
+  return `
+    <div class="adutora-hover-card p-3" style="min-width: 270px;">
+      <div class="flex items-center gap-2 mb-2 pb-1.5 border-b border-cyan-500/30">
+        <span class="w-3 h-3 rounded-full shadow" style="background:${ponto.cor}"></span>
         <div>
-          <h4 class="font-extrabold text-sm text-white">${ponto.nome}</h4>
-          <p class="text-[10px] text-slate-400">${ponto.lat.toFixed(6)}, ${ponto.lng.toFixed(6)}</p>
+          <h4 class="font-bold text-xs text-white">${ponto.nome}</h4>
+          <p class="text-[9px] text-cyan-300 font-mono">${ponto.lat.toFixed(6)}, ${ponto.lng.toFixed(6)}</p>
         </div>
       </div>
       <div class="space-y-1">
         ${lagoasHtml}
       </div>
+      <div class="pt-1 mt-1 border-t border-slate-800 text-[9px] text-slate-400 text-right">
+        Clique para fixar janela
+      </div>
     </div>
   `;
+}
 
-  marker.bindPopup(popupContent, { maxWidth: 320 }).openPopup();
+function _abrirPopupPonto(marker, ponto) {
+  const content = _gerarHTMLTooltipPonto(ponto);
+  marker.bindPopup(content, { maxWidth: 320, closeOnClick: false }).openPopup();
 }
 
 function _abrirPopupTrecho(trecho, latlng) {
@@ -892,11 +907,14 @@ export function atualizarDadosMapa() {
   if (!_map) return;
   const estado = getEstadoLagoas();
 
-  // 1. Atualiza ícones dos marcadores
+  // 1. Atualiza ícones dos marcadores e seus tooltips de hover
   Object.values(PONTOS_ADUTORA).forEach(ponto => {
     const marker = _markers[ponto.chave];
     if (marker) {
       marker.setIcon(_criarIconePonto(ponto, estado));
+      if (typeof marker.setTooltipContent === 'function') {
+        marker.setTooltipContent(_gerarHTMLTooltipPonto(ponto));
+      }
     }
   });
 
