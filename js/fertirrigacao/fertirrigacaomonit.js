@@ -15,7 +15,7 @@ const FIREBASE_CONFIG = {
   appId: "1:707534137465:web:839d7e27bc538de7308ca8"
 };
 
-export const POLL_INTERVAL_MS    = 30 * 1000;
+export const POLL_INTERVAL_MS    = 10 * 1000;
 const ONLINE_THRESHOLD_MS = 15 * 60 * 1000;
 
 export const LAGOA_CONFIG = {

@@ -245,9 +245,9 @@ async function loadDataFromAPI() {
 
         // Montar readingsCache com as 50 mais recentes
         readingsCache = leiturasRecalculadas.slice(0, 50).map((data, idx) => {
-            const leituraCm  = data.media_cm || data.leitura_sensor_cm || data.leitura || 0;
+            const leituraVal = parseFloat(data.media_cm ?? data.leitura_sensor_cm ?? data.leitura ?? 0) || 0;
             const ts         = formatarTimestampFixo(data.timestamp); // 🔥 mesmo que historico.js
-            const penetracao = hMesaAtual - leituraCm;
+            const penetracao = hMesaAtual - leituraVal;
             const statusBase = data.statusRecalculado || STATUS.PARADO_MESA;
 
             // Status em tempo real para a leitura mais recente
@@ -260,7 +260,7 @@ async function loadDataFromAPI() {
 
             return {
                 timestamp:       ts,
-                leitura:         leituraCm,
+                leitura:         leituraVal,
                 profundidade:    penetracao,
                 hMesa:           hMesaAtual,
                 statusBase,
@@ -392,7 +392,7 @@ function updateDashboard(readings) {
             row.className = 'table-row hover:bg-gray-50 transition-colors';
             row.innerHTML = `
                 <td class="px-6 py-3">${tsFormatado}</td>
-                <td class="px-6 py-3 font-mono">${(r.leitura || 0).toFixed(2)} cm</td>
+                <td class="px-6 py-3 font-mono">${(parseFloat(r.leitura) || 0).toFixed(2)} cm</td>
                 <td class="px-6 py-3 ${statusClass}" title="${r.motivo || ''}">${r.statusBase}</td>
                 <td class="px-6 py-3">${r.sd_status || 'OK'}</td>`;
             historyBody.appendChild(row);
