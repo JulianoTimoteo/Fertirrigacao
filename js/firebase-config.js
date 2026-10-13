@@ -1,4 +1,4 @@
-�// ============================================================================
+// ============================================================================
 // firebase-config.js � Conexão Direta ao Firestore (fertirrigacaomonit)
 // Gerencia Usuários, Equipamentos, Grupos e Equipes diretamente no Firebase
 // ============================================================================

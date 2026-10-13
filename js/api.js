@@ -1,4 +1,4 @@
-�// ============================================================================
+// ============================================================================
 // api.js � Ponto de Conexão: Roteamento Direto para o Firebase Firestore
 // Substitui a API do Google Sheets por persistência direta no Firebase
 // ============================================================================

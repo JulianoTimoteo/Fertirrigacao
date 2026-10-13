@@ -1,7 +1,7 @@
-�import { 
+import { 
     apiGet,
     apiPost
-} from './api.js?v=8.4.1';
+} from './api.js?v=8.4.2';
 
 import { 
     setupAuthListeners, 
@@ -9,7 +9,7 @@ import {
     setCurrentUserProfile,
     handlePasswordReset,
     handleLogout
-} from './auth.js?v=8.4.1';
+} from './auth.js?v=8.4.2';
 
 import { 
     setupImplementosSelector,
@@ -17,30 +17,30 @@ import {
     destroyCharts,
     setRefreshTime,
     forcarAtualizacaoImplementos
-} from './dashboard/tratos.js?v=8.4.1';
+} from './dashboard/tratos.js?v=8.4.2';
 
 import { 
     setupHistoricoTab,
     destroyHistoricoChart
-} from './dashboard/historico.js?v=8.4.1';
+} from './dashboard/historico.js?v=8.4.2';
 
 import { 
     setupEquipamentosTab
-} from './equipamentos/equipamentos.js?v=8.4.1';
+} from './equipamentos/equipamentos.js?v=8.4.2';
 
 import { 
     setupAdminTabs,
     loadAdminData,
     handleAddUser
-} from './admin/users.js?v=8.4.1';
+} from './admin/users.js?v=8.4.2';
 
-import { formatarTimestampFixo } from './dashboard/regras.js?v=8.4.1';
+import { formatarTimestampFixo } from './dashboard/regras.js?v=8.4.2';
 
 // �x� IMPORTA�!ÒO DO M�DULO DE FERTIRRIGA�!ÒO
-import fertirrigacao from './fertirrigacao/index.js?v=8.4.1';
+import fertirrigacao from './fertirrigacao/index.js?v=8.4.2';
 
 // �xRx IMPORTA�!ÒO DO SUBMENU DE PERFIL / AVATAR
-import { setupProfileMenu } from './dashboard/perfil.js?v=8.4.1';
+import { setupProfileMenu } from './dashboard/perfil.js?v=8.4.2';
 
 // Variável global do perfil do usuário
 let currentUserProfile = null;
@@ -801,7 +801,7 @@ function getImplementosTabHTML() {
 
     <div class="mb-10">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-2xl font-bold" style="color:var(--text-1)">�x` Perfil de Inserção no Solo</h2>
+            <h2 class="text-2xl font-bold" style="color:var(--text-1)">📊 Perfil de Inserção no Solo</h2>
         </div>
         <div class="grid grid-cols-4 gap-3 mb-4">
             <div class="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
@@ -835,7 +835,7 @@ function getImplementosTabHTML() {
     
     <div>
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold" style="color:var(--text-1)">�altimas Leituras</h2>
+            <h2 class="text-2xl font-bold" style="color:var(--text-1)">Últimas Leituras</h2>
             <button id="refresh-now-btn" class="flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors">
                 <span class="material-symbols-outlined text-sm">refresh</span>
                 Atualizar Agora

@@ -1,4 +1,4 @@
-�import { 
+import { 
     getEquipamentos,
     getLeiturasESP 
 } from '../api.js';
@@ -43,7 +43,7 @@ function calcularTempoSemLeitura() {
     }
     const agora = new Date();
     const diffMinutos = (agora.getTime() - ultimaLeituraTimestamp.getTime()) / (1000 * 60);
-    console.log(`⏱️ �altima leitura: ${ultimaLeituraTimestamp.toLocaleString()}, Diferença: ${diffMinutos.toFixed(2)} min`);
+    console.log(`⏱️ Última leitura: ${ultimaLeituraTimestamp.toLocaleString()}, Diferença: ${diffMinutos.toFixed(2)} min`);
     return diffMinutos;
 }
 
@@ -220,7 +220,7 @@ async function loadDataFromAPI() {
                 const dateMs  = new Date(tsMs);
                 const dateSec = new Date(ts * 1000);
                 const dateRaw = new Date(ts);
-                console.log(`�x"�️ Leitura[${i}] timestamp bruto=${ts} (tipo:${typeof ts})`);
+                console.log(`🕵️ Leitura[${i}] timestamp bruto=${ts} (tipo:${typeof ts})`);
                 console.log(`   �  new Date(ts)       = ${dateRaw.toLocaleString('pt-BR')} (${ts < 1e10 ? 'segundos?' : 'ms?'})`);
                 console.log(`   �  new Date(ts*1000)  = ${dateSec.toLocaleString('pt-BR')}`);
                 console.log(`   �  formatarTimestamp  = ${formatarTimestampFixo(ts).toLocaleString('pt-BR')}`);
@@ -236,7 +236,7 @@ async function loadDataFromAPI() {
         if (leiturasRecalculadas.length > 0) {
             const ulr = leiturasRecalculadas[0];
             ultimaLeituraTimestamp = formatarTimestampFixo(ulr.timestamp);
-            console.log(`�x& �altima: ${ultimaLeituraTimestamp.toLocaleString()} | ${ulr.media_cm || 0}cm | ${ulr.statusRecalculado}`);
+            console.log(`📅 Última: ${ultimaLeituraTimestamp.toLocaleString()} | ${ulr.media_cm || 0}cm | ${ulr.statusRecalculado}`);
         }
 
         const hMesaAtual  = equipamentoAtivo.hMesa;
@@ -275,7 +275,7 @@ async function loadDataFromAPI() {
             };
         });
 
-        console.log(`�x` Cache: ${readingsCache.length} | Recente: ${readingsCache[0]?.leitura}cm | ${readingsCache[0]?.statusBase} | ${readingsCache[0]?.timestamp?.toLocaleString()}`);
+        console.log(`📊 Cache: ${readingsCache.length} | Recente: ${readingsCache[0]?.leitura}cm | ${readingsCache[0]?.statusBase} | ${readingsCache[0]?.timestamp?.toLocaleString()}`);
         updateDashboard(readingsCache);
 
         // �x� Sincroniza o cronômetro do cabeçalho com o envio do ESP32 de implementos
@@ -327,7 +327,7 @@ function updateDashboard(readings) {
     const tempoSemLeitura = calcularTempoSemLeitura();
     const TEMPO_LIMITE    = CONFIG_PADRAO.TEMPO_DESLIGADO_MINUTOS;
 
-    console.log(`�x` Dashboard | Sensor: ${latestDepth}cm | Prof: ${latestProfund}cm | Status: ${latestReading.statusBase} | ${tempoSemLeitura.toFixed(1)}min atrás`);
+        console.log(`📊 Dashboard | Sensor: ${latestDepth}cm | Prof: ${latestProfund}cm | Status: ${latestReading.statusBase} | ${tempoSemLeitura.toFixed(1)}min atrás`);
 
     // Badge Online/Offline
     if (badge) {
@@ -356,7 +356,7 @@ function updateDashboard(readings) {
     const desloc = readings.filter(r => r.statusBase === STATUS.DESLOCAMENTO).length;
     const parado = readings.filter(r => r.statusBase === STATUS.PARADO_MESA || r.statusBase === STATUS.PARADO_SUSPENSO).length;
 
-    console.log(`�x` Distrib (${total}): Ideal=${ideal} Raso=${raso} Fundo=${fundo} Desloc=${desloc} Parado=${parado}`);
+        console.log(`📊 Distrib (${total}): Ideal=${ideal} Raso=${raso} Fundo=${fundo} Desloc=${desloc} Parado=${parado}`);
 
     document.getElementById('ideal-percent') ?.setAttribute('textContent', total ? ((ideal  / total) * 100).toFixed(1) + '%' : '0%');
     document.getElementById('raso-percent')  ?.setAttribute('textContent', total ? ((raso   / total) * 100).toFixed(1) + '%' : '0%');

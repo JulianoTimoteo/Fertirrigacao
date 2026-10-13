@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // fertirrigacaomonit.js — Conexão Firestore "fertirrigacaomonit"
 // Lê da coleção "medidas" — suporte flexível a documentos por código (T1..T5)
 // Polling a cada 10s sincronizado com ESP32.
