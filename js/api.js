@@ -164,8 +164,8 @@ export async function getLeiturasESP(identificador, desde = null, ate = null, li
                 const docTanque = docId.split('_')[0].toUpperCase();
                 const matchDoc   = docTanque === idFiltro;
                 const matchCampo = tanque === idFiltro;
-                const matchData  = (data.tanque || ').toUpperCase() === idFiltro;
-                const matchCod   = (data.codigo || ').toUpperCase() === idFiltro;
+                const matchData  = (data.tanque || '').toUpperCase() === idFiltro;
+                const matchCod   = (data.codigo || '').toUpperCase() === idFiltro;
                 if (!matchDoc && !matchCampo && !matchData && !matchCod) return;
             }
 
@@ -269,5 +269,6 @@ export async function testConnection() {
 }
 
 console.log("âœ… API reconfigurada: Equipamentos, UsuÃ¡rios, Grupos e Equipes agora 100% no Firebase!");
+
 
 
