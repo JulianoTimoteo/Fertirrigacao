@@ -10,7 +10,7 @@ import { getVazaoHTML, getSummaryCardHTML, atualizarAcumulados, setupMetaInput, 
 import { setupFertirrigacaoSubTabs, stopAutoplay }                            from './subtabs.js';
 import { getInsightsHTML, atualizarInsights, resetInsights, renderInsightsFromEstado } from './insights.js';
 import { formatarTempoRelativo }                                               from './regras.js';
-import { getMapaHTML, initMapaAdutoras, destroyMapaAdutoras }                     from './mapa.js?v=8.4.15';
+import { getMapaHTML, initMapaAdutoras, destroyMapaAdutoras }                     from './mapa.js?v=8.4.18';
 
 // ─── HTML principal ──────────────────────────────────────────────────────────
 export function getFertirrigacaoTabHTML() {
