@@ -12,7 +12,7 @@
 // TIMEOUT OFFLINE: 5min sem dado novo → badge offline
 // ============================================================================
 
-import { calcularVolumeTronco } from './regras.js';
+import { calcularVolumeTronco, formatarTempoRelativo } from './regras.js';
 import { LAGOA_CONFIG }         from './firebase.js';
 
 const _estado    = {};
@@ -243,7 +243,7 @@ export function onLeituraESP32(lagoaId, dados) {
   // Label da última leitura com aviso de dado antigo
   const dataHoraTexto = dados.data_hora || (dados.data && dados.hora ? `${dados.data} - ${dados.hora}` : (dados.hora || '–'));
   const labelHora = isStale
-    ? `${dataHoraTexto} — ⚠️ ${dados.idadeMin ?? '?'}min atrás`
+    ? `${dataHoraTexto} — ⚠️ ${formatarTempoRelativo(dados.idadeMin)}`
     : `${dataHoraTexto} — ${dados.status}`;
 
   _atualizarCardUI(lagoaId, {

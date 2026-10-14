@@ -9,6 +9,7 @@ import { renderLagoasChart, destroyLagoasChart, getGraficoHTML, carregarHistoric
 import { getVazaoHTML, getSummaryCardHTML, atualizarAcumulados, setupMetaInput, resetAcumulados, recalcularVolumeFromEstado, carregarHistoricoRealVazao } from './vazao.js';
 import { setupFertirrigacaoSubTabs, stopAutoplay }                            from './subtabs.js';
 import { getInsightsHTML, atualizarInsights, resetInsights, renderInsightsFromEstado } from './insights.js';
+import { formatarTempoRelativo }                                               from './regras.js';
 import { getMapaHTML, initMapaAdutoras, destroyMapaAdutoras }                     from './mapa.js?v=8.4.15';
 
 // ─── HTML principal ──────────────────────────────────────────────────────────
@@ -190,7 +191,7 @@ function _onDados(lagoaId, dados) {
     );
   } else {
     _setStatus(
-      `Firestore OK — Dados históricos de ${dados.data} ${dados.hora} (${dados.idadeMin}min atrás)`,
+      `Firestore OK — Dados históricos de ${dados.data} ${dados.hora} (${formatarTempoRelativo(dados.idadeMin)})`,
       'online'
     );
   }

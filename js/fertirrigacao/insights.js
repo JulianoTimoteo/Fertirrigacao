@@ -4,6 +4,7 @@
 // ============================================================================
 
 import { LAGOA_CONFIG } from './firebase.js';
+import { formatarTempoRelativo } from './regras.js';
 
 // Janela de análise: últimos N pontos com timestamp
 const JANELA_TAXA = 10 * 60 * 1000;  // 10 min para calcular taxa L/min
@@ -197,7 +198,7 @@ function _gerarAlertasDeEstado(estado) {
       alertas.push({
         tipo: 'aviso', icon: 'wifi_off',
         titulo: `${nome}: sensor offline`,
-        msg: `Última leitura: ${e.ultimaLeitura.data} ${e.ultimaLeitura.hora} (${e.ultimaLeitura.idadeMin ?? '?'}min atrás). Dados exibidos são históricos.`
+        msg: `Última leitura: ${e.ultimaLeitura.data} ${e.ultimaLeitura.hora} (${formatarTempoRelativo(e.ultimaLeitura.idadeMin)}). Dados exibidos são históricos.`
       });
     }
   });

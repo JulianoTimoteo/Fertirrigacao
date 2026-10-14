@@ -46,3 +46,32 @@ export function processarMovimentacao(variacoes) {
 
     return resultado;
 }
+
+/**
+ * Converte minutos decorridos em texto amigável (ex: "45min atrás", "15h e 6min atrás", "1 dia e 4h atrás")
+ */
+export function formatarTempoRelativo(minutos) {
+    if (minutos == null || isNaN(minutos)) return 'tempo desconhecido';
+    const m = Math.round(Number(minutos));
+    if (m < 1) return 'agora mesmo';
+    if (m < 60) return `${m}min atrás`;
+
+    const horas = Math.floor(m / 60);
+    const minRestantes = m % 60;
+
+    if (horas < 24) {
+        if (minRestantes === 0) return `${horas}h atrás`;
+        return `${horas}h e ${minRestantes}min atrás`;
+    }
+
+    const dias = Math.floor(horas / 24);
+    const horasRestantes = horas % 24;
+
+    if (dias === 1) {
+        if (horasRestantes === 0) return '1 dia atrás';
+        return `1 dia e ${horasRestantes}h atrás`;
+    }
+
+    if (horasRestantes === 0) return `${dias} dias atrás`;
+    return `${dias} dias e ${horasRestantes}h atrás`;
+}
