@@ -50,7 +50,13 @@ function _ativarAba(container, tabId) {
 
   const btn     = container.querySelector(`[data-tab="${tabId}"]`);
   const content = document.getElementById(tabId);
-  if (btn)     btn.classList.add('active');
+  if (btn) {
+    btn.classList.add('active');
+    // No celular, centraliza a pílula ativa suavemente no carrossel horizontal
+    try {
+      btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    } catch (_) {}
+  }
   if (content) content.classList.add('active');
 
   if (tabId === 'grafico-content') {

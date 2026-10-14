@@ -12,7 +12,7 @@
 // TIMEOUT OFFLINE: 5min sem dado novo → badge offline
 // ============================================================================
 
-import { calcularVolumeTronco, formatarTempoRelativo } from './regras.js';
+import { calcularVolumeTronco, calcularCapacidadeMaxima, formatarTempoRelativo } from './regras.js';
 import { LAGOA_CONFIG }         from './firebase.js';
 
 const _estado    = {};
@@ -30,7 +30,7 @@ const DEFAULT_CONFIG = {
   T1: { L_top: 40.0, W_top: 20.0, L_bottom: 35.0, W_bottom: 15.0, H_max: 3.0 },
   T2: { L_top: 40.0, W_top: 20.0, L_bottom: 35.0, W_bottom: 15.0, H_max: 3.0 },
   T3: { L_top: 38.0, W_top: 18.0, L_bottom: 32.0, W_bottom: 13.0, H_max: 2.8 },
-  T4: { L_top: 42.0, W_top: 22.0, L_bottom: 36.0, W_bottom: 16.0, H_max: 3.2 },
+  T4: { L_top: 42.0, W_top: 22.0, L_bottom: 36.0, W_bottom: 16.0, H_max: 3.0 },
   T5: { L_top: 45.0, W_top: 25.0, L_bottom: 38.0, W_bottom: 18.0, H_max: 3.5 }
 };
 
@@ -143,11 +143,11 @@ export function getLagoasCardsHTML() {
 
           <!-- Volume -->
           <div class="w-full text-center py-2 px-1 border-y border-[var(--border-1)] bg-[var(--bg-3)]/40 rounded-xl">
-            <p class="lagoa-label-small mb-0.5">Volume</p>
+            <p class="lagoa-label-small mb-0.5">Volume Armazenado</p>
             <p class="lagoa-value-row text-xl font-extrabold text-emerald-500 tracking-tight leading-none mb-1">
-              <span id="lagoa-volume-litros-${id}">–</span> <span class="text-xs font-bold text-emerald-600">L</span>
+              <span id="lagoa-volume-litros-${id}">–</span> <span class="text-xs font-bold text-emerald-600">Litros</span>
             </p>
-            <p class="lagoa-sub-text font-semibold text-xs">
+            <p class="lagoa-sub-text font-bold text-xs text-emerald-400">
               <span id="lagoa-volume-m3-${id}">–</span>
             </p>
           </div>
@@ -214,9 +214,10 @@ export function onLeituraESP32(lagoaId, dados) {
   }
 
   const alturaM  = alturaCm / 100;
-  const percent  = Math.max(0, Math.min(100, (alturaM / H_max) * 100));
   const volumeL  = calcularVolumeTronco(alturaM, tanque);
   const volumeM3 = volumeL / 1000;
+  const volumeMaxL = calcularCapacidadeMaxima(tanque);
+  const percent  = volumeMaxL > 0 ? Math.max(0, Math.min(100, (volumeL / volumeMaxL) * 100)) : 0;
 
   // Tendência: só calcula para dados frescos; dados históricos usam 'offline'
   const tendencia = isStale ? 'offline' : _calcularTendencia(lagoaId, alturaCm);
@@ -284,7 +285,7 @@ function _atualizarCardUI(id, { alturaM, percent, volumeL, volumeM3, nivelCm, te
   set(`lagoa-nivel-sensor-${id}`,  nivelCm.toFixed(0));
   set(`lagoa-altura-${id}`,        alturaM.toFixed(2));
   set(`lagoa-volume-litros-${id}`, volumeL.toLocaleString('pt-BR', { maximumFractionDigits: 0 }));
-  set(`lagoa-volume-m3-${id}`,     `(${volumeM3.toFixed(2)} m³)`);
+  set(`lagoa-volume-m3-${id}`,     `${volumeM3.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m³`);
   set(`lagoa-ultima-leitura-${id}`, labelHora);
 
   // ── Gauge ──────────────────────────────────────────────────────────────

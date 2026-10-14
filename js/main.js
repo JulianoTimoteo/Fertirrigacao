@@ -1,7 +1,7 @@
 import { 
     apiGet,
     apiPost
-} from './api.js?v=8.4.12';
+} from './api.js';
 
 import { 
     setupAuthListeners, 
@@ -9,7 +9,7 @@ import {
     setCurrentUserProfile,
     handlePasswordReset,
     handleLogout
-} from './auth.js?v=8.4.12';
+} from './auth.js';
 
 import { 
     setupImplementosSelector,
@@ -17,30 +17,30 @@ import {
     destroyCharts,
     setRefreshTime,
     forcarAtualizacaoImplementos
-} from './dashboard/tratos.js?v=8.4.12';
+} from './dashboard/tratos.js';
 
 import { 
     setupHistoricoTab,
     destroyHistoricoChart
-} from './dashboard/historico.js?v=8.4.12';
+} from './dashboard/historico.js';
 
 import { 
     setupEquipamentosTab
-} from './equipamentos/equipamentos.js?v=8.4.12';
+} from './equipamentos/equipamentos.js';
 
 import { 
     setupAdminTabs,
     loadAdminData,
     handleAddUser
-} from './admin/users.js?v=8.4.12';
+} from './admin/users.js';
 
-import { formatarTimestampFixo } from './dashboard/regras.js?v=8.4.12';
+import { formatarTimestampFixo } from './dashboard/regras.js';
 
 // x IMPORTA!ÒO DO MDULO DE FERTIRRIGA!ÒO
-import fertirrigacao from './fertirrigacao/index.js?v=8.4.18';
+import fertirrigacao from './fertirrigacao/index.js';
 
 // 🌟 IMPORTAÇÃO DO SUBMENU DE PERFIL / AVATAR
-import { setupProfileMenu } from './dashboard/perfil.js?v=8.4.17';
+import { setupProfileMenu } from './dashboard/perfil.js';
 
 // Variável global do perfil do usuário
 let currentUserProfile = null;
@@ -209,8 +209,14 @@ export function startApplication(user) {
     runInitialAnimation();
 }
 
+let _dashboardInitialized = false;
+
 function initializeDashboard() {
+    if (_dashboardInitialized) return;
+    _dashboardInitialized = true;
+
     const doLogout = () => {
+        _dashboardInitialized = false;
         unsubscribeAll();
         fertirrigacao.stop();
         destroyCharts();
@@ -280,44 +286,82 @@ function initializeDashboard() {
 }
 
 
-function setupTabNavigation() {
+export function switchAppTab(tabId) {
+    if (!tabId) return;
+    _activeAppTab = tabId;
+    
+    // Ajusta o ciclo do timer para o ESP32 da aba correspondente
+    if (tabId === 'implementos') {
+        _currentCycleSeconds = 10;
+        _remainingSeconds = 10;
+    } else if (tabId === 'fertirrigacao') {
+        _currentCycleSeconds = 30;
+        _remainingSeconds = 30;
+    }
+
+    fertirrigacao.stop();
+    
+    if (tabId === 'fertirrigacao') {
+        setTimeout(() => fertirrigacao.init(), 100);
+    }
+
+    // Atualiza classes visuais da sidebar
     const sidebar = document.getElementById('tabs-container');
-    if (!sidebar) return;
-
-    sidebar.addEventListener('click', (e) => {
-        const btn = e.target.closest('.tab-button');
-        if (!btn) return;
-
-        const tabId = btn.dataset.tab;
-        _activeAppTab = tabId;
-        
-        // Ajusta o ciclo do timer para o ESP32 da aba correspondente
-        if (tabId === 'implementos') {
-            _currentCycleSeconds = 10;
-            _remainingSeconds = 10;
-        } else if (tabId === 'fertirrigacao') {
-            _currentCycleSeconds = 30;
-            _remainingSeconds = 30;
-        }
-
-        fertirrigacao.stop();
-        
-        if (tabId === 'fertirrigacao') {
-            setTimeout(() => fertirrigacao.init(), 100);
-        }
-
-        // S& FIX: Só troca a classe de cor da aba ativa  NÒO substitui className inteiro
-        // Remove somente as classes de cor de aba anteriores, preservando "sidebar"
+    if (sidebar) {
         sidebar.classList.remove('fertirrigacao', 'implementos', 'historico', 'limites', 'cadastro');
         sidebar.classList.add(tabId);
-        
-        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        const activeTab = document.getElementById(`${tabId}-tab`);
-        if (activeTab) activeTab.classList.add('active');
+    }
+    
+    // Atualiza botões da sidebar desktop
+    document.querySelectorAll('.sidebar .tab-button').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === tabId);
     });
+
+    // Atualiza botões da Bottom Navigation mobile
+    document.querySelectorAll('.mobile-bottom-nav .mobile-nav-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === tabId);
+    });
+    
+    // Atualiza conteúdo exibido
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    const activeTab = document.getElementById(`${tabId}-tab`);
+    if (activeTab) activeTab.classList.add('active');
+
+    // No smartphone, rola suavemente para o topo ao trocar de aba
+    if (window.innerWidth <= 768) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+function setupTabNavigation() {
+    const sidebar = document.getElementById('tabs-container');
+    if (sidebar) {
+        sidebar.addEventListener('click', (e) => {
+            const btn = e.target.closest('.tab-button');
+            if (!btn) return;
+            switchAppTab(btn.dataset.tab);
+        });
+    }
+
+    // Suporte à Barra de Navegação Inferior Mobile
+    const bottomNav = document.getElementById('mobile-bottom-nav');
+    if (bottomNav) {
+        bottomNav.addEventListener('click', (e) => {
+            const btn = e.target.closest('.mobile-nav-btn');
+            if (!btn) return;
+            const tabId = btn.dataset.tab;
+            if (tabId === 'menu') {
+                const sidebarEl = document.getElementById('tabs-container');
+                const overlay = document.getElementById('sidebar-overlay');
+                if (sidebarEl) {
+                    sidebarEl.classList.toggle('open');
+                    if (overlay) overlay.classList.toggle('active');
+                }
+                return;
+            }
+            switchAppTab(tabId);
+        });
+    }
 }
 
 function runInitialAnimation() {
@@ -624,6 +668,30 @@ function getAppHTML(user, profile) {
           </main>
         </div>
 
+        <!-- Barra de Navegação Inferior Nativa para Mobile (iOS / Android) -->
+        <nav id="mobile-bottom-nav" class="mobile-bottom-nav" aria-label="Navegação Principal Mobile">
+          <button class="mobile-nav-btn active" data-tab="fertirrigacao" title="Fertirrigação e Vinhaça">
+            <span class="material-symbols-outlined">water_drop</span>
+            <span class="mobile-nav-label">Vinhaça</span>
+          </button>
+          <button class="mobile-nav-btn" data-tab="implementos" title="Dashboard Geral">
+            <span class="material-symbols-outlined">dashboard</span>
+            <span class="mobile-nav-label">Painel</span>
+          </button>
+          <button class="mobile-nav-btn" data-tab="historico" title="Histórico de Leituras">
+            <span class="material-symbols-outlined">history</span>
+            <span class="mobile-nav-label">Histórico</span>
+          </button>
+          <button class="mobile-nav-btn" data-tab="limites" title="Equipamentos e Frotas">
+            <span class="material-symbols-outlined">agriculture</span>
+            <span class="mobile-nav-label">Frotas</span>
+          </button>
+          <button class="mobile-nav-btn" id="mobile-nav-menu-btn" data-tab="menu" title="Menu e Mais Opções">
+            <span class="material-symbols-outlined">menu</span>
+            <span class="mobile-nav-label">Menu</span>
+          </button>
+        </nav>
+
         <div id="modal-placeholder"></div>
     `;
 }
@@ -636,7 +704,7 @@ function setupMobileMenu() {
     const toggle  = document.getElementById('menu-toggle');
     const sidebar = document.getElementById('tabs-container');
     const overlay = document.getElementById('sidebar-overlay');
-    if (!toggle || !sidebar) return;
+    if (!sidebar) return;
 
     const openMenu = () => {
         sidebar.classList.add('open');
@@ -649,9 +717,11 @@ function setupMobileMenu() {
         document.body.style.overflow = '';
     };
 
-    toggle.addEventListener('click', () => {
-        sidebar.classList.contains('open') ? closeMenu() : openMenu();
-    });
+    if (toggle) {
+        toggle.addEventListener('click', () => {
+            sidebar.classList.contains('open') ? closeMenu() : openMenu();
+        });
+    }
     if (overlay) overlay.addEventListener('click', closeMenu);
 
     // Fecha ao selecionar uma aba no mobile
@@ -736,45 +806,54 @@ function setupAutoRefresh() {
     _remainingSeconds = _currentCycleSeconds;
     countEl.textContent = _fmt(_remainingSeconds);
 
-    const _executarAtualizacao = async () => {
-        if (_isAutoRefreshing) return;
+    const _executarAtualizacao = async (manual = false) => {
+        // Se for clique manual, força destravamento imediato
+        if (manual) {
+            _isAutoRefreshing = false;
+        } else if (_isAutoRefreshing) {
+            return;
+        }
         _isAutoRefreshing = true;
 
         widget.classList.add('refreshing');
+        const iconSpan = widget.querySelector('.material-symbols-outlined');
+        if (iconSpan) iconSpan.style.animation = 'spin 0.8s linear infinite';
+        countEl.textContent = '...';
 
-        // Requisição com timeout de 4 segundos para NUNCA travar a interface
+        // Requisição com timeout de 5 segundos para NUNCA travar a interface
         const refreshPromise = (async () => {
             if (_activeAppTab === 'fertirrigacao') {
-                if (typeof fertirrigacao.refresh === 'function') {
-                    await fertirrigacao.refresh();
-                } else if (typeof fertirrigacao.init === 'function') {
-                    fertirrigacao.stop();
-                    fertirrigacao.init();
+                if (window.fertirrigacao && typeof window.fertirrigacao.refresh === 'function') {
+                    await window.fertirrigacao.refresh();
+                } else if (typeof forcarPollLeituras === 'function') {
+                    await forcarPollLeituras();
                 }
                 window.dispatchEvent(new CustomEvent('ferti:recalcularVolumes'));
+                window.dispatchEvent(new CustomEvent('ferti:leituraAtualizada'));
             } else if (_activeAppTab === 'implementos') {
                 forcarAtualizacaoImplementos();
             }
         })();
 
-        const timeoutPromise = new Promise(resolve => setTimeout(resolve, 4000));
+        const timeoutPromise = new Promise(resolve => setTimeout(resolve, 5000));
 
         try {
             await Promise.race([refreshPromise, timeoutPromise]);
             // Flash verde de confirmação
             countEl.style.color = '#10b981';
-            setTimeout(() => { if (countEl) countEl.style.color = ''; }, 700);
+            setTimeout(() => { if (countEl) countEl.style.color = ''; }, 800);
         } catch(e) {
             console.warn('[AutoRefresh] Erro na sincronização:', e);
             countEl.style.color = '#ef4444';
-            setTimeout(() => { if (countEl) countEl.style.color = ''; }, 700);
+            setTimeout(() => { if (countEl) countEl.style.color = ''; }, 800);
         } finally {
             _remainingSeconds = _currentCycleSeconds;
             countEl.textContent = _fmt(_remainingSeconds);
+            if (iconSpan) iconSpan.style.animation = '';
             setTimeout(() => {
                 widget.classList.remove('refreshing');
                 _isAutoRefreshing = false;
-            }, 500);
+            }, 300);
         }
     };
 
@@ -793,7 +872,7 @@ function setupAutoRefresh() {
         }
 
         if (_remainingSeconds <= 0) {
-            _executarAtualizacao();
+            _executarAtualizacao(false);
         }
     };
 
@@ -802,10 +881,11 @@ function setupAutoRefresh() {
 
     // Clique manual no widget força refresh imediato e reinicia a contagem
     widget.style.cursor = 'pointer';
-    widget.title = 'Sincronizado com os tanques — Clique para atualizar agora';
+    widget.title = 'Sincronizado com os tanques — Clique para sincronizar agora';
     widget.onclick = (e) => {
         e.preventDefault();
-        _executarAtualizacao();
+        e.stopPropagation();
+        _executarAtualizacao(true);
     };
 
     console.log('[AutoRefresh] Ciclo configurado para:', _currentCycleSeconds, 's');
@@ -1269,5 +1349,6 @@ function getAdminHTML() {
             </div>
         </div>`;
 }
+
 
 

@@ -161,6 +161,8 @@ body {
 .app-layout {
   display: flex;
   min-height: calc(100vh - 60px);
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .main-content {
@@ -252,33 +254,127 @@ body {
 /* ── Overlay mobile ─────────────────────────────────────────────── */
 #sidebar-overlay {
   display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.6); z-index: 29;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(4px);
+  z-index: 49;
+  transition: opacity 0.25s ease;
 }
 #sidebar-overlay.active { display: block; }
 
-/* ── Mobile: sidebar em gaveta ─────────────────────────────────── */
+/* ── Mobile: sidebar em gaveta (Drawer) com animação moderna ─────── */
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
     top: 0; left: 0;
+    width: 260px;
     height: 100vh;
     transform: translateX(-100%);
     z-index: 50;
     padding-top: 1.5rem;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.4);
+    background: var(--bg-2);
   }
   .sidebar.open { transform: translateX(0); }
-  .main-content { padding: 1rem; }
+  .main-content {
+    padding: 0.875rem 0.75rem 5.5rem 0.75rem; /* 5.5rem reserva espaço para a Bottom Nav */
+    width: 100%;
+    max-width: 100vw;
+  }
 }
 
 /* ── Menu toggle (visível só em mobile) ─────────────────────────── */
 #menu-toggle {
   display: none;
-  padding: 0.4rem;
-  border: none; border-radius: 0.4rem;
-  background: var(--bg-3); color: var(--text-1);
+  padding: 0.45rem;
+  border: 1px solid var(--border-1);
+  border-radius: 0.5rem;
+  background: var(--bg-3);
+  color: var(--text-1);
   cursor: pointer;
+  align-items: center;
+  justify-content: center;
 }
-@media (max-width: 768px) { #menu-toggle { display: flex; align-items: center; } }
+@media (max-width: 768px) { #menu-toggle { display: flex; } }
+
+/* ================================================================
+   BARRA DE NAVEGAÇÃO INFERIOR NATIVA (MOBILE BOTTOM NAVIGATION)
+   ================================================================ */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: var(--bg-2);
+  border-top: 1px solid var(--border-1);
+  z-index: 45;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  padding: 0 4px;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+  }
+}
+
+.mobile-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  padding: 4px 0;
+  background: transparent;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: color 0.15s, transform 0.1s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-nav-btn:active {
+  transform: scale(0.92);
+}
+
+.mobile-nav-btn .material-symbols-outlined {
+  font-size: 1.45rem;
+  margin-bottom: 2px;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mobile-nav-btn .mobile-nav-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.mobile-nav-btn.active {
+  color: var(--c-primary);
+}
+
+.mobile-nav-btn.active .material-symbols-outlined {
+  transform: translateY(-2px);
+}
+
+/* Indicador de cor por aba na Bottom Nav */
+.mobile-nav-btn.active[data-tab="fertirrigacao"] { color: var(--c-fertirrigacao); }
+.mobile-nav-btn.active[data-tab="implementos"]   { color: var(--c-primary); }
+.mobile-nav-btn.active[data-tab="historico"]     { color: var(--c-historico); }
+.mobile-nav-btn.active[data-tab="limites"]       { color: var(--c-limites); }
+.mobile-nav-btn.active[data-tab="menu"]          { color: var(--text-1); }
+
+[data-theme="light"] .mobile-bottom-nav {
+  background: #ffffff;
+  border-top-color: #e2e8f0;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+}
 
 /* ================================================================
    BOTÃO DE TEMA
@@ -505,13 +601,8 @@ input::placeholder { color: var(--text-3) !important; }
 .equip-sub-content.hidden        { display: none !important; }
 
 /* ================================================================
-   RESPONSIVO — UTILITÁRIOS
+   SUB-TABS E NAVEGAÇÃO DE PÍLULAS RESPONSIVA
    ================================================================ */
-@media (max-width: 640px) {
-  .hidden-mobile { display: none !important; }
-}
-
-/* ── Alias: fert-sub-tab = ferti-subtab-btn ─────────────────────── */
 .fert-sub-tab {
   padding: 0.45rem 1rem;
   border-radius: 0.5rem 0.5rem 0 0;
@@ -519,8 +610,11 @@ input::placeholder { color: var(--text-3) !important; }
   border: none; border-bottom: 2px solid transparent;
   background: transparent; color: var(--text-3);
   cursor: pointer;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
-  display: inline-flex; align-items: center; gap: 0.3rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 .fert-sub-tab:hover  { color: var(--text-1); background: var(--bg-3); }
 .fert-sub-tab.active {
@@ -580,3 +674,125 @@ input::placeholder { color: var(--text-3) !important; }
   color: #0a0a0a;
 }
 [data-theme="light"] #auto-refresh-widget:hover { background: #d8e1ec; }
+
+/* ================================================================
+   RESPONSIVO CELULAR (SMARTPHONE UI SUPREMA - iOS / Android)
+   ================================================================ */
+@media (max-width: 768px) {
+  /* Evitar qualquer scroll horizontal ou corte no celular */
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Header compacto em smartphones */
+  .app-header .max-w-7xl {
+    padding-left: 0.65rem !important;
+    padding-right: 0.65rem !important;
+    padding-top: 0.35rem !important;
+    padding-bottom: 0.35rem !important;
+  }
+  
+  .header-logo {
+    height: 1.85rem !important;
+    max-width: 130px;
+    object-fit: contain;
+  }
+
+  /* Oculta o label de texto "Claro/Escuro" mantendo o ícone compacto */
+  #theme-label {
+    display: none !important;
+  }
+  
+  #theme-toggle {
+    padding: 0.35rem 0.5rem !important;
+    border-radius: 0.5rem;
+  }
+
+  /* Widget de atualização automática ultra-compacto */
+  #auto-refresh-widget {
+    padding: 0.35rem 0.45rem !important;
+    font-size: 0.68rem !important;
+    gap: 0.2rem !important;
+  }
+  #auto-refresh-countdown {
+    min-width: 2rem !important;
+  }
+
+  /* Avatar menor no header para não colidir com outros botões */
+  .avatar-button {
+    padding: 0 !important;
+  }
+  .avatar-button img,
+  .avatar-button div.rounded-full {
+    height: 2rem !important;
+    width: 2rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Sub-abas de Fertirrigação: Carrossel Horizontal Touch em Pílulas */
+  #fertirrigacao-sub-tabs {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    gap: 0.4rem !important;
+    padding: 0.2rem 0.1rem 0.4rem 0.1rem !important;
+    scroll-snap-type: x mandatory;
+    width: 100%;
+  }
+  #fertirrigacao-sub-tabs::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
+
+  .fert-sub-tab {
+    flex: 0 0 auto !important;
+    scroll-snap-align: start;
+    border-radius: 9999px !important;
+    padding: 0.4rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    background: var(--bg-2) !important;
+    border: 1px solid var(--border-1) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .fert-sub-tab.active {
+    background: var(--c-blue) !important;
+    color: #ffffff !important;
+    border-color: var(--c-blue) !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35) !important;
+  }
+
+  [data-theme="light"] .fert-sub-tab {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #334155 !important;
+  }
+
+  [data-theme="light"] .fert-sub-tab.active {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+  }
+
+  /* Modais com ajuste em telas pequenas */
+  .modal-content {
+    margin: 1rem;
+    max-width: calc(100vw - 2rem) !important;
+  }
+
+  /* Submenu do Avatar alinhado para não estourar a tela */
+  #profile-menu {
+    right: 0 !important;
+    max-width: 90vw !important;
+    width: 280px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .hidden-mobile { display: none !important; }
+}

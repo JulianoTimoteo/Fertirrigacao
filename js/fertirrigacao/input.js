@@ -132,6 +132,14 @@ function carregarConfiguracoesSalvas() {
     if (savedConfig) {
         try {
             const config = JSON.parse(savedConfig);
+            if (config.T4 && (config.T4.H_max === 3.2 || !config.T4.H_max)) {
+                config.T4.H_max = 3.0;
+                config.T4.L_top = 42.0;
+                config.T4.W_top = 22.0;
+                config.T4.L_bottom = 36.0;
+                config.T4.W_bottom = 16.0;
+                localStorage.setItem('agro_tanks_config', JSON.stringify(config));
+            }
             preencherConfiguracoes(config);
             console.log("✅ Configurações carregadas do localStorage");
         } catch (e) {
@@ -148,7 +156,7 @@ function getDefaultConfig() {
         T1: { L_top: 40.0, W_top: 20.0, L_bottom: 35.0, W_bottom: 15.0, H_max: 3.0 },
         T2: { L_top: 40.0, W_top: 20.0, L_bottom: 35.0, W_bottom: 15.0, H_max: 3.0 },
         T3: { L_top: 38.0, W_top: 18.0, L_bottom: 32.0, W_bottom: 13.0, H_max: 2.8 },
-        T4: { L_top: 42.0, W_top: 22.0, L_bottom: 36.0, W_bottom: 16.0, H_max: 3.2 },
+        T4: { L_top: 42.0, W_top: 22.0, L_bottom: 36.0, W_bottom: 16.0, H_max: 3.0 },
         T5: { L_top: 45.0, W_top: 25.0, L_bottom: 38.0, W_bottom: 18.0, H_max: 3.5 }
     };
 }

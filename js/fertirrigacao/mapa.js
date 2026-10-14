@@ -19,26 +19,57 @@ let _markers = {};
 let _distanceMarkers = [];
 let _activeFlowTrechos = new Set();
 let _modoCamada = 'satellite';
+let _modoOperacaoFluxo = 'auto'; // 'auto' (IA/Sensores) | 'manual' (Supervisório SCADA)
 
 // Estado individual e independente de fluxo por trecho
 const _estadoTrechos = {
-  't2-t1': { sentido: 'direto', vazao: 120 },
-  't1-eucalipto': { sentido: 'direto', vazao: 120 },
-  'eucalipto-castanha': { sentido: 'direto', vazao: 120 },
-  'castanha-theresinha': { sentido: 'direto', vazao: 120 }
+  'industria-bifurcacao': { ativo: true, sentido: 'direto', vazao: 250 },
+  'bifurcacao-t1': { ativo: true, sentido: 'direto', vazao: 125 },
+  'bifurcacao-t2': { ativo: true, sentido: 'direto', vazao: 125 },
+  't1-carr-usina': { ativo: false, sentido: 'direto', vazao: 0 },
+  't2-carr-usina': { ativo: false, sentido: 'direto', vazao: 0 },
+  't2-t1': { ativo: true, sentido: 'direto', vazao: 120 },
+  't1-eucalipto': { ativo: true, sentido: 'direto', vazao: 120 },
+  'eucalipto-castanha': { ativo: true, sentido: 'direto', vazao: 120 },
+  'castanha-theresinha': { ativo: true, sentido: 'direto', vazao: 120 },
+  'theresinha-carr-sul': { ativo: false, sentido: 'direto', vazao: 0 },
+  'castanha-carr-sul': { ativo: false, sentido: 'direto', vazao: 0 }
 };
 
 export const PONTOS_ADUTORA = {
+  industria: {
+    chave: 'industria',
+    nome: 'INDÚSTRIA PITANGUEIRAS',
+    subtitulo: 'Moagem & Geração 24h',
+    lat: -21.048358207942854,
+    lng: -48.26135796446434,
+    ordem: -1,
+    cor: '#ef4444',
+    badge: 'IND',
+    tipo: 'industria'
+  },
+  carr_usina: {
+    chave: 'carr_usina',
+    nome: 'CARREGAMENTO CAMINHÕES USINA',
+    subtitulo: 'Doca T1 / T2',
+    lat: -21.044694910635954,
+    lng: -48.26141733148316,
+    ordem: 0,
+    cor: '#f97316',
+    badge: '🚛',
+    tipo: 'caminhao'
+  },
   t2: {
     chave: 't2',
     nome: 'CARREGAMENTO USINA B',
     subtitulo: 'Tanque 2 (T2)',
     lat: -21.044852715210126,
     lng: -48.260317960320975,
-    ordem: 0,
+    ordem: 1,
     lagoas: [2],
     cor: '#0ea5e9',
-    badge: 'T2'
+    badge: 'T2',
+    tipo: 'tanque'
   },
   t1: {
     chave: 't1',
@@ -46,10 +77,11 @@ export const PONTOS_ADUTORA = {
     subtitulo: 'Tanque 1 (T1)',
     lat: -21.04508601802594,
     lng: -48.260840316946286,
-    ordem: 1,
+    ordem: 2,
     lagoas: [1],
     cor: '#06b6d4',
-    badge: 'T1'
+    badge: 'T1',
+    tipo: 'tanque'
   },
   eucalipto: {
     chave: 'eucalipto',
@@ -57,10 +89,11 @@ export const PONTOS_ADUTORA = {
     subtitulo: 'Lagoa 3 (T3)',
     lat: -21.048171179817402,
     lng: -48.27849805552853,
-    ordem: 2,
+    ordem: 3,
     lagoas: [3],
     cor: '#f59e0b',
-    badge: 'T3'
+    badge: 'T3',
+    tipo: 'tanque'
   },
   castanha: {
     chave: 'castanha',
@@ -68,10 +101,22 @@ export const PONTOS_ADUTORA = {
     subtitulo: 'Lagoa 4 (T4)',
     lat: -21.080929846011003,
     lng: -48.30075955155999,
-    ordem: 3,
+    ordem: 4,
     lagoas: [4],
     cor: '#8b5cf6',
-    badge: 'T4'
+    badge: 'T4',
+    tipo: 'tanque'
+  },
+  carr_sul: {
+    chave: 'carr_sul',
+    nome: 'CARREGAMENTO CAMINHÕES SUL',
+    subtitulo: 'Doca T4 / T5',
+    lat: -21.099731418780465,
+    lng: -48.35205904510835,
+    ordem: 5,
+    cor: '#f97316',
+    badge: '🚛',
+    tipo: 'caminhao'
   },
   theresinha: {
     chave: 'theresinha',
@@ -79,14 +124,89 @@ export const PONTOS_ADUTORA = {
     subtitulo: 'Lagoa 5 (T5)',
     lat: -21.104326364035728,
     lng: -48.35321793859342,
-    ordem: 4,
+    ordem: 6,
     lagoas: [5],
     cor: '#ec4899',
-    badge: 'T5'
+    badge: 'T5',
+    tipo: 'tanque'
   }
 };
 
 export const TRECHOS_ADUTORA = [
+  {
+    id: 'industria-bifurcacao',
+    origem: 'industria',
+    destino: 'bifurcacao',
+    nome: 'Indústria ➔ Bifurcação Tanques',
+    distanciaKm: 0.38,
+    diametroMm: 350,
+    tubulacao: 'Aço / PEAD 355mm (Linha Contínua 24h)',
+    tipo: 'industria',
+    pontos: [
+      [-21.048358207942854, -48.26135796446434],
+      [-21.046941460750915, -48.26085306662122],
+      [-21.046303585136798, -48.26061943021131],
+      [-21.045613478345047, -48.260781280211035],
+      [-21.045382454755696, -48.26074637138774],
+      [-21.045213629598635, -48.260273515507265]
+    ]
+  },
+  {
+    id: 'bifurcacao-t1',
+    origem: 'bifurcacao',
+    destino: 't1',
+    nome: 'Bifurcação ➔ Tanque 1 (T1)',
+    distanciaKm: 0.06,
+    diametroMm: 300,
+    tubulacao: 'PEAD PN10 De 315mm',
+    tipo: 'alimentacao_tanque',
+    pontos: [
+      [-21.045213629598635, -48.260273515507265],
+      [-21.04508601802594, -48.260840316946286]
+    ]
+  },
+  {
+    id: 'bifurcacao-t2',
+    origem: 'bifurcacao',
+    destino: 't2',
+    nome: 'Bifurcação ➔ Tanque 2 (T2)',
+    distanciaKm: 0.04,
+    diametroMm: 300,
+    tubulacao: 'PEAD PN10 De 315mm',
+    tipo: 'alimentacao_tanque',
+    pontos: [
+      [-21.045213629598635, -48.260273515507265],
+      [-21.044852715210126, -48.260317960320975]
+    ]
+  },
+  {
+    id: 't1-carr-usina',
+    origem: 't1',
+    destino: 'carr_usina',
+    nome: 'Tanque 1 (T1) ➔ Carregamento Caminhões',
+    distanciaKm: 0.08,
+    diametroMm: 250,
+    tubulacao: 'PEAD PN10 De 250mm',
+    tipo: 'caminhao',
+    pontos: [
+      [-21.04508601802594, -48.260840316946286],
+      [-21.044694910635954, -48.26141733148316]
+    ]
+  },
+  {
+    id: 't2-carr-usina',
+    origem: 't2',
+    destino: 'carr_usina',
+    nome: 'Tanque 2 (T2) ➔ Carregamento Caminhões',
+    distanciaKm: 0.12,
+    diametroMm: 250,
+    tubulacao: 'PEAD PN10 De 250mm',
+    tipo: 'caminhao',
+    pontos: [
+      [-21.044852715210126, -48.260317960320975],
+      [-21.044694910635954, -48.26141733148316]
+    ]
+  },
   {
     id: 't2-t1',
     origem: 't2',
@@ -95,6 +215,7 @@ export const TRECHOS_ADUTORA = [
     distanciaKm: 0.06,
     diametroMm: 300,
     tubulacao: 'PEAD PN10 De 315mm (Interligação)',
+    tipo: 'adutora',
     pontos: [
       [-21.044852715210126, -48.260317960320975],
       [-21.04508601802594, -48.260840316946286]
@@ -108,6 +229,7 @@ export const TRECHOS_ADUTORA = [
     distanciaKm: 1.90,
     diametroMm: 300,
     tubulacao: 'PEAD PN10 De 315mm',
+    tipo: 'adutora',
     pontos: [
       [-21.04508601802594, -48.260840316946286],
       [-21.048171179817402, -48.27849805552853]
@@ -121,6 +243,7 @@ export const TRECHOS_ADUTORA = [
     distanciaKm: 4.26,
     diametroMm: 300,
     tubulacao: 'PEAD PN10 De 315mm',
+    tipo: 'adutora',
     pontos: [
       [-21.048171179817402, -48.27849805552853],
       [-21.080929846011003, -48.30075955155999]
@@ -134,16 +257,71 @@ export const TRECHOS_ADUTORA = [
     distanciaKm: 6.10,
     diametroMm: 250,
     tubulacao: 'PEAD PN10 De 280mm',
+    tipo: 'adutora',
     pontos: [
       [-21.080929846011003, -48.30075955155999],
       [-21.104326364035728, -48.35321793859342]
+    ]
+  },
+  {
+    id: 'theresinha-carr-sul',
+    origem: 'theresinha',
+    destino: 'carr_sul',
+    nome: 'Santa Theresinha (T5) ➔ Carregamento Caminhões',
+    distanciaKm: 0.52,
+    diametroMm: 250,
+    tubulacao: 'PEAD PN10 De 250mm',
+    tipo: 'caminhao',
+    pontos: [
+      [-21.104326364035728, -48.35321793859342],
+      [-21.099731418780465, -48.35205904510835]
+    ]
+  },
+  {
+    id: 'castanha-carr-sul',
+    origem: 'castanha',
+    destino: 'carr_sul',
+    nome: 'Castanha (T4) ➔ Carregamento Caminhões',
+    distanciaKm: 5.80,
+    diametroMm: 250,
+    tubulacao: 'Ramal de Abastecimento Regional',
+    tipo: 'caminhao',
+    pontos: [
+      [-21.080929846011003, -48.30075955155999],
+      [-21.099731418780465, -48.35205904510835]
     ]
   }
 ];
 
 // ─── Controle Individual de Fluxo por Trecho ─────────────────────────────────
+// ─── Controle Individual e Inteligente de Fluxo ──────────────────────────────
 export function _gerarHTMLStatusTrecho(trechoId) {
-  const est = _estadoTrechos[trechoId] || { sentido: 'direto', vazao: 120 };
+  const est = _estadoTrechos[trechoId] || { ativo: true, sentido: 'direto', vazao: 120 };
+  const trecho = TRECHOS_ADUTORA.find(t => t.id === trechoId);
+  const isCaminhao = trecho?.tipo === 'caminhao';
+  const isIndustria = trecho?.tipo === 'industria';
+
+  if (!est.ativo) {
+    return `<span class="inline-flex items-center gap-1.5 font-bold font-mono text-xs text-slate-400">
+      <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+      ${isCaminhao ? 'Stand-by (Vazio)' : 'Inativo / Stand-by'}
+    </span>`;
+  }
+
+  if (isIndustria) {
+    return `<span class="inline-flex items-center gap-1.5 font-bold font-mono text-xs text-red-400">
+      <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+      Contínuo 24h (~${est.vazao || 250} m³/h)
+    </span>`;
+  }
+
+  if (isCaminhao) {
+    return `<span class="inline-flex items-center gap-1.5 font-bold font-mono text-xs text-orange-400">
+      <span class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+      Abastecendo Caminhão (~${est.vazao || 180} m³/h)
+    </span>`;
+  }
+
   const isReverso = est.sentido === 'reverso';
   const badgeDot = isReverso ? 'bg-amber-400' : 'bg-cyan-400';
   const textCor = isReverso ? 'text-amber-400' : 'text-cyan-400';
@@ -156,61 +334,200 @@ export function _gerarHTMLStatusTrecho(trechoId) {
   </span>`;
 }
 
-export function _aplicarSentidoTrecho(trechoId, sentido) {
+export function _aplicarEstadoTrecho(trechoId, { ativo = true, sentido = 'direto', vazao = 120 }) {
   if (!_estadoTrechos[trechoId]) {
-    _estadoTrechos[trechoId] = { sentido: 'direto', vazao: 120 };
+    _estadoTrechos[trechoId] = { ativo: true, sentido: 'direto', vazao: 120 };
   }
+  _estadoTrechos[trechoId].ativo = ativo;
   _estadoTrechos[trechoId].sentido = sentido;
+  _estadoTrechos[trechoId].vazao = vazao;
 
+  const trecho = TRECHOS_ADUTORA.find(t => t.id === trechoId);
   const p = _pipeLines[trechoId];
-  const isReverso = sentido === 'reverso';
-  const animClass = isReverso ? 'adutora-anim-flow-reverse' : 'adutora-anim-flow';
-  const corLinha = isReverso ? '#f59e0b' : '#06b6d4';
-  const badgeDot = isReverso ? 'bg-amber-400' : 'bg-cyan-400';
-  const seta = isReverso ? '⬅' : '➔';
-  const label = isReverso ? 'Fluxo Reverso' : 'Fluxo Direto';
+  if (!p || !p.flowLine) return;
 
-  // 1. Atualiza visual no mapa Leaflet para ESTE trecho exclusivamente
-  if (p && p.flowLine) {
-    if (p.flowLine._path) {
-      p.flowLine._path.classList.remove('adutora-anim-flow', 'adutora-anim-flow-reverse');
-      p.flowLine._path.classList.add(animClass);
-    }
-    p.flowLine.setStyle({ color: corLinha, weight: 4.5 });
+  const isIndustria = trecho?.tipo === 'industria';
+  const isCaminhao = trecho?.tipo === 'caminhao';
+  const isReverso = sentido === 'reverso';
+
+  let animClass = 'adutora-anim-flow';
+  let corLinha = '#06b6d4';
+  let pesoLinha = 3.5;
+  let opacidade = 0.95;
+
+  if (!ativo) {
+    animClass = '';
+    corLinha = '#334155';
+    pesoLinha = 2.0;
+    opacidade = 0.45;
+  } else if (isIndustria) {
+    animClass = 'adutora-anim-flow-industria';
+    corLinha = '#ef4444';
+    pesoLinha = 4.5;
+  } else if (isCaminhao) {
+    animClass = 'adutora-anim-flow-caminhao';
+    corLinha = '#f97316';
+    pesoLinha = 4.0;
+  } else if (isReverso) {
+    animClass = 'adutora-anim-flow-reverse';
+    corLinha = '#f59e0b';
+    pesoLinha = 4.5;
   }
 
-  // 2. Atualiza badge no card do trecho abaixo do mapa
+  // Atualiza visual da linha no Leaflet
+  if (p.flowLine._path) {
+    p.flowLine._path.classList.remove('adutora-anim-flow', 'adutora-anim-flow-reverse', 'adutora-anim-flow-industria', 'adutora-anim-flow-caminhao');
+    if (animClass) p.flowLine._path.classList.add(animClass);
+  }
+  p.flowLine.setStyle({ color: corLinha, weight: pesoLinha, opacity: opacidade });
+
+  // Atualiza badge no card do trecho
   const badgeEl = document.getElementById(`pipe-flow-${trechoId}`);
   if (badgeEl) {
-    badgeEl.innerHTML = `<span class="w-2 h-2 rounded-full ${badgeDot} animate-pulse"></span> <strong class="${isReverso ? 'text-amber-400' : 'text-cyan-400'}">${label} (${seta})</strong>`;
+    badgeEl.innerHTML = _gerarHTMLStatusTrecho(trechoId);
   }
 
-  // 3. Atualiza destaque visual de borda no card do trecho
+  // Atualiza borda do card
   const cardEl = document.getElementById(`card-trecho-${trechoId}`);
   if (cardEl) {
-    if (isReverso) {
-      cardEl.classList.add('border-amber-500/60');
-    } else {
-      cardEl.classList.remove('border-amber-500/60');
+    cardEl.classList.remove('border-amber-500/60', 'border-red-500/60', 'border-orange-500/60');
+    if (ativo) {
+      if (isIndustria) cardEl.classList.add('border-red-500/60');
+      else if (isCaminhao) cardEl.classList.add('border-orange-500/60');
+      else if (isReverso) cardEl.classList.add('border-amber-500/60');
     }
   }
 
-  // 4. Se o popup deste trecho estiver aberto, atualiza o status dinamicamente
+  // Atualiza popup se aberto
   const popupStatusEl = document.getElementById(`popup-status-${trechoId}`);
   if (popupStatusEl) {
     popupStatusEl.innerHTML = _gerarHTMLStatusTrecho(trechoId);
   }
 }
 
+export function _aplicarSentidoTrecho(trechoId, sentido) {
+  const est = _estadoTrechos[trechoId] || { ativo: true, sentido: 'direto', vazao: 120 };
+  _aplicarEstadoTrecho(trechoId, { ...est, sentido, ativo: true });
+}
+
 export function _inverterFluxoTrecho(trechoId) {
-  const est = _estadoTrechos[trechoId] || { sentido: 'direto', vazao: 120 };
+  const est = _estadoTrechos[trechoId] || { ativo: true, sentido: 'direto', vazao: 120 };
   const novoSentido = (est.sentido === 'reverso') ? 'direto' : 'reverso';
   _aplicarSentidoTrecho(trechoId, novoSentido);
 }
 
+export function _alternarAtivoTrecho(trechoId) {
+  const est = _estadoTrechos[trechoId] || { ativo: true, sentido: 'direto', vazao: 120 };
+  _aplicarEstadoTrecho(trechoId, { ...est, ativo: !est.ativo });
+}
+
+// ─── Motor de Regras Inteligente Orientado por Dados das Lagoas ──────────────
+export function _processarRegrasFluxoInteligente() {
+  if (_modoOperacaoFluxo !== 'auto') return;
+
+  const estado = getEstadoLagoas();
+  const e1 = estado[1] || {};
+  const e2 = estado[2] || {};
+  const e3 = estado[3] || {};
+  const e4 = estado[4] || {};
+  const e5 = estado[5] || {};
+
+  const t1Enchendo = e1.tendencia === 'subindo';
+  const t1Esvaziando = e1.tendencia === 'descendo';
+  const t2Enchendo = e2.tendencia === 'subindo';
+  const t2Esvaziando = e2.tendencia === 'descendo';
+  const t3Estavel = e3.tendencia === 'estavel' || e3.tendencia === 'offline';
+  const t4Enchendo = e4.tendencia === 'subindo';
+  const t4Esvaziando = e4.tendencia === 'descendo';
+  const t5Enchendo = e5.tendencia === 'subindo';
+  const t5Esvaziando = e5.tendencia === 'descendo';
+  const t5CheioOuEstavel = (e5.percent >= 80) || (e5.tendencia === 'estavel');
+
+  // 1. Adutora Principal Indústria -> Bifurcação (24h contínua sem parar)
+  _aplicarEstadoTrecho('industria-bifurcacao', { ativo: true, sentido: 'direto', vazao: 250 });
+
+  // 2. Bifurcação para Tanque 1 e Tanque 2
+  if (t1Enchendo && t2Enchendo) {
+    _aplicarEstadoTrecho('bifurcacao-t1', { ativo: true, sentido: 'direto', vazao: 125 });
+    _aplicarEstadoTrecho('bifurcacao-t2', { ativo: true, sentido: 'direto', vazao: 125 });
+  } else if (t1Enchendo && !t2Enchendo) {
+    _aplicarEstadoTrecho('bifurcacao-t1', { ativo: true, sentido: 'direto', vazao: 250 });
+    _aplicarEstadoTrecho('bifurcacao-t2', { ativo: false, sentido: 'direto', vazao: 0 });
+  } else if (t2Enchendo && !t1Enchendo) {
+    _aplicarEstadoTrecho('bifurcacao-t1', { ativo: false, sentido: 'direto', vazao: 0 });
+    _aplicarEstadoTrecho('bifurcacao-t2', { ativo: true, sentido: 'direto', vazao: 250 });
+  } else {
+    _aplicarEstadoTrecho('bifurcacao-t1', { ativo: true, sentido: 'direto', vazao: 125 });
+    _aplicarEstadoTrecho('bifurcacao-t2', { ativo: true, sentido: 'direto', vazao: 125 });
+  }
+
+  // 3. Carregamento Usina (Doca Caminhões T1 / T2)
+  // Regra: Se Eucalipto Cheiroso (T3) estável E (T1 esvaziando OU T2 esvaziando)
+  const carrUsinaAtivo = t3Estavel && (t1Esvaziando || t2Esvaziando);
+  _aplicarEstadoTrecho('t1-carr-usina', { ativo: t1Esvaziando, sentido: 'direto', vazao: t1Esvaziando ? 180 : 0 });
+  _aplicarEstadoTrecho('t2-carr-usina', { ativo: t2Esvaziando, sentido: 'direto', vazao: t2Esvaziando ? 180 : 0 });
+  _atualizarMarcadorCaminhao('carr_usina', carrUsinaAtivo);
+
+  // 4. Adutora T1 ➔ Eucalipto Cheiroso (T3)
+  if (e3.tendencia === 'subindo' && (t1Esvaziando || t2Esvaziando)) {
+    _aplicarEstadoTrecho('t1-eucalipto', { ativo: true, sentido: 'direto', vazao: 150 });
+  } else if (t3Estavel && !t1Esvaziando && !t2Esvaziando) {
+    _aplicarEstadoTrecho('t1-eucalipto', { ativo: false, sentido: 'direto', vazao: 0 });
+  }
+
+  // 5. Adutora Eucalipto (T3) ➔ Castanha (T4)
+  if (t4Enchendo && e3.tendencia === 'descendo') {
+    _aplicarEstadoTrecho('eucalipto-castanha', { ativo: true, sentido: 'direto', vazao: 150 });
+  } else if (t4Enchendo) {
+    _aplicarEstadoTrecho('eucalipto-castanha', { ativo: true, sentido: 'direto', vazao: 120 });
+  }
+
+  // 6. Carregamento Sul (Doca Caminhões T4 / T5)
+  // Regra A: Se T3 estável, T4 enchendo e T5 esvaziando -> Carregamento T5 ativo
+  // Regra B: Se T5 cheio/estável e T4 esvaziando -> Carregamento T4 ativo
+  const carrT5Ativo = t3Estavel && t4Enchendo && t5Esvaziando;
+  const carrT4Ativo = t5CheioOuEstavel && t4Esvaziando;
+  const carrSulAtivo = carrT5Ativo || carrT4Ativo;
+
+  _aplicarEstadoTrecho('theresinha-carr-sul', { ativo: carrT5Ativo, sentido: 'direto', vazao: carrT5Ativo ? 180 : 0 });
+  _aplicarEstadoTrecho('castanha-carr-sul', { ativo: carrT4Ativo, sentido: 'direto', vazao: carrT4Ativo ? 180 : 0 });
+  _atualizarMarcadorCaminhao('carr_sul', carrSulAtivo);
+
+  // 7. Adutora Castanha ➔ Santa Theresinha (T5)
+  if (t5Enchendo && t4Esvaziando) {
+    _aplicarEstadoTrecho('castanha-theresinha', { ativo: true, sentido: 'direto', vazao: 140 });
+  }
+}
+
+export function _alternarModoOperacaoFluxo(modo) {
+  _modoOperacaoFluxo = modo;
+  const btnAuto = document.getElementById('btn-flow-mode-auto');
+  const btnManual = document.getElementById('btn-flow-mode-manual');
+  const indModo = document.getElementById('map-mode-indicator');
+
+  if (modo === 'auto') {
+    if (btnAuto) btnAuto.className = 'px-2.5 py-1 rounded-lg text-xs font-bold bg-cyan-600 text-white transition flex items-center gap-1 shadow cursor-pointer';
+    if (btnManual) btnManual.className = 'px-2.5 py-1 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition flex items-center gap-1 cursor-pointer';
+    if (indModo) indModo.innerHTML = '🤖 AUTOMÁTICO';
+    _processarRegrasFluxoInteligente();
+  } else {
+    if (btnAuto) btnAuto.className = 'px-2.5 py-1 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition flex items-center gap-1 cursor-pointer';
+    if (btnManual) btnManual.className = 'px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-600 text-white transition flex items-center gap-1 shadow cursor-pointer';
+    if (indModo) indModo.innerHTML = '🛠️ MANUAL (SCADA)';
+  }
+}
+
+export function _atualizarMarcadorCaminhao(chave, ativo) {
+  const marker = _markers[chave];
+  const ponto = PONTOS_ADUTORA[chave];
+  if (marker && ponto) {
+    marker.setIcon(_criarIconeCaminhao(ponto, ativo));
+  }
+}
+
 export function _obterDadosLagoa(chave) {
   const ponto = PONTOS_ADUTORA[chave];
-  if (!ponto) return null;
+  if (!ponto || !ponto.lagoas || !ponto.lagoas.length) return null;
 
   const lagoaId = ponto.lagoas[0];
   const tanqueId = ponto.badge; // T1, T2, T3, T4, T5
@@ -248,33 +565,49 @@ export function getMapaHTML() {
   return `
   <div class="space-y-6">
 
-    <!-- Cabeçalho do Mapa -->
-    <div class="vazao-panel rounded-xl p-5 shadow-lg border flex flex-col md:flex-row md:items-center justify-between gap-4" style="background:var(--bg-2);border-color:var(--border-1)">
+    <!-- Cabeçalho do Mapa (Mobile Touch-Optimized) -->
+    <div class="vazao-panel rounded-2xl p-3.5 sm:p-5 shadow-lg border flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4" style="background:var(--bg-2);border-color:var(--border-1)">
       <div>
-        <div class="flex items-center gap-2 mb-1">
-          <span class="material-symbols-outlined text-cyan-400 text-2xl">route</span>
-          <h3 class="text-xl font-extrabold" style="color:var(--text-1)">Rede de Adutoras & Fluxo de Vinhaça</h3>
-          <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/40">
-            12.32 km de extensão
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <span class="material-symbols-outlined text-cyan-400 text-xl sm:text-2xl">route</span>
+          <h3 class="text-base sm:text-xl font-extrabold" style="color:var(--text-1)">Rede de Adutoras & Fluxo</h3>
+          <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/40">
+            12.76 km Total
+          </span>
+          <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-500/20 text-red-400 border border-red-500/40 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> Indústria 24h
           </span>
         </div>
-        <p class="text-xs" style="color:var(--text-3)">
-          Traçado georreferenciado interligando Carregamento Usina (T1 e T2), Eucalipto Cheiroso (T3), Castanha (T4) e Santa Theresinha (T5) com telemetria dedicada dos sensores
+        <p class="text-[11px] sm:text-xs" style="color:var(--text-3)">
+          Traçado georreferenciado: Indústria, Tanques T1/T2, Docas de Caminhões, Eucalipto (T3), Castanha (T4) e Theresinha (T5)
         </p>
       </div>
 
-      <!-- Filtros Rápidos de Visão -->
-      <div class="flex flex-wrap items-center gap-2">
-        <button id="btn-map-fit-all" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white transition flex items-center gap-1.5 shadow cursor-pointer">
-          <span class="material-symbols-outlined text-xs">zoom_out_map</span> Ver Linha Completa
+      <!-- Filtros e Controles Operacionais do Mapa -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full flex-nowrap sm:flex-wrap" style="scrollbar-width:none;-webkit-overflow-scrolling:touch;">
+        <!-- Seletor Modo Operacional Inteligente -->
+        <div class="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-700 mr-1 shadow-inner">
+          <button id="btn-flow-mode-auto" type="button" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-cyan-600 text-white transition flex items-center gap-1 shadow cursor-pointer" title="Fluxo automatizado conforme a dinâmica dos sensores">
+            <span class="material-symbols-outlined text-xs">smart_toy</span> Auto
+          </button>
+          <button id="btn-flow-mode-manual" type="button" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-1 cursor-pointer" title="Modo manual: clique nas linhas ou docas para ligar/desligar">
+            <span class="material-symbols-outlined text-xs">tune</span> Manual
+          </button>
+        </div>
+
+        <button id="btn-map-fit-all" class="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white transition flex items-center gap-1 shadow cursor-pointer whitespace-nowrap">
+          <span class="material-symbols-outlined text-xs">zoom_out_map</span> Linha Completa
         </button>
-        <button id="btn-map-focus-usina" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer" style="background:var(--bg-3);color:var(--text-1);border:1px solid var(--border-1)" title="Focar nos tanques gêmeos Carregamento A e B">
-          Carregamento A/B
+        <button id="btn-map-focus-usina" class="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap" style="background:var(--bg-3);color:var(--text-1);border:1px solid var(--border-1)" title="Focar na Indústria, Carregamento A/B e Doca Usina">
+          Pátio Usina
         </button>
-        <button id="btn-map-focus-castanha" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-900/30 hover:bg-purple-800/50 text-purple-300 border border-purple-500/40 transition cursor-pointer">
-          Castanha (Online)
+        <button id="btn-map-focus-castanha" class="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold bg-purple-900/30 hover:bg-purple-800/50 text-purple-300 border border-purple-500/40 transition cursor-pointer whitespace-nowrap">
+          Castanha
         </button>
-        <button id="btn-map-toggle-layer" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer" style="background:var(--bg-3);color:var(--text-1);border:1px solid var(--border-1)">
+        <button id="btn-map-focus-doca-sul" class="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold bg-orange-900/30 hover:bg-orange-800/50 text-orange-300 border border-orange-500/40 transition cursor-pointer whitespace-nowrap" title="Focar na Doca de Caminhões Sul (T4/T5)">
+          Doca Sul
+        </button>
+        <button id="btn-map-toggle-layer" class="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1 cursor-pointer whitespace-nowrap" style="background:var(--bg-3);color:var(--text-1);border:1px solid var(--border-1)">
           <span class="material-symbols-outlined text-xs text-cyan-400">layers</span> <span id="lbl-layer-mode">Satélite</span>
         </button>
       </div>
@@ -284,19 +617,29 @@ export function getMapaHTML() {
     <div class="adutoras-map-container">
       <div id="adutoras-leaflet-map"></div>
 
-      <!-- Overlay Flutuante com Métricas do Enlace (Glassmorphism de Alta Legibilidade) -->
-      <div class="map-floating-overlay">
+      <!-- Botão Flutuante de Gota 💧 (Abre / Fecha a janela de telemetria) -->
+      <button id="btn-toggle-telemetry-overlay" class="map-toggle-droplet-btn" title="Exibir / Ocultar Telemetria da Rede de Campo">
+        💧
+      </button>
+
+      <!-- Overlay Flutuante com Métricas do Enlace (Inicia Recolhido para Não Cobrir o Mapa) -->
+      <div id="map-floating-overlay-card" class="map-floating-overlay hidden">
         <div class="map-overlay-header">
           <div class="map-overlay-title-group">
             <span class="material-symbols-outlined text-emerald-400 text-base">sensors</span>
             <span class="map-overlay-title">Rede de Campo</span>
           </div>
-          <span id="map-telemetry-nodes" class="map-overlay-badge">5 Nós de Telemetria</span>
+          <div class="flex items-center gap-2">
+            <span id="map-telemetry-nodes" class="map-overlay-badge">5 Nós de Campo</span>
+            <button id="btn-close-telemetry-overlay" class="map-overlay-close-btn" title="Fechar Janela">
+              <span class="material-symbols-outlined text-sm">close</span>
+            </button>
+          </div>
         </div>
         <div class="space-y-1.5">
           <div class="map-overlay-row">
             <span class="map-overlay-label">Extensão Total:</span>
-            <span class="map-overlay-value text-slate-100">12.32 km</span>
+            <span class="map-overlay-value text-slate-100">12.76 km</span>
           </div>
           <div class="map-overlay-row">
             <span class="map-overlay-label">Armazenado na Linha:</span>
@@ -307,6 +650,10 @@ export function getMapaHTML() {
             <span id="map-flow-status" class="map-overlay-value text-emerald-400 flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Em Operação
             </span>
+          </div>
+          <div class="map-overlay-row pt-1.5 border-t border-slate-700/60">
+            <span class="map-overlay-label">Controle de Fluxo:</span>
+            <span id="map-mode-indicator" class="map-overlay-value text-cyan-300 font-mono text-[11px]">🤖 AUTOMÁTICO</span>
           </div>
         </div>
       </div>
@@ -323,7 +670,7 @@ export function getMapaHTML() {
             <h4 class="text-xs font-bold text-white flex items-center gap-2">
               <span>Simulador de Fluxos & Monitoramento de Trechos</span>
               <span id="badge-simulador-resumo" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-800 text-cyan-300 border border-slate-700">
-                4 Trechos · 12.32 km
+                11 Trechos · 12.76 km
               </span>
             </h4>
             <p class="text-[11px] text-slate-400">Clique para abrir ou recolher o simulador de vazão, estimativas de trânsito e detalhes das tubulações</p>
@@ -544,35 +891,40 @@ export function getMapaHTML() {
 
         </div>
 
-        <!-- Painel de Trechos da Adutora (4 trechos) -->
+        <!-- Painel de Trechos da Adutora (11 Trechos da Malha Completa) -->
         <div>
-          <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
             <h5 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-sm text-cyan-400">segment</span> Trechos Georreferenciados da Rede
+              <span class="material-symbols-outlined text-sm text-cyan-400">segment</span> Trechos Georreferenciados da Rede (11 Trechos)
             </h5>
-            <span class="text-[11px] text-slate-400">Inverta o fluxo de qualquer trecho de forma individual clicando no botão Inverter</span>
+            <span class="text-[11px] text-slate-400">Clique em qualquer trecho no mapa ou use os botões abaixo para alternar ou inverter o fluxo</span>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
             ${TRECHOS_ADUTORA.map((t, idx) => `
-              <div class="vazao-panel rounded-xl p-4 shadow border border-slate-700 relative overflow-hidden transition hover:border-cyan-500/50" id="card-trecho-${t.id}">
-                <div class="flex items-center justify-between mb-2 pb-1 border-b border-slate-700">
-                  <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Trecho ${idx + 1}</span>
+              <div class="vazao-panel rounded-xl p-3.5 shadow border border-slate-700/90 relative overflow-hidden transition hover:border-cyan-500/50 bg-slate-900/80" id="card-trecho-${t.id}">
+                <div class="flex items-center justify-between mb-2 pb-1 border-b border-slate-700/60">
+                  <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Trecho ${idx + 1}</span>
                   <span class="map-distance-chip">
                     <span class="material-symbols-outlined text-[12px]">straighten</span> ${t.distanciaKm} km
                   </span>
                 </div>
-                <h4 class="text-sm font-bold text-slate-100 mb-1">${t.nome}</h4>
-                <p class="text-xs text-slate-400 mb-2">${t.tubulacao}</p>
+                <h4 class="text-xs font-bold text-slate-100 mb-1 leading-snug">${t.nome}</h4>
+                <p class="text-[10px] text-slate-400 mb-2 truncate" title="${t.tubulacao}">${t.tubulacao}</p>
                 <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-800">
                   <div class="flex flex-col">
-                    <span class="text-[10px] text-slate-400 uppercase">Fluxo no Trecho:</span>
+                    <span class="text-[9px] text-slate-400 uppercase">Status:</span>
                     <span id="pipe-flow-${t.id}">
                       ${_gerarHTMLStatusTrecho(t.id)}
                     </span>
                   </div>
-                  <button type="button" class="btn-inverter-trecho-card px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 hover:text-amber-300 border border-slate-700 text-xs font-bold flex items-center gap-1 cursor-pointer transition shadow" data-id="${t.id}" title="Inverter apenas o fluxo deste trecho">
-                    <span class="material-symbols-outlined text-sm">swap_horiz</span> Inverter
-                  </button>
+                  <div class="flex items-center gap-1">
+                    <button type="button" class="btn-toggle-trecho-card px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-[11px] font-bold cursor-pointer transition shadow" data-id="${t.id}" title="Ligar / Desligar este trecho">
+                      <span class="material-symbols-outlined text-xs">power_settings_new</span>
+                    </button>
+                    <button type="button" class="btn-inverter-trecho-card px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-amber-400 hover:text-amber-300 border border-slate-700 text-[11px] font-bold flex items-center gap-0.5 cursor-pointer transition shadow" data-id="${t.id}" title="Inverter sentido">
+                      <span class="material-symbols-outlined text-xs">swap_horiz</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             `).join('')}
@@ -718,31 +1070,58 @@ function _gerarTooltipTrechoHTML(trecho) {
 
 function _desenharAdutoras() {
   TRECHOS_ADUTORA.forEach(trecho => {
-    // 1. Linha de base (glow exterior) - Apenas visual
+    const est = _estadoTrechos[trecho.id] || { ativo: true, sentido: 'direto', vazao: 120 };
+    const isIndustria = trecho.tipo === 'industria';
+    const isCaminhao = trecho.tipo === 'caminhao';
+    const isReverso = est.sentido === 'reverso';
+
+    let animClass = 'adutora-anim-flow';
+    let corLinha = '#06b6d4';
+    let pesoLinha = 3.5;
+    let corBase = '#083344';
+    let opacidade = 0.95;
+
+    if (!est.ativo) {
+      animClass = '';
+      corLinha = '#334155';
+      pesoLinha = 2.0;
+      corBase = '#1e293b';
+      opacidade = 0.45;
+    } else if (isIndustria) {
+      animClass = 'adutora-anim-flow-industria';
+      corLinha = '#ef4444';
+      pesoLinha = 4.5;
+      corBase = '#450a0a';
+    } else if (isCaminhao) {
+      animClass = 'adutora-anim-flow-caminhao';
+      corLinha = '#f97316';
+      pesoLinha = 4.0;
+      corBase = '#431407';
+    } else if (isReverso) {
+      animClass = 'adutora-anim-flow-reverse';
+      corLinha = '#f59e0b';
+      pesoLinha = 4.5;
+    }
+
+    // 1. Linha de base (glow exterior)
     const baseLine = L.polyline(trecho.pontos, {
-      color: '#083344',
+      color: corBase,
       weight: 8,
       opacity: 0.7,
       lineCap: 'round',
       interactive: false
     }).addTo(_map);
 
-    const est = _estadoTrechos[trecho.id] || { sentido: 'direto' };
-    const isReverso = est.sentido === 'reverso';
-    const animClass = isReverso ? 'adutora-anim-flow-reverse' : 'adutora-anim-flow';
-    const corLinha = isReverso ? '#f59e0b' : '#06b6d4';
-
-    // 2. Linha interna condutora de fluido (animada) - Apenas visual
+    // 2. Linha interna condutora de fluido (animada)
     const flowLine = L.polyline(trecho.pontos, {
       color: corLinha,
-      weight: isReverso ? 4.5 : 3.5,
-      opacity: 0.95,
+      weight: pesoLinha,
+      opacity: opacidade,
       className: animClass,
       interactive: false
     }).addTo(_map);
 
     // 3. HITBOX TRANSPARENTE ULTRA-PRECISA (30px de largura)
-    // Responde ao simples PASSAR DO MOUSE (Hover Instantâneo) e ao clique
     const hitLine = L.polyline(trecho.pontos, {
       color: '#06b6d4',
       weight: 30,
@@ -751,8 +1130,6 @@ function _desenharAdutoras() {
       className: 'cursor-pointer'
     }).addTo(_map);
 
-    // TOOLTIP INSTANTÂNEO NO HOVER (SEM PRECISAR CLICAR!)
-    // O card de dados segue o cursor suavemente pela tubulação
     hitLine.bindTooltip(_gerarTooltipTrechoHTML(trecho), {
       sticky: true,
       opacity: 1,
@@ -761,36 +1138,35 @@ function _desenharAdutoras() {
       className: 'adutora-leaflet-tooltip'
     });
 
-    // Hover effect: ilumina o trecho ao passar o mouse
     hitLine.on('mouseover', () => {
-      flowLine.setStyle({ weight: 5.5, color: '#38bdf8' });
+      flowLine.setStyle({ weight: pesoLinha + 2, color: isIndustria ? '#f87171' : (isCaminhao ? '#fb923c' : '#38bdf8') });
       baseLine.setStyle({ weight: 12, opacity: 0.9 });
       const cardEl = document.getElementById(`card-trecho-${trecho.id}`);
       if (cardEl) cardEl.classList.add('ring-2', 'ring-cyan-400');
     });
 
     hitLine.on('mouseout', () => {
-      flowLine.setStyle({ weight: 3.5, color: '#06b6d4' });
+      const curEst = _estadoTrechos[trecho.id] || { ativo: true, sentido: 'direto' };
+      const curCor = !curEst.ativo ? '#334155' : (isIndustria ? '#ef4444' : (isCaminhao ? '#f97316' : (curEst.sentido === 'reverso' ? '#f59e0b' : '#06b6d4')));
+      flowLine.setStyle({ weight: pesoLinha, color: curCor });
       baseLine.setStyle({ weight: 8, opacity: 0.7 });
       const cardEl = document.getElementById(`card-trecho-${trecho.id}`);
       if (cardEl) cardEl.classList.remove('ring-2', 'ring-cyan-400');
     });
 
-    // Ao clicar, abre o popup fixo com botão para disparar o simulador
     hitLine.on('click', (e) => {
-      const latlng = e?.latlng || [
-        (trecho.pontos[0][0] + trecho.pontos[1][0]) / 2,
-        (trecho.pontos[0][1] + trecho.pontos[1][1]) / 2
-      ];
+      const midLat = (trecho.pontos[0][0] + trecho.pontos[trecho.pontos.length - 1][0]) / 2;
+      const midLng = (trecho.pontos[0][1] + trecho.pontos[trecho.pontos.length - 1][1]) / 2;
+      const latlng = e?.latlng || [midLat, midLng];
       _abrirPopupTrecho(trecho, latlng);
     });
 
     _pipeLines[trecho.id] = { baseLine, flowLine, hitLine };
 
-    // Badge de distância no ponto médio do trecho (só exibido em trechos com mais de 200m para não cobrir tanques próximos)
+    // Badge de distância no ponto médio
     if (trecho.distanciaKm >= 0.2) {
-      const midLat = (trecho.pontos[0][0] + trecho.pontos[1][0]) / 2;
-      const midLng = (trecho.pontos[0][1] + trecho.pontos[1][1]) / 2;
+      const midLat = (trecho.pontos[0][0] + trecho.pontos[trecho.pontos.length - 1][0]) / 2;
+      const midLng = (trecho.pontos[0][1] + trecho.pontos[trecho.pontos.length - 1][1]) / 2;
       const distIcon = L.divIcon({
         className: 'custom-distance-marker',
         html: `<div class="map-distance-chip shadow-lg cursor-pointer">${trecho.distanciaKm} km</div>`,
@@ -812,25 +1188,50 @@ function _desenharAdutoras() {
 
       _distanceMarkers.push(distMarker);
     }
+  });
+}
 
-    // Conecta o card do trecho na parte inferior da tela
-    const cardEl = document.getElementById(`card-trecho-${trecho.id}`);
-    if (cardEl) {
-      cardEl.style.cursor = 'pointer';
-      cardEl.title = 'Passe o mouse ou clique para detalhar no mapa';
-      cardEl.onmouseenter = () => {
-        flowLine.setStyle({ weight: 5.5, color: '#38bdf8' });
-      };
-      cardEl.onmouseleave = () => {
-        flowLine.setStyle({ weight: 3.5, color: '#06b6d4' });
-      };
-      cardEl.onclick = () => {
-        if (_map) {
-          _map.flyTo([midLat, midLng], 14, { duration: 1.0 });
-          _abrirPopupTrecho(trecho, [midLat, midLng]);
-        }
-      };
-    }
+function _criarIconeCaminhao(ponto, ativo = false) {
+  const pulseHtml = ativo ? '<div class="caminhao-pulse"></div>' : '';
+  const statusBadge = ativo
+    ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span class="text-emerald-300">CARREGANDO</span>'
+    : '<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span><span class="text-slate-400">STAND-BY</span>';
+
+  return L.divIcon({
+    className: 'caminhao-map-marker',
+    html: `
+      <div class="caminhao-marker-badge badge-ponto-${ponto.chave}" title="${ponto.nome} — Doca de Abastecimento">
+        <div class="caminhao-marker-icon">
+          ${pulseHtml}
+          <span class="material-symbols-outlined" style="font-size:22px;color:#fff;">local_shipping</span>
+        </div>
+        <div class="caminhao-marker-label">
+          ${statusBadge}
+        </div>
+      </div>
+    `,
+    iconSize: [54, 64],
+    iconAnchor: [27, 32]
+  });
+}
+
+function _criarIconeIndustria(ponto) {
+  return L.divIcon({
+    className: 'lagoa-map-marker',
+    html: `
+      <div class="lagoa-marker-badge badge-ponto-${ponto.chave}" title="${ponto.nome} — Geração 24h">
+        <div class="lagoa-marker-icon" style="background:#ef4444;border-color:#fca5a5;">
+          <div class="lagoa-pulse" style="background:#ef4444;"></div>
+          <span class="material-symbols-outlined" style="font-size:22px;color:#fff;">factory</span>
+        </div>
+        <div class="lagoa-marker-label" style="border-color:#f87171;">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>MOAGEM 24H</span>
+        </div>
+      </div>
+    `,
+    iconSize: [60, 70],
+    iconAnchor: [30, 35]
   });
 }
 
@@ -838,10 +1239,20 @@ function _criarMarcadoresLagoas() {
   const estado = getEstadoLagoas();
 
   Object.values(PONTOS_ADUTORA).forEach(ponto => {
-    const customIcon = _criarIconePonto(ponto, estado);
+    let customIcon;
+    if (ponto.tipo === 'caminhao') {
+      const isAtivo = ponto.chave === 'carr_usina'
+        ? (_estadoTrechos['t1-carr-usina']?.ativo || _estadoTrechos['t2-carr-usina']?.ativo)
+        : (_estadoTrechos['theresinha-carr-sul']?.ativo || _estadoTrechos['castanha-carr-sul']?.ativo);
+      customIcon = _criarIconeCaminhao(ponto, isAtivo);
+    } else if (ponto.tipo === 'industria') {
+      customIcon = _criarIconeIndustria(ponto);
+    } else {
+      customIcon = _criarIconePonto(ponto, estado);
+    }
+
     const marker = L.marker([ponto.lat, ponto.lng], { icon: customIcon }).addTo(_map);
 
-    // TOOLTIP NO HOVER DOS "Ts" (INSTANTÂNEO NO MOUSE - IGUAL ÀS ADUTORAS!)
     const htmlTooltip = _gerarHTMLTooltipPonto(ponto);
     marker.bindTooltip(htmlTooltip, {
       opacity: 1,
@@ -850,7 +1261,6 @@ function _criarMarcadoresLagoas() {
       className: 'adutora-leaflet-tooltip'
     });
 
-    // Eventos explícitos para garantir exibição imediata no hover e atualização em tempo real
     marker.on('mouseover', () => {
       marker.setTooltipContent(_gerarHTMLTooltipPonto(ponto));
       marker.openTooltip();
@@ -860,7 +1270,6 @@ function _criarMarcadoresLagoas() {
       marker.closeTooltip();
     });
 
-    // CLIQUE FIXA A JANELA POPUP
     marker.on('click', () => {
       _abrirPopupPonto(marker, ponto);
     });
@@ -873,13 +1282,15 @@ function _criarIconePonto(ponto, estado) {
   let online = false;
   let percentual = '--';
 
-  ponto.lagoas.forEach(id => {
-    const e = estado[id];
-    if (e) {
-      if (e.online && !e.isStale) online = true;
-      if (e.percent > 0) percentual = `${e.percent.toFixed(0)}%`;
-    }
-  });
+  if (ponto.lagoas && ponto.lagoas.length) {
+    ponto.lagoas.forEach(id => {
+      const e = estado[id];
+      if (e) {
+        if (e.online && !e.isStale) online = true;
+        if (e.percent > 0) percentual = `${e.percent.toFixed(0)}%`;
+      }
+    });
+  }
 
   const pulseHtml = online ? `<div class="lagoa-pulse" style="background:${ponto.cor}"></div>` : '';
 
@@ -903,54 +1314,123 @@ function _criarIconePonto(ponto, estado) {
 }
 
 function _gerarHTMLTooltipPonto(ponto) {
+  if (ponto.tipo === 'caminhao') {
+    const isAtivo = ponto.chave === 'carr_usina'
+      ? (_estadoTrechos['t1-carr-usina']?.ativo || _estadoTrechos['t2-carr-usina']?.ativo)
+      : (_estadoTrechos['theresinha-carr-sul']?.ativo || _estadoTrechos['castanha-carr-sul']?.ativo);
+    const vazao = isAtivo ? '~180 m³/h' : '0 m³/h';
+    const statusTxt = isAtivo ? 'Carregamento Ativo' : 'Em Stand-by';
+    const fontes = ponto.chave === 'carr_usina' ? 'Alimentado por T1 / T2' : 'Alimentado por T4 / T5';
+
+    return `
+      <div class="adutora-hover-card p-3" style="min-width: 250px;">
+        <div class="flex items-center justify-between pb-1.5 mb-2 border-b border-orange-500/40">
+          <div class="flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-orange-400 text-base">local_shipping</span>
+            <strong class="text-white text-xs font-bold">${ponto.nome}</strong>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${isAtivo ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-slate-800 text-slate-400'}">
+            ${isAtivo ? 'ATIVO' : 'STAND-BY'}
+          </span>
+        </div>
+        <div class="grid grid-cols-2 gap-1.5 text-xs mb-2">
+          <div class="bg-slate-950/80 p-2 rounded border border-slate-700/60">
+            <span class="text-[9px] text-slate-400 block uppercase font-semibold">Operação</span>
+            <strong class="${isAtivo ? 'text-emerald-400' : 'text-slate-300'} text-xs font-mono">${statusTxt}</strong>
+          </div>
+          <div class="bg-slate-950/80 p-2 rounded border border-slate-700/60">
+            <span class="text-[9px] text-slate-400 block uppercase font-semibold">Vazão Doca</span>
+            <strong class="text-orange-300 text-xs font-mono">${vazao}</strong>
+          </div>
+        </div>
+        <div class="p-2 bg-slate-950/80 rounded border border-slate-800 text-[10px] text-slate-300 mb-1">
+          <span class="text-slate-400 block font-semibold uppercase text-[9px]">Interligação:</span>
+          ${fontes}
+        </div>
+        <div class="pt-1 text-[9px] text-orange-400 text-right">Clique para ver detalhes</div>
+      </div>
+    `;
+  }
+
+  if (ponto.tipo === 'industria') {
+    return `
+      <div class="adutora-hover-card p-3" style="min-width: 260px;">
+        <div class="flex items-center justify-between pb-1.5 mb-2 border-b border-red-500/40">
+          <div class="flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-red-400 text-base">factory</span>
+            <strong class="text-white text-xs font-bold">${ponto.nome}</strong>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-500/20 text-red-300 border border-red-500/40">
+            24H CONTÍNUA
+          </span>
+        </div>
+        <div class="grid grid-cols-2 gap-1.5 text-xs mb-2">
+          <div class="bg-slate-950/80 p-2 rounded border border-slate-700/60">
+            <span class="text-[9px] text-slate-400 block uppercase font-semibold">Geração</span>
+            <strong class="text-red-400 text-xs font-mono">Vinhaça In Natura</strong>
+          </div>
+          <div class="bg-slate-950/80 p-2 rounded border border-slate-700/60">
+            <span class="text-[9px] text-slate-400 block uppercase font-semibold">Vazão Média</span>
+            <strong class="text-amber-300 text-xs font-mono">~250 m³/h</strong>
+          </div>
+        </div>
+        <div class="p-2 bg-slate-950/80 rounded border border-slate-800 text-[10px] text-slate-300 mb-1">
+          <span class="text-slate-400 block font-semibold uppercase text-[9px]">Destino da Adutora:</span>
+          Bifurcação ➔ Tanque 1 (T1) & Tanque 2 (T2)
+        </div>
+        <div class="pt-1 text-[9px] text-red-400 text-right">Telemetria de Geração Ativa</div>
+      </div>
+    `;
+  }
+
   const estado = getEstadoLagoas();
   let lagoasHtml = '';
 
-  ponto.lagoas.forEach(id => {
-    const cfg = LAGOA_CONFIG[id];
-    const e = estado[id] || {};
-    const online = e.online && !e.isStale;
-    const volM3 = e.volume ? (e.volume / 1000).toFixed(0) : '--';
-    
-    // Suporte aos formatos de nível: nivelCm, nivel ou ultimaLeitura
-    const rawNivel = e.nivelCm != null ? e.nivelCm : (e.nivel != null ? e.nivel : e.ultimaLeitura?.nivel);
-    const nivel = rawNivel != null && !isNaN(rawNivel) ? `${parseFloat(rawNivel).toFixed(1)} cm` : '--';
+  if (ponto.lagoas && ponto.lagoas.length) {
+    ponto.lagoas.forEach(id => {
+      const cfg = LAGOA_CONFIG[id];
+      const e = estado[id] || {};
+      const online = e.online && !e.isStale;
+      const volM3 = e.volume ? (e.volume / 1000).toFixed(0) : '--';
+      
+      const rawNivel = e.nivelCm != null ? e.nivelCm : (e.nivel != null ? e.nivel : e.ultimaLeitura?.nivel);
+      const nivel = rawNivel != null && !isNaN(rawNivel) ? `${parseFloat(rawNivel).toFixed(1)} cm` : '--';
 
-    // Lâmina d'água útil
-    const rawLamina = e.alturaCm != null ? (e.alturaCm / 100) : (e.altura != null ? e.altura : null);
-    const lamina = rawLamina != null && !isNaN(rawLamina) ? `${parseFloat(rawLamina).toFixed(2)} m` : '--';
+      const rawLamina = e.alturaCm != null ? (e.alturaCm / 100) : (e.altura != null ? e.altura : null);
+      const lamina = rawLamina != null && !isNaN(rawLamina) ? `${parseFloat(rawLamina).toFixed(2)} m` : '--';
 
-    const pct = e.percent != null && !isNaN(e.percent) ? `${e.percent.toFixed(1)}%` : '--';
+      const pct = e.percent != null && !isNaN(e.percent) ? `${e.percent.toFixed(1)}%` : '--';
 
-    lagoasHtml += `
-      <div class="p-2.5 bg-slate-900/90 rounded-lg border border-slate-700/80 mb-1.5">
-        <div class="flex items-center justify-between mb-1.5">
-          <strong class="text-xs text-slate-100 font-bold">${cfg ? cfg.name : `Lagoa ${id}`}</strong>
-          <span class="text-[9px] px-2 py-0.5 rounded-full font-bold ${online ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-slate-700 text-slate-400'}">
-            ${online ? 'ONLINE' : 'OFFLINE'}
-          </span>
+      lagoasHtml += `
+        <div class="p-2.5 bg-slate-900/90 rounded-lg border border-slate-700/80 mb-1.5">
+          <div class="flex items-center justify-between mb-1.5">
+            <strong class="text-xs text-slate-100 font-bold">${cfg ? cfg.name : `Lagoa ${id}`}</strong>
+            <span class="text-[9px] px-2 py-0.5 rounded-full font-bold ${online ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-slate-700 text-slate-400'}">
+              ${online ? 'ONLINE' : 'OFFLINE'}
+            </span>
+          </div>
+          <div class="grid grid-cols-4 gap-1.5 text-center text-xs">
+            <div class="bg-slate-950/70 p-1 rounded">
+              <span class="text-[9px] text-slate-400 block uppercase font-semibold">Capac.</span>
+              <strong class="text-cyan-400 font-mono text-[11px]">${pct}</strong>
+            </div>
+            <div class="bg-slate-950/70 p-1 rounded">
+              <span class="text-[9px] text-slate-400 block uppercase font-semibold">Volume</span>
+              <strong class="text-purple-300 font-mono text-[11px]">${volM3} m³</strong>
+            </div>
+            <div class="bg-slate-950/70 p-1 rounded" title="Distância do sensor">
+              <span class="text-[9px] text-slate-400 block uppercase font-semibold">Sensor</span>
+              <strong class="text-slate-200 font-mono text-[11px]">${nivel}</strong>
+            </div>
+            <div class="bg-slate-950/70 p-1 rounded" title="Lâmina de vinhaça">
+              <span class="text-[9px] text-slate-400 block uppercase font-semibold">Lâmina</span>
+              <strong class="text-emerald-400 font-mono text-[11px]">${lamina}</strong>
+            </div>
+          </div>
         </div>
-        <div class="grid grid-cols-4 gap-1.5 text-center text-xs">
-          <div class="bg-slate-950/70 p-1 rounded">
-            <span class="text-[9px] text-slate-400 block uppercase font-semibold">Capac.</span>
-            <strong class="text-cyan-400 font-mono text-[11px]">${pct}</strong>
-          </div>
-          <div class="bg-slate-950/70 p-1 rounded">
-            <span class="text-[9px] text-slate-400 block uppercase font-semibold">Volume</span>
-            <strong class="text-purple-300 font-mono text-[11px]">${volM3} m³</strong>
-          </div>
-          <div class="bg-slate-950/70 p-1 rounded" title="Distância do sensor">
-            <span class="text-[9px] text-slate-400 block uppercase font-semibold">Sensor</span>
-            <strong class="text-slate-200 font-mono text-[11px]">${nivel}</strong>
-          </div>
-          <div class="bg-slate-950/70 p-1 rounded" title="Lâmina de vinhaça">
-            <span class="text-[9px] text-slate-400 block uppercase font-semibold">Lâmina</span>
-            <strong class="text-emerald-400 font-mono text-[11px]">${lamina}</strong>
-          </div>
-        </div>
-      </div>
-    `;
-  });
+      `;
+    });
+  }
 
   return `
     <div class="adutora-hover-card p-3" style="min-width: 270px;">
@@ -1092,17 +1572,57 @@ function _expandirSimulador() {
 function _conectarBotoesControle() {
   document.getElementById('btn-map-fit-all')?.addEventListener('click', _ajustarVisaoCompleta);
 
+  // Foco Pátio Usina (englobando Indústria, T1, T2 e Doca Usina)
   document.getElementById('btn-map-focus-usina')?.addEventListener('click', () => {
     if (_map) {
-      // Foco detalhado (zoom 17) no pátio dos carregamentos gêmeos T1 e T2
-      _map.flyTo([-21.044969, -48.260579], 17, { duration: 1.2 });
+      _map.flyTo([-21.0465, -48.2610], 16, { duration: 1.2 });
     }
   });
 
+  // Foco Lagoa Castanha (T4)
   document.getElementById('btn-map-focus-castanha')?.addEventListener('click', () => {
     if (_map) _map.flyTo([PONTOS_ADUTORA.castanha.lat, PONTOS_ADUTORA.castanha.lng], 15, { duration: 1.2 });
   });
 
+  // Foco Doca de Carregamento de Caminhões Sul
+  document.getElementById('btn-map-focus-doca-sul')?.addEventListener('click', () => {
+    if (_map) _map.flyTo([PONTOS_ADUTORA.carr_sul.lat, PONTOS_ADUTORA.carr_sul.lng], 16, { duration: 1.2 });
+  });
+
+  // Botão Flutuante de Gota 💧 (Abre / Fecha Janela de Telemetria)
+  const btnGota = document.getElementById('btn-toggle-telemetry-overlay');
+  const cardOverlay = document.getElementById('map-floating-overlay-card');
+
+  btnGota?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!cardOverlay) return;
+    const isHidden = cardOverlay.classList.contains('hidden');
+    if (isHidden) {
+      cardOverlay.classList.remove('hidden');
+      btnGota.classList.add('active');
+    } else {
+      cardOverlay.classList.add('hidden');
+      btnGota.classList.remove('active');
+    }
+  });
+
+  // Botão Fechar dentro da janela de telemetria
+  document.getElementById('btn-close-telemetry-overlay')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (cardOverlay) cardOverlay.classList.add('hidden');
+    if (btnGota) btnGota.classList.remove('active');
+  });
+
+  // Modos de Fluxo Inteligente: Automático (IA & Dados) vs Manual (SCADA)
+  document.getElementById('btn-flow-mode-auto')?.addEventListener('click', () => {
+    _alternarModoOperacaoFluxo('auto');
+  });
+
+  document.getElementById('btn-flow-mode-manual')?.addEventListener('click', () => {
+    _alternarModoOperacaoFluxo('manual');
+  });
+
+  // Alternador de Camada Satélite / Dark
   const btnToggleLayer = document.getElementById('btn-map-toggle-layer');
   const lblLayerMode = document.getElementById('lbl-layer-mode');
 
@@ -1362,6 +1882,20 @@ function _conectarSimuladorFluxo() {
     });
   });
 
+  // Botões de ligar/desligar fluxo individual nos cards de trechos
+  document.querySelectorAll('.btn-toggle-trecho-card').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const trechoId = btn.getAttribute('data-id');
+      if (trechoId) {
+        if (_modoOperacaoFluxo === 'auto') {
+          _alternarModoOperacaoFluxo('manual');
+        }
+        _alternarAtivoTrecho(trechoId);
+      }
+    });
+  });
+
   // Executa o cálculo inicial da simulação
   atualizarSimulacaoNivel();
 }
@@ -1381,14 +1915,26 @@ export function atualizarDadosMapa() {
   Object.values(PONTOS_ADUTORA).forEach(ponto => {
     const marker = _markers[ponto.chave];
     if (marker) {
-      marker.setIcon(_criarIconePonto(ponto, estado));
+      if (ponto.tipo === 'caminhao') {
+        const isAtivo = ponto.chave === 'carr_usina'
+          ? (_estadoTrechos['t1-carr-usina']?.ativo || _estadoTrechos['t2-carr-usina']?.ativo)
+          : (_estadoTrechos['theresinha-carr-sul']?.ativo || _estadoTrechos['castanha-carr-sul']?.ativo);
+        marker.setIcon(_criarIconeCaminhao(ponto, isAtivo));
+      } else if (ponto.tipo === 'industria') {
+        marker.setIcon(_criarIconeIndustria(ponto));
+      } else {
+        marker.setIcon(_criarIconePonto(ponto, estado));
+      }
       if (typeof marker.setTooltipContent === 'function') {
         marker.setTooltipContent(_gerarHTMLTooltipPonto(ponto));
       }
     }
   });
 
-  // 2. Calcula total armazenado na adutora
+  // 2. Processa regras inteligentes de fluxo dinamicamente
+  _processarRegrasFluxoInteligente();
+
+  // 3. Calcula total armazenado na adutora
   let totalM3 = 0;
   Object.values(estado).forEach(e => {
     if (e?.volume > 0) totalM3 += e.volume / 1000;
@@ -1396,7 +1942,7 @@ export function atualizarDadosMapa() {
   const storedEl = document.getElementById('map-total-stored');
   if (storedEl) storedEl.textContent = `${totalM3.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} m³`;
 
-  // 3. Status dinâmico dos nós
+  // 4. Status dinâmico dos nós
   const onlineCount = Object.values(estado).filter(e => e?.online && !e?.isStale).length;
   const nodesEl = document.getElementById('map-telemetry-nodes');
   if (nodesEl) nodesEl.textContent = `${onlineCount} Nós Transmitindo`;

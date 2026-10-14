@@ -176,3 +176,42 @@
 /* Gauge cinza para dados históricos (ESP offline) */
 .gauge-stale { background: var(--bg-4); }
 [data-theme="light"] .gauge-stale { background: #b0bec5; }
+
+/* ================================================================
+   OTIMIZAÇÃO MOBILE PARA CARDS DE LAGOAS (SMARTPHONES)
+   ================================================================ */
+@media (max-width: 640px) {
+  .lagoa-card-base {
+    padding: 0.875rem !important;
+    border-radius: 1rem !important;
+  }
+  
+  .lagoa-title {
+    font-size: 0.95rem !important;
+  }
+  
+  /* Ajusta o medidor vertical para caber perfeitamente na tela do celular */
+  .lagoa-gauge-container {
+    height: 170px !important;
+    width: 60px !important;
+    border-radius: 10px !important;
+  }
+  
+  .lagoa-gauge-fill {
+    border-radius: 0 0 9px 9px !important;
+  }
+
+  .lagoa-percent-label {
+    font-size: 1.1rem !important;
+  }
+
+  .lagoa-value-row {
+    font-size: 0.82rem !important;
+  }
+
+  .lagoa-badge {
+    padding: 0.15rem 0.4rem !important;
+    font-size: 0.65rem !important;
+  }
+}
+

@@ -19,6 +19,11 @@ export function calcularVolumeTronco(h, config) {
     return volume_m3 * 1000; // Retorna o volume convertido para Litros
 }
 
+export function calcularCapacidadeMaxima(config) {
+    if (!config || !config.H_max) return 0;
+    return calcularVolumeTronco(config.H_max, config);
+}
+
 export function processarMovimentacao(variacoes) {
     // Exemplo esperado de variacoes: { T1: -500, T2: 0, T3: 450, T4: 0, T5: 0 }
     let resultado = { tipo: 'estável', volume: 0 };
