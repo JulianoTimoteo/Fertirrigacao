@@ -5,72 +5,112 @@
 // ============================================================================
 
 import { fbUpdateUser } from '../firebase-service.js';
-import { showMessage } from '../main.js';
 
 let _currentProfile = null;
 let _onProfileUpdatedCallback = null;
+let _onLogoutCallback = null;
+let _isDelegatedBound = false;
+
+function notify(title, message, type = 'info') {
+    if (typeof window.showMessage === 'function') {
+        window.showMessage(title, message, type);
+    } else {
+        alert(`${title}: ${message}`);
+    }
+}
+
+export function openProfileMenu() {
+    const profileMenu = document.getElementById('profile-menu');
+    const caret = document.getElementById('avatar-caret');
+    if (!profileMenu) return;
+
+    profileMenu.classList.remove('hidden');
+    // Força reflow para transição suave de opacidade e escala
+    void profileMenu.offsetWidth;
+    profileMenu.classList.add('open');
+    if (caret) caret.style.transform = 'rotate(180deg)';
+}
+
+export function closeProfileMenu() {
+    const profileMenu = document.getElementById('profile-menu');
+    const caret = document.getElementById('avatar-caret');
+    if (!profileMenu) return;
+
+    profileMenu.classList.remove('open');
+    if (caret) caret.style.transform = 'rotate(0deg)';
+    setTimeout(() => {
+        if (!profileMenu.classList.contains('open')) {
+            profileMenu.classList.add('hidden');
+        }
+    }, 200);
+}
+
+export function toggleProfileMenu() {
+    const profileMenu = document.getElementById('profile-menu');
+    if (!profileMenu) return;
+    const isOpen = profileMenu.classList.contains('open') && !profileMenu.classList.contains('hidden');
+    if (isOpen) {
+        closeProfileMenu();
+    } else {
+        openProfileMenu();
+    }
+}
 
 export function setupProfileMenu(user, profile, onProfileUpdated, onLogout) {
     _currentProfile = profile;
     _onProfileUpdatedCallback = onProfileUpdated;
+    _onLogoutCallback = onLogout;
 
-    const avatarBtn = document.getElementById('avatar-btn');
-    const profileMenu = document.getElementById('profile-menu');
-    const caret = document.getElementById('avatar-caret');
+    // Vincula delegação global uma única vez no document para nunca perder eventos
+    if (!_isDelegatedBound) {
+        _isDelegatedBound = true;
 
-    if (!avatarBtn || !profileMenu) return;
-
-    // Toggle do submenu animado
-    avatarBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const isOpen = !profileMenu.classList.contains('hidden');
-        if (isOpen) {
-            closeMenu();
-        } else {
-            openMenu();
-        }
-    });
-
-    function openMenu() {
-        profileMenu.classList.remove('hidden', 'closing');
-        if (caret) caret.style.transform = 'rotate(180deg)';
-    }
-
-    function closeMenu() {
-        profileMenu.classList.add('closing');
-        if (caret) caret.style.transform = 'rotate(0deg)';
-        setTimeout(() => {
-            profileMenu.classList.add('hidden');
-            profileMenu.classList.remove('closing');
-        }, 180);
-    }
-
-    // Fecha ao clicar fora
-    document.addEventListener('click', (e) => {
-        if (!profileMenu.contains(e.target) && !avatarBtn.contains(e.target)) {
-            if (!profileMenu.classList.contains('hidden')) {
-                closeMenu();
+        document.addEventListener('click', (e) => {
+            // 1. Clique no botão de Avatar (ou em qualquer elemento interno dele)
+            const avatarBtn = e.target.closest('#avatar-btn');
+            if (avatarBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleProfileMenu();
+                return;
             }
-        }
-    });
 
-    // Opção: Mudar Nome de Exibição
-    document.getElementById('btn-edit-displayname')?.addEventListener('click', () => {
-        closeMenu();
-        openEditDisplayNameModal();
-    });
+            // 2. Opção: Mudar Nome de Exibição
+            const editNameBtn = e.target.closest('#btn-edit-displayname');
+            if (editNameBtn) {
+                e.preventDefault();
+                closeProfileMenu();
+                openEditDisplayNameModal();
+                return;
+            }
 
-    // Opção: Mudar Usuário e Senha
-    document.getElementById('btn-edit-credentials')?.addEventListener('click', () => {
-        closeMenu();
-        openEditCredentialsModal();
-    });
+            // 3. Opção: Mudar Usuário e Senha
+            const editCredBtn = e.target.closest('#btn-edit-credentials');
+            if (editCredBtn) {
+                e.preventDefault();
+                closeProfileMenu();
+                openEditCredentialsModal();
+                return;
+            }
 
-    // Opção: Logout
-    document.getElementById('menu-logout-btn')?.addEventListener('click', () => {
-        closeMenu();
-        if (onLogout) onLogout();
-    });
+            // 4. Opção: Logout
+            const logoutBtn = e.target.closest('#menu-logout-btn');
+            if (logoutBtn) {
+                e.preventDefault();
+                closeProfileMenu();
+                if (_onLogoutCallback) _onLogoutCallback();
+                return;
+            }
+
+            // 5. Clique fora do menu: fecha o submenu se estiver aberto
+            const profileMenu = document.getElementById('profile-menu');
+            if (profileMenu && profileMenu.classList.contains('open')) {
+                if (!profileMenu.contains(e.target)) {
+                    closeProfileMenu();
+                }
+            }
+        });
+    }
 }
 
 // ============================================================================
@@ -144,10 +184,10 @@ export function openEditDisplayNameModal() {
             }
 
             closeModal();
-            showMessage('Sucesso', 'Nome de exibição atualizado com sucesso no Firebase!', 'success');
+            notify('Sucesso', 'Nome de exibição atualizado com sucesso no Firebase!', 'success');
         } catch (err) {
             console.error('Erro ao atualizar nome:', err);
-            showMessage('Erro', 'Não foi possível salvar o nome de exibição.', 'error');
+            notify('Erro', 'Não foi possível salvar o nome de exibição.', 'error');
             btn.disabled = false;
             btn.textContent = 'Salvar Alteração';
         }
@@ -284,7 +324,7 @@ export function openEditCredentialsModal() {
             }
 
             closeModal();
-            showMessage('Sucesso', 'Usuário e senha gravados diretamente no Firebase com sucesso!', 'success');
+            notify('Sucesso', 'Usuário e senha gravados diretamente no Firebase com sucesso!', 'success');
         } catch (err) {
             console.error('Erro ao atualizar credenciais:', err);
             errEl.textContent = 'Falha ao atualizar credenciais.';

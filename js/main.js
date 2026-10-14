@@ -39,8 +39,8 @@ import { formatarTimestampFixo } from './dashboard/regras.js?v=8.4.12';
 // x IMPORTA!ÒO DO MDULO DE FERTIRRIGA!ÒO
 import fertirrigacao from './fertirrigacao/index.js?v=8.4.16';
 
-// xRx IMPORTA!ÒO DO SUBMENU DE PERFIL / AVATAR
-import { setupProfileMenu } from './dashboard/perfil.js?v=8.4.12';
+// 🌟 IMPORTAÇÃO DO SUBMENU DE PERFIL / AVATAR
+import { setupProfileMenu } from './dashboard/perfil.js?v=8.4.17';
 
 // Variável global do perfil do usuário
 let currentUserProfile = null;
@@ -109,6 +109,7 @@ export function showMessage(title, message, type = 'info') {
     document.body.appendChild(dialogContainer);
     dialogContainer.querySelector('#dialog-ok-button')?.addEventListener('click', () => dialogContainer.remove());
 }
+window.showMessage = showMessage;
 
 export function showConfirmationModal(message, onConfirm) {
     const modalPlaceholder = document.getElementById('modal-placeholder');
@@ -182,6 +183,29 @@ export function startApplication(user) {
     }
     
     appContainer.innerHTML = getAppHTML(user, currentUserProfile);
+
+    // Ativação imediata do menu de perfil / avatar sem esperar animações
+    setupProfileMenu(
+        { email: currentUserProfile?.email || currentUserProfile?.username },
+        currentUserProfile,
+        (updated) => {
+            currentUserProfile = { ...currentUserProfile, ...updated };
+            setCurrentUserProfile(currentUserProfile);
+            const nameEl = document.getElementById('header-user-name');
+            if (nameEl) nameEl.textContent = updated.displayName || updated.username;
+            const menuNameEl = document.getElementById('menu-user-display');
+            if (menuNameEl) menuNameEl.textContent = updated.displayName || updated.username;
+            const initials = (updated.displayName || updated.username || 'JT').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            const avatarEls = document.querySelectorAll('#avatar-btn div, #profile-menu div');
+            avatarEls.forEach(el => {
+                if (el.classList.contains('rounded-full') && el.textContent.length <= 3) {
+                    el.textContent = initials;
+                }
+            });
+        },
+        () => handleLogout()
+    );
+
     runInitialAnimation();
 }
 

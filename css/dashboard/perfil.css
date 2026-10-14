@@ -15,57 +15,55 @@
 /* 🌟 Botão do Avatar com Micro-animação */
 .avatar-button {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    user-select: none;
 }
 .avatar-button:hover {
-    transform: scale(1.05);
+    transform: scale(1.04);
 }
 .avatar-button:active {
     transform: scale(0.97);
 }
 
-/* 🌟 Dropdown Submenu Animado */
+/* 🌟 Dropdown Submenu Animado e Confiável */
 .profile-dropdown-menu {
-    background: var(--bg-2, #ffffff);
+    background: var(--bg-2, #1e293b);
     border: 1px solid var(--border-1, rgba(255, 255, 255, 0.1));
-    backdrop-filter: blur(12px);
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3), 0 0 15px rgba(64, 128, 12, 0.15);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.4), 0 0 20px rgba(64, 128, 12, 0.2);
     transform-origin: top right;
-    animation: menuScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.94) translateY(-8px);
+    pointer-events: none;
 }
 
-@keyframes menuScaleIn {
-    0% {
-        opacity: 0;
-        transform: scale(0.92) translateY(-8px);
-    }
-    100% {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
+.profile-dropdown-menu.open {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: scale(1) translateY(0) !important;
+    pointer-events: auto !important;
 }
 
-.profile-dropdown-menu.closing {
-    animation: menuScaleOut 0.18s ease forwards;
-}
-
-@keyframes menuScaleOut {
-    0% {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
-    100% {
-        opacity: 0;
-        transform: scale(0.92) translateY(-8px);
-    }
+[data-theme="light"] .profile-dropdown-menu {
+    background: #ffffff !important;
+    border-color: #e5e7eb !important;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* 🌟 Itens do Menu com Hover Suave */
 .profile-menu-item {
-    transition: all 0.2s ease;
+    transition: all 0.18s ease;
 }
 .profile-menu-item:hover {
     transform: translateX(4px);
-    background: var(--bg-3, rgba(0, 0, 0, 0.05));
+    background: var(--bg-3, rgba(255, 255, 255, 0.06));
+}
+
+[data-theme="light"] .profile-menu-item:hover {
+    background: #f3f4f6 !important;
 }
 
 /* 🌟 Modal Dinâmico de Edição */
