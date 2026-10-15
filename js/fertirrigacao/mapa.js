@@ -26,14 +26,13 @@ const _estadoTrechos = {
   'industria-bifurcacao': { ativo: true, sentido: 'direto', vazao: 250 },
   'bifurcacao-t1': { ativo: true, sentido: 'direto', vazao: 125 },
   'bifurcacao-t2': { ativo: true, sentido: 'direto', vazao: 125 },
-  't1-carr-usina': { ativo: false, sentido: 'direto', vazao: 0 },
-  't2-carr-usina': { ativo: false, sentido: 'direto', vazao: 0 },
   't2-t1': { ativo: true, sentido: 'direto', vazao: 120 },
+  't1-carr-usina': { ativo: false, sentido: 'direto', vazao: 0 },
   't1-eucalipto': { ativo: true, sentido: 'direto', vazao: 120 },
   'eucalipto-castanha': { ativo: true, sentido: 'direto', vazao: 120 },
+  't4-carr-castanha': { ativo: false, sentido: 'direto', vazao: 0 },
   'castanha-theresinha': { ativo: true, sentido: 'direto', vazao: 120 },
-  'theresinha-carr-sul': { ativo: false, sentido: 'direto', vazao: 0 },
-  'castanha-carr-sul': { ativo: false, sentido: 'direto', vazao: 0 }
+  'theresinha-carr-theresinha': { ativo: false, sentido: 'direto', vazao: 0 }
 };
 
 export const PONTOS_ADUTORA = {
@@ -50,8 +49,8 @@ export const PONTOS_ADUTORA = {
   },
   carr_usina: {
     chave: 'carr_usina',
-    nome: 'CARREGAMENTO CAMINHÕES USINA',
-    subtitulo: 'Doca T1 / T2',
+    nome: 'CARREGAMENTO USINA',
+    subtitulo: 'Doca de Caminhões Usina (T1/T2)',
     lat: -21.044694910635954,
     lng: -48.26141733148316,
     ordem: 0,
@@ -107,12 +106,12 @@ export const PONTOS_ADUTORA = {
     badge: 'T4',
     tipo: 'tanque'
   },
-  carr_sul: {
-    chave: 'carr_sul',
-    nome: 'CARREGAMENTO CAMINHÕES SUL',
-    subtitulo: 'Doca T4 / T5',
-    lat: -21.099731418780465,
-    lng: -48.35205904510835,
+  carr_castanha: {
+    chave: 'carr_castanha',
+    nome: 'CARREGAMENTO CASTANHA',
+    subtitulo: 'Doca de Caminhões (T4)',
+    lat: -21.07840906172092,
+    lng: -48.300072451861894,
     ordem: 5,
     cor: '#f97316',
     badge: '🚛',
@@ -129,18 +128,30 @@ export const PONTOS_ADUTORA = {
     cor: '#ec4899',
     badge: 'T5',
     tipo: 'tanque'
+  },
+  carr_theresinha: {
+    chave: 'carr_theresinha',
+    nome: 'CARREGAMENTO SANTA THERESINHA',
+    subtitulo: 'Doca de Caminhões (T5)',
+    lat: -21.099731418780465,
+    lng: -48.35205904510835,
+    ordem: 7,
+    cor: '#f97316',
+    badge: '🚛',
+    tipo: 'caminhao'
   }
 };
 
 export const TRECHOS_ADUTORA = [
+  // 1. Adutora de Abastecimento Moagem 24h (Imagem 3)
   {
     id: 'industria-bifurcacao',
     origem: 'industria',
     destino: 'bifurcacao',
-    nome: 'Indústria ➔ Bifurcação Tanques',
+    nome: 'Moagem 24h ➔ Bifurcação Tanques',
     distanciaKm: 0.38,
     diametroMm: 350,
-    tubulacao: 'Aço / PEAD 355mm (Linha Contínua 24h)',
+    tubulacao: 'Aço Carbono / PEAD 355mm (Linha Contínua 24h)',
     tipo: 'industria',
     pontos: [
       [-21.048358207942854, -48.26135796446434],
@@ -179,34 +190,8 @@ export const TRECHOS_ADUTORA = [
       [-21.044852715210126, -48.260317960320975]
     ]
   },
-  {
-    id: 't1-carr-usina',
-    origem: 't1',
-    destino: 'carr_usina',
-    nome: 'Tanque 1 (T1) ➔ Carregamento Caminhões',
-    distanciaKm: 0.08,
-    diametroMm: 250,
-    tubulacao: 'PEAD PN10 De 250mm',
-    tipo: 'caminhao',
-    pontos: [
-      [-21.04508601802594, -48.260840316946286],
-      [-21.044694910635954, -48.26141733148316]
-    ]
-  },
-  {
-    id: 't2-carr-usina',
-    origem: 't2',
-    destino: 'carr_usina',
-    nome: 'Tanque 2 (T2) ➔ Carregamento Caminhões',
-    distanciaKm: 0.12,
-    diametroMm: 250,
-    tubulacao: 'PEAD PN10 De 250mm',
-    tipo: 'caminhao',
-    pontos: [
-      [-21.044852715210126, -48.260317960320975],
-      [-21.044694910635954, -48.26141733148316]
-    ]
-  },
+
+  // 2. Carregamento Usina T1 e T2 (Imagem 4: T2 -> T1 -> Doca Carregamento)
   {
     id: 't2-t1',
     origem: 't2',
@@ -214,7 +199,7 @@ export const TRECHOS_ADUTORA = [
     nome: 'Carregamento B ⇄ Carregamento A',
     distanciaKm: 0.06,
     diametroMm: 300,
-    tubulacao: 'PEAD PN10 De 315mm (Interligação)',
+    tubulacao: 'PEAD PN10 De 315mm (Interligação T2-T1)',
     tipo: 'adutora',
     pontos: [
       [-21.044852715210126, -48.260317960320975],
@@ -222,24 +207,49 @@ export const TRECHOS_ADUTORA = [
     ]
   },
   {
+    id: 't1-carr-usina',
+    origem: 't1',
+    destino: 'carr_usina',
+    nome: 'Tanque 1 (T1) ➔ Carregamento Usina',
+    distanciaKm: 0.09,
+    diametroMm: 250,
+    tubulacao: 'PEAD PN10 De 250mm',
+    tipo: 'caminhao',
+    pontos: [
+      [-21.04508601802594, -48.260840316946286],
+      [-21.044980, -48.261220],
+      [-21.044694910635954, -48.26141733148316]
+    ]
+  },
+
+  // 3. Fluxo T1 - T2 - T3 (Imagem 5: Traçado fiel acompanhando a estrada vicinal)
+  {
     id: 't1-eucalipto',
     origem: 't1',
     destino: 'eucalipto',
-    nome: 'Carregamento Usina ➔ Eucalipto Cheiroso',
-    distanciaKm: 1.90,
+    nome: 'Carregamento Usina ➔ Eucalipto Cheiroso (T3)',
+    distanciaKm: 1.95,
     diametroMm: 300,
     tubulacao: 'PEAD PN10 De 315mm',
     tipo: 'adutora',
     pontos: [
       [-21.04508601802594, -48.260840316946286],
+      [-21.045230, -48.261100],
+      [-21.045950, -48.266200],
+      [-21.046750, -48.271800],
+      [-21.047350, -48.275800],
+      [-21.047580, -48.276900],
+      [-21.048050, -48.278200],
       [-21.048171179817402, -48.27849805552853]
     ]
   },
+
+  // 4. Eucalipto Cheiroso (T3) ➔ Castanha (T4)
   {
     id: 'eucalipto-castanha',
     origem: 'eucalipto',
     destino: 'castanha',
-    nome: 'Eucalipto Cheiroso ➔ Castanha',
+    nome: 'Eucalipto Cheiroso (T3) ➔ Castanha (T4)',
     distanciaKm: 4.26,
     diametroMm: 300,
     tubulacao: 'PEAD PN10 De 315mm',
@@ -249,11 +259,29 @@ export const TRECHOS_ADUTORA = [
       [-21.080929846011003, -48.30075955155999]
     ]
   },
+
+  // 5. Carregamento Castanha (Imagem 2: Saída direta de T4 Castanha)
+  {
+    id: 't4-carr-castanha',
+    origem: 'castanha',
+    destino: 'carr_castanha',
+    nome: 'Castanha (T4) ➔ Carregamento Castanha',
+    distanciaKm: 0.30,
+    diametroMm: 250,
+    tubulacao: 'PEAD PN10 De 250mm',
+    tipo: 'caminhao',
+    pontos: [
+      [-21.080536, -48.300914],
+      [-21.07840906172092, -48.300072451861894]
+    ]
+  },
+
+  // 6. Castanha (T4) ➔ Santa Theresinha (T5)
   {
     id: 'castanha-theresinha',
     origem: 'castanha',
     destino: 'theresinha',
-    nome: 'Castanha ➔ Santa Theresinha',
+    nome: 'Castanha (T4) ➔ Santa Theresinha (T5)',
     distanciaKm: 6.10,
     diametroMm: 250,
     tubulacao: 'PEAD PN10 De 280mm',
@@ -263,31 +291,19 @@ export const TRECHOS_ADUTORA = [
       [-21.104326364035728, -48.35321793859342]
     ]
   },
+
+  // 7. Carregamento Santa Theresinha (Imagem 1: Somente de T5 ao Carregamento Santa Theresinha)
   {
-    id: 'theresinha-carr-sul',
+    id: 'theresinha-carr-theresinha',
     origem: 'theresinha',
-    destino: 'carr_sul',
-    nome: 'Santa Theresinha (T5) ➔ Carregamento Caminhões',
+    destino: 'carr_theresinha',
+    nome: 'Santa Theresinha (T5) ➔ Carregamento Santa Theresinha',
     distanciaKm: 0.52,
     diametroMm: 250,
     tubulacao: 'PEAD PN10 De 250mm',
     tipo: 'caminhao',
     pontos: [
       [-21.104326364035728, -48.35321793859342],
-      [-21.099731418780465, -48.35205904510835]
-    ]
-  },
-  {
-    id: 'castanha-carr-sul',
-    origem: 'castanha',
-    destino: 'carr_sul',
-    nome: 'Castanha (T4) ➔ Carregamento Caminhões',
-    distanciaKm: 5.80,
-    diametroMm: 250,
-    tubulacao: 'Ramal de Abastecimento Regional',
-    tipo: 'caminhao',
-    pontos: [
-      [-21.080929846011003, -48.30075955155999],
       [-21.099731418780465, -48.35205904510835]
     ]
   }
@@ -461,14 +477,13 @@ export function _processarRegrasFluxoInteligente() {
     _aplicarEstadoTrecho('bifurcacao-t2', { ativo: true, sentido: 'direto', vazao: 125 });
   }
 
-  // 3. Carregamento Usina (Doca Caminhões T1 / T2)
+  // 3. Carregamento Usina (Doca de Caminhões T1 / T2 - Imagem 4)
   // Regra: Se Eucalipto Cheiroso (T3) estável E (T1 esvaziando OU T2 esvaziando)
   const carrUsinaAtivo = t3Estavel && (t1Esvaziando || t2Esvaziando);
-  _aplicarEstadoTrecho('t1-carr-usina', { ativo: t1Esvaziando, sentido: 'direto', vazao: t1Esvaziando ? 180 : 0 });
-  _aplicarEstadoTrecho('t2-carr-usina', { ativo: t2Esvaziando, sentido: 'direto', vazao: t2Esvaziando ? 180 : 0 });
+  _aplicarEstadoTrecho('t1-carr-usina', { ativo: carrUsinaAtivo, sentido: 'direto', vazao: carrUsinaAtivo ? 180 : 0 });
   _atualizarMarcadorCaminhao('carr_usina', carrUsinaAtivo);
 
-  // 4. Adutora T1 ➔ Eucalipto Cheiroso (T3)
+  // 4. Adutora T1 ➔ Eucalipto Cheiroso (T3) - Imagem 5
   if (e3.tendencia === 'subindo' && (t1Esvaziando || t2Esvaziando)) {
     _aplicarEstadoTrecho('t1-eucalipto', { ativo: true, sentido: 'direto', vazao: 150 });
   } else if (t3Estavel && !t1Esvaziando && !t2Esvaziando) {
@@ -482,21 +497,22 @@ export function _processarRegrasFluxoInteligente() {
     _aplicarEstadoTrecho('eucalipto-castanha', { ativo: true, sentido: 'direto', vazao: 120 });
   }
 
-  // 6. Carregamento Sul (Doca Caminhões T4 / T5)
-  // Regra A: Se T3 estável, T4 enchendo e T5 esvaziando -> Carregamento T5 ativo
-  // Regra B: Se T5 cheio/estável e T4 esvaziando -> Carregamento T4 ativo
-  const carrT5Ativo = t3Estavel && t4Enchendo && t5Esvaziando;
-  const carrT4Ativo = t5CheioOuEstavel && t4Esvaziando;
-  const carrSulAtivo = carrT5Ativo || carrT4Ativo;
-
-  _aplicarEstadoTrecho('theresinha-carr-sul', { ativo: carrT5Ativo, sentido: 'direto', vazao: carrT5Ativo ? 180 : 0 });
-  _aplicarEstadoTrecho('castanha-carr-sul', { ativo: carrT4Ativo, sentido: 'direto', vazao: carrT4Ativo ? 180 : 0 });
-  _atualizarMarcadorCaminhao('carr_sul', carrSulAtivo);
+  // 6. Carregamento Castanha (Imagem 2: Doca T4)
+  // Ativa quando a Lagoa Castanha (T4) está esvaziando para os caminhões
+  const carrCastanhaAtivo = t4Esvaziando;
+  _aplicarEstadoTrecho('t4-carr-castanha', { ativo: carrCastanhaAtivo, sentido: 'direto', vazao: carrCastanhaAtivo ? 180 : 0 });
+  _atualizarMarcadorCaminhao('carr_castanha', carrCastanhaAtivo);
 
   // 7. Adutora Castanha ➔ Santa Theresinha (T5)
   if (t5Enchendo && t4Esvaziando) {
     _aplicarEstadoTrecho('castanha-theresinha', { ativo: true, sentido: 'direto', vazao: 140 });
   }
+
+  // 8. Carregamento Santa Theresinha (Imagem 1: Somente de T5 ao Carregamento Santa Theresinha)
+  // Ativa quando o reservatório T5 está esvaziando para caminhões
+  const carrTheresinhaAtivo = t5Esvaziando;
+  _aplicarEstadoTrecho('theresinha-carr-theresinha', { ativo: carrTheresinhaAtivo, sentido: 'direto', vazao: carrTheresinhaAtivo ? 180 : 0 });
+  _atualizarMarcadorCaminhao('carr_theresinha', carrTheresinhaAtivo);
 }
 
 export function _alternarModoOperacaoFluxo(modo) {
@@ -572,7 +588,7 @@ export function getMapaHTML() {
           <span class="material-symbols-outlined text-cyan-400 text-xl sm:text-2xl">route</span>
           <h3 class="text-base sm:text-xl font-extrabold" style="color:var(--text-1)">Rede de Adutoras & Fluxo</h3>
           <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/40">
-            12.76 km Total
+            13.76 km Total
           </span>
           <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-500/20 text-red-400 border border-red-500/40 flex items-center gap-1">
             <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> Indústria 24h
@@ -604,8 +620,11 @@ export function getMapaHTML() {
         <button id="btn-map-focus-castanha" class="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold bg-purple-900/30 hover:bg-purple-800/50 text-purple-300 border border-purple-500/40 transition cursor-pointer whitespace-nowrap">
           Castanha
         </button>
-        <button id="btn-map-focus-doca-sul" class="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold bg-orange-900/30 hover:bg-orange-800/50 text-orange-300 border border-orange-500/40 transition cursor-pointer whitespace-nowrap" title="Focar na Doca de Caminhões Sul (T4/T5)">
-          Doca Sul
+        <button id="btn-map-focus-carr-castanha" class="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold bg-orange-900/30 hover:bg-orange-800/50 text-orange-300 border border-orange-500/40 transition cursor-pointer whitespace-nowrap" title="Focar na Doca de Caminhões Castanha (T4)">
+          Doca Castanha
+        </button>
+        <button id="btn-map-focus-carr-theresinha" class="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold bg-pink-900/30 hover:bg-pink-800/50 text-pink-300 border border-pink-500/40 transition cursor-pointer whitespace-nowrap" title="Focar na Doca de Caminhões Santa Theresinha (T5)">
+          Doca St. Theresinha
         </button>
         <button id="btn-map-toggle-layer" class="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1 cursor-pointer whitespace-nowrap" style="background:var(--bg-3);color:var(--text-1);border:1px solid var(--border-1)">
           <span class="material-symbols-outlined text-xs text-cyan-400">layers</span> <span id="lbl-layer-mode">Satélite</span>
@@ -639,7 +658,7 @@ export function getMapaHTML() {
         <div class="space-y-1.5">
           <div class="map-overlay-row">
             <span class="map-overlay-label">Extensão Total:</span>
-            <span class="map-overlay-value text-slate-100">12.76 km</span>
+            <span class="map-overlay-value text-slate-100">13.76 km</span>
           </div>
           <div class="map-overlay-row">
             <span class="map-overlay-label">Armazenado na Linha:</span>
@@ -670,7 +689,7 @@ export function getMapaHTML() {
             <h4 class="text-xs font-bold text-white flex items-center gap-2">
               <span>Simulador de Fluxos & Monitoramento de Trechos</span>
               <span id="badge-simulador-resumo" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-800 text-cyan-300 border border-slate-700">
-                11 Trechos · 12.76 km
+                10 Trechos · 13.76 km
               </span>
             </h4>
             <p class="text-[11px] text-slate-400">Clique para abrir ou recolher o simulador de vazão, estimativas de trânsito e detalhes das tubulações</p>
@@ -891,11 +910,11 @@ export function getMapaHTML() {
 
         </div>
 
-        <!-- Painel de Trechos da Adutora (11 Trechos da Malha Completa) -->
+        <!-- Painel de Trechos da Adutora (10 Trechos da Malha Completa) -->
         <div>
           <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
             <h5 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-sm text-cyan-400">segment</span> Trechos Georreferenciados da Rede (11 Trechos)
+              <span class="material-symbols-outlined text-sm text-cyan-400">segment</span> Trechos Georreferenciados da Rede (10 Trechos)
             </h5>
             <span class="text-[11px] text-slate-400">Clique em qualquer trecho no mapa ou use os botões abaixo para alternar ou inverter o fluxo</span>
           </div>
@@ -1241,9 +1260,14 @@ function _criarMarcadoresLagoas() {
   Object.values(PONTOS_ADUTORA).forEach(ponto => {
     let customIcon;
     if (ponto.tipo === 'caminhao') {
-      const isAtivo = ponto.chave === 'carr_usina'
-        ? (_estadoTrechos['t1-carr-usina']?.ativo || _estadoTrechos['t2-carr-usina']?.ativo)
-        : (_estadoTrechos['theresinha-carr-sul']?.ativo || _estadoTrechos['castanha-carr-sul']?.ativo);
+      let isAtivo = false;
+      if (ponto.chave === 'carr_usina') {
+        isAtivo = !!_estadoTrechos['t1-carr-usina']?.ativo;
+      } else if (ponto.chave === 'carr_castanha') {
+        isAtivo = !!_estadoTrechos['t4-carr-castanha']?.ativo;
+      } else if (ponto.chave === 'carr_theresinha') {
+        isAtivo = !!_estadoTrechos['theresinha-carr-theresinha']?.ativo;
+      }
       customIcon = _criarIconeCaminhao(ponto, isAtivo);
     } else if (ponto.tipo === 'industria') {
       customIcon = _criarIconeIndustria(ponto);
@@ -1315,12 +1339,20 @@ function _criarIconePonto(ponto, estado) {
 
 function _gerarHTMLTooltipPonto(ponto) {
   if (ponto.tipo === 'caminhao') {
-    const isAtivo = ponto.chave === 'carr_usina'
-      ? (_estadoTrechos['t1-carr-usina']?.ativo || _estadoTrechos['t2-carr-usina']?.ativo)
-      : (_estadoTrechos['theresinha-carr-sul']?.ativo || _estadoTrechos['castanha-carr-sul']?.ativo);
+    let isAtivo = false;
+    let fontes = '';
+    if (ponto.chave === 'carr_usina') {
+      isAtivo = !!_estadoTrechos['t1-carr-usina']?.ativo;
+      fontes = 'Alimentado por Tanque 1 (T1) / Tanque 2 (T2)';
+    } else if (ponto.chave === 'carr_castanha') {
+      isAtivo = !!_estadoTrechos['t4-carr-castanha']?.ativo;
+      fontes = 'Alimentado pela Lagoa Castanha (T4)';
+    } else if (ponto.chave === 'carr_theresinha') {
+      isAtivo = !!_estadoTrechos['theresinha-carr-theresinha']?.ativo;
+      fontes = 'Alimentado pela Lagoa Santa Theresinha (T5)';
+    }
     const vazao = isAtivo ? '~180 m³/h' : '0 m³/h';
     const statusTxt = isAtivo ? 'Carregamento Ativo' : 'Em Stand-by';
-    const fontes = ponto.chave === 'carr_usina' ? 'Alimentado por T1 / T2' : 'Alimentado por T4 / T5';
 
     return `
       <div class="adutora-hover-card p-3" style="min-width: 250px;">
@@ -1584,9 +1616,18 @@ function _conectarBotoesControle() {
     if (_map) _map.flyTo([PONTOS_ADUTORA.castanha.lat, PONTOS_ADUTORA.castanha.lng], 15, { duration: 1.2 });
   });
 
-  // Foco Doca de Carregamento de Caminhões Sul
-  document.getElementById('btn-map-focus-doca-sul')?.addEventListener('click', () => {
-    if (_map) _map.flyTo([PONTOS_ADUTORA.carr_sul.lat, PONTOS_ADUTORA.carr_sul.lng], 16, { duration: 1.2 });
+  // Foco Doca de Carregamento de Caminhões Castanha (T4)
+  document.getElementById('btn-map-focus-carr-castanha')?.addEventListener('click', () => {
+    if (_map && PONTOS_ADUTORA.carr_castanha) {
+      _map.flyTo([PONTOS_ADUTORA.carr_castanha.lat, PONTOS_ADUTORA.carr_castanha.lng], 16, { duration: 1.2 });
+    }
+  });
+
+  // Foco Doca de Carregamento de Caminhões Santa Theresinha (T5)
+  document.getElementById('btn-map-focus-carr-theresinha')?.addEventListener('click', () => {
+    if (_map && PONTOS_ADUTORA.carr_theresinha) {
+      _map.flyTo([PONTOS_ADUTORA.carr_theresinha.lat, PONTOS_ADUTORA.carr_theresinha.lng], 16, { duration: 1.2 });
+    }
   });
 
   // Botão Flutuante de Gota 💧 (Abre / Fecha Janela de Telemetria)
@@ -1916,9 +1957,14 @@ export function atualizarDadosMapa() {
     const marker = _markers[ponto.chave];
     if (marker) {
       if (ponto.tipo === 'caminhao') {
-        const isAtivo = ponto.chave === 'carr_usina'
-          ? (_estadoTrechos['t1-carr-usina']?.ativo || _estadoTrechos['t2-carr-usina']?.ativo)
-          : (_estadoTrechos['theresinha-carr-sul']?.ativo || _estadoTrechos['castanha-carr-sul']?.ativo);
+        let isAtivo = false;
+        if (ponto.chave === 'carr_usina') {
+          isAtivo = !!_estadoTrechos['t1-carr-usina']?.ativo;
+        } else if (ponto.chave === 'carr_castanha') {
+          isAtivo = !!_estadoTrechos['t4-carr-castanha']?.ativo;
+        } else if (ponto.chave === 'carr_theresinha') {
+          isAtivo = !!_estadoTrechos['theresinha-carr-theresinha']?.ativo;
+        }
         marker.setIcon(_criarIconeCaminhao(ponto, isAtivo));
       } else if (ponto.tipo === 'industria') {
         marker.setIcon(_criarIconeIndustria(ponto));
