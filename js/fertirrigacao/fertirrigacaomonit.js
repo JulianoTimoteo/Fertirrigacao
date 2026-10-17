@@ -156,6 +156,11 @@ async function _fetchLatestReadings() {
 
     if (!tanque) return;
 
+    // Ignora documentos corrompidos sem sincronismo de data (ex: ano 2000 gerados quando o ESP32 estava sem NTP)
+    if (key.includes('2000') || String(raw.data).includes('2000') || String(raw.data_hora).includes('2000')) {
+      return;
+    }
+
     // 2. Extrai timestamp real com suporte a todos os formatos do Firestore
     let tsReal = 0;
     if (raw.timestamp) {
